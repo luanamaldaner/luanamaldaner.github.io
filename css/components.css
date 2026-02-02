@@ -1118,3 +1118,41 @@ a:focus-visible {
   background: var(--glass-bg-subtle);
   border-top: 1px solid var(--glass-border-subtle);
 }
+
+/* Project Hero Image Frame */
+.project-hero-image {
+  display: flex;
+  justify-content: center;
+}
+
+.project-hero-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 8px 48px rgba(0, 0, 0, 0.04);
+  padding: var(--space-sm);
+  transition: all var(--transition-medium);
+}
+
+.project-hero-image img:hover {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 16px 64px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+[data-theme="dark"] .project-hero-image img {
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.3),
+    0 8px 48px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .project-hero-image img:hover {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 16px 64px rgba(0, 0, 0, 0.25);
+}
