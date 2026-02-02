@@ -1,0 +1,140 @@
+/**
+ * Apple Liquid Glass Portfolio
+ * Main Stylesheet - Import Order
+ */
+
+/* 1. Design Tokens & Variables */
+@import url('variables.css');
+
+/* 2. Layout System */
+@import url('layout.css');
+
+/* 3. Glass Effects */
+@import url('glass-effects.css');
+
+/* 4. Components */
+@import url('components.css');
+
+/* 5. Animations */
+@import url('animations.css');
+
+/* ========================================
+   GLOBAL STYLES
+   ======================================== */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+/* Remove default list styles */
+ul, ol {
+  list-style: none;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Remove default button styles */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Code */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 2px 6px;
+  background: var(--glass-bg-subtle);
+  border-radius: var(--radius-xs);
+}
+
+/* ========================================
+   RESPONSIVE PROJECT GRID
+   ======================================== */
+
+.projects-flow {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .projects-flow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .projects-flow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ========================================
+   CONTACT FLOW
+   ======================================== */
+
+.contact-flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-width: 400px;
+}
+
+/* ========================================
+   TWO COLUMN LAYOUT
+   ======================================== */
+
+.two-col {
+  display: grid;
+  gap: var(--space-2xl);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .two-col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ========================================
+   PRINT
+   ======================================== */
+
+@media print {
+  @page {
+    margin: 1.5cm;
+  }
+
+  body {
+    font-size: 11pt;
+    color: black;
+    background: white;
+  }
+
+  .floating-nav,
+  .theme-toggle,
+  .scroll-progress,
+  .ambient-bg {
+    display: none !important;
+  }
+
+  a {
+    color: black;
+    text-decoration: underline;
+  }
+
+  .section {
+    page-break-inside: avoid;
+    padding: 1cm 0;
+  }
+}

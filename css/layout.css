@@ -1,0 +1,329 @@
+/**
+ * Apple Liquid Glass - Layout System
+ * Seamless, flowing layout with no hard breaks
+ */
+
+/* ========================================
+   BASE RESET
+   ======================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  overflow-x: hidden;
+  min-height: 100vh;
+  transition: background var(--transition-medium), color var(--transition-medium);
+}
+
+/* ========================================
+   AMBIENT BACKGROUND
+   Soft gradient that flows throughout
+   ======================================== */
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-behind);
+  pointer-events: none;
+  background: var(--color-bg-primary);
+}
+
+.ambient-bg::before,
+.ambient-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.6;
+  animation: ambientFloat 12s ease-in-out infinite;
+}
+
+.ambient-bg::before {
+  width: 500px;
+  height: 500px;
+  top: -150px;
+  right: -100px;
+  background: linear-gradient(135deg, rgba(137, 194, 217, 0.5), rgba(78, 205, 196, 0.4));
+  animation-delay: 0s;
+}
+
+.ambient-bg::after {
+  width: 450px;
+  height: 450px;
+  bottom: -100px;
+  left: -150px;
+  background: linear-gradient(135deg, rgba(149, 213, 178, 0.5), rgba(82, 183, 136, 0.4));
+  animation-delay: -6s;
+}
+
+@keyframes ambientFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 15px) scale(0.95);
+  }
+}
+
+[data-theme="dark"] .ambient-bg {
+  background: var(--color-bg-primary);
+}
+
+[data-theme="dark"] .ambient-bg::before {
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.3), rgba(137, 194, 217, 0.25));
+  opacity: 0.5;
+}
+
+[data-theme="dark"] .ambient-bg::after {
+  background: linear-gradient(135deg, rgba(82, 183, 136, 0.3), rgba(149, 213, 178, 0.25));
+  opacity: 0.5;
+}
+
+/* ========================================
+   CONTAINER
+   ======================================== */
+
+.container {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+.container-narrow {
+  max-width: 720px;
+}
+
+.container-wide {
+  max-width: 1400px;
+}
+
+/* ========================================
+   MAIN CONTENT WRAPPER
+   Seamless single-surface design
+   ======================================== */
+
+main {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+/* ========================================
+   SECTION SYSTEM - Seamless Flow
+   No hard breaks between sections
+   ======================================== */
+
+.section {
+  position: relative;
+  padding: var(--space-3xl) 0;
+}
+
+.section-compact {
+  padding: var(--space-2xl) 0;
+}
+
+.section-hero {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-4xl) 0 var(--space-3xl);
+}
+
+.section-hero-compact {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-4xl) 0 var(--space-2xl);
+}
+
+/* Section divider - subtle gradient fade */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--glass-border-subtle) 20%,
+    var(--glass-border-subtle) 80%,
+    transparent 100%
+  );
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+/* ========================================
+   FLOW LAYOUT
+   Organic content flow without boxes
+   ======================================== */
+
+.flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.flow-tight {
+  gap: var(--space-md);
+}
+
+.flow-relaxed {
+  gap: var(--space-2xl);
+}
+
+/* Inline flow for horizontal items */
+.flow-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+/* ========================================
+   CONTENT GROUPS
+   Soft groupings without hard boundaries
+   ======================================== */
+
+.content-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.content-group + .content-group {
+  margin-top: var(--space-2xl);
+}
+
+/* Two-column responsive layout */
+.content-split {
+  display: grid;
+  gap: var(--space-xl);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .content-split {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2xl);
+  }
+}
+
+/* ========================================
+   FLOATING ELEMENTS
+   Glass elements that float above content
+   ======================================== */
+
+.floating-element {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+/* ========================================
+   RESPONSIVE TYPOGRAPHY
+   ======================================== */
+
+@media (min-width: 768px) {
+  .section {
+    padding: var(--space-4xl) 0;
+  }
+
+  .section-compact {
+    padding: var(--space-3xl) 0;
+  }
+
+  .section-hero {
+    padding: var(--space-4xl) 0;
+  }
+}
+
+/* ========================================
+   VISIBILITY & ACCESSIBILITY
+   ======================================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: var(--space-md);
+  background: var(--color-accent);
+  color: white;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  z-index: var(--z-tooltip);
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: var(--space-md);
+}
+
+/* ========================================
+   UTILITY SPACING
+   ======================================== */
+
+.mt-auto { margin-top: auto; }
+.mb-auto { margin-bottom: auto; }
+.ml-auto { margin-left: auto; }
+.mr-auto { margin-right: auto; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  .ambient-bg,
+  .floating-nav,
+  .theme-toggle {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  .section {
+    page-break-inside: avoid;
+  }
+}

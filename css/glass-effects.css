@@ -1,0 +1,551 @@
+/**
+ * Apple Liquid Glass Effects
+ * True three-layer glass system: highlight, shadow, illumination
+ */
+
+/* ========================================
+   FLOATING PILL NAVIGATION
+   Apple Dynamic Island inspired
+   ======================================== */
+
+.floating-nav {
+  position: fixed;
+  top: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-nav);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+
+  /* Glass Material */
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+
+  /* Three-layer system */
+  box-shadow:
+    var(--glass-highlight),
+    var(--glass-shadow),
+    var(--glass-glow);
+
+  border: 1px solid var(--glass-border);
+  transition:
+    transform var(--transition-medium),
+    padding var(--transition-medium),
+    opacity var(--transition-fast);
+}
+
+.floating-nav.scrolled {
+  padding: var(--space-2xs) var(--space-xs);
+}
+
+.floating-nav.hidden {
+  transform: translateX(-50%) translateY(-100%);
+  opacity: 0;
+}
+
+.nav-list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-list a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.nav-list a:hover {
+  background: var(--glass-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+.nav-list a.active {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+/* Mobile nav adjustments */
+@media (max-width: 767px) {
+  .floating-nav {
+    bottom: var(--space-md);
+    top: auto;
+    max-width: calc(100% - var(--space-xl));
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .floating-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-list a {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ========================================
+   LIQUID GLASS PANEL
+   Floating content container
+   ======================================== */
+
+.glass-panel {
+  position: relative;
+  padding: var(--space-xl);
+  border-radius: var(--radius-2xl);
+
+  /* Glass Material */
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+
+  /* Three-layer system */
+  box-shadow:
+    var(--glass-highlight),
+    var(--glass-shadow-elevated);
+
+  border: 1px solid var(--glass-border);
+  transition: all var(--transition-medium);
+}
+
+.glass-panel:hover {
+  box-shadow:
+    var(--glass-highlight-strong),
+    var(--glass-shadow-floating),
+    var(--glass-glow);
+  transform: translateY(-2px);
+}
+
+/* Subtle variant - less prominent */
+.glass-panel-subtle {
+  background: var(--glass-bg-subtle);
+  box-shadow:
+    var(--glass-highlight),
+    var(--glass-shadow);
+}
+
+/* Strong variant - more opaque */
+.glass-panel-strong {
+  background: var(--glass-bg-strong);
+}
+
+/* ========================================
+   GLASS PILL BUTTON
+   Rounded, floating button style
+   ======================================== */
+
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-fast);
+
+  /* Glass Material */
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur-subtle));
+  -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
+
+  box-shadow:
+    var(--glass-highlight),
+    var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-primary);
+}
+
+.glass-pill:hover {
+  background: var(--glass-bg-hover);
+  box-shadow:
+    var(--glass-highlight-strong),
+    var(--glass-shadow-elevated);
+  transform: translateY(-1px);
+}
+
+.glass-pill:active {
+  transform: translateY(0);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Primary accent pill */
+.glass-pill-primary {
+  background: var(--color-accent);
+  color: white;
+  border-color: transparent;
+}
+
+.glass-pill-primary:hover {
+  background: var(--color-accent-hover);
+  box-shadow:
+    var(--glass-highlight),
+    var(--glass-shadow-elevated),
+    var(--glass-glow-accent);
+}
+
+/* ========================================
+   INLINE GLASS TAG
+   Small pill for labels/categories
+   ======================================== */
+
+.glass-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  transition: all var(--transition-fast);
+}
+
+.glass-tag:hover {
+  background: var(--glass-bg);
+  color: var(--color-text-primary);
+}
+
+/* ========================================
+   EXPERIENCE ITEM
+   Timeline-like flowing content
+   ======================================== */
+
+.experience-item {
+  position: relative;
+  padding-left: var(--space-lg);
+}
+
+.experience-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--space-xs);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 8px rgba(42, 157, 143, 0.3);
+}
+
+.experience-item::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: calc(var(--space-xs) + 12px);
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--glass-border-subtle),
+    transparent
+  );
+}
+
+.experience-item:last-child::after {
+  display: none;
+}
+
+/* ========================================
+   SKILL FLOW
+   Inline flowing skills without grid boxes
+   ======================================== */
+
+.skill-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.skill-item {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+  transition: all var(--transition-fast);
+}
+
+.skill-item:hover {
+  background: var(--glass-bg);
+  color: var(--color-text-primary);
+  border-color: var(--glass-border);
+  transform: translateY(-1px);
+}
+
+/* Skill category label */
+.skill-category {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  margin-bottom: var(--space-sm);
+}
+
+/* ========================================
+   PROJECT PREVIEW
+   Floating glass preview cards
+   ======================================== */
+
+.project-preview {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  transition: all var(--transition-medium);
+
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur-subtle));
+  -webkit-backdrop-filter: blur(var(--glass-blur-subtle));
+
+  box-shadow:
+    var(--glass-highlight),
+    var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+}
+
+.project-preview:hover {
+  box-shadow:
+    var(--glass-highlight-strong),
+    var(--glass-shadow-floating),
+    var(--glass-glow);
+  transform: translateY(-4px);
+}
+
+.project-preview-image {
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-subtle) 0%,
+    rgba(77, 182, 172, 0.08) 50%,
+    rgba(135, 206, 235, 0.06) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-tertiary);
+}
+
+.project-preview-content {
+  padding: var(--space-lg);
+}
+
+.project-preview-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-xs);
+  color: var(--color-text-primary);
+}
+
+.project-preview-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+/* Compact project preview */
+.project-preview-compact .project-preview-image {
+  aspect-ratio: 16 / 9;
+}
+
+.project-preview-compact .project-preview-content {
+  padding: var(--space-md);
+}
+
+.project-preview-compact .project-preview-title {
+  font-size: var(--font-size-md);
+}
+
+.project-preview-compact .project-preview-desc {
+  font-size: var(--font-size-xs);
+}
+
+/* ========================================
+   CONTACT LINK
+   Glass contact items
+   ======================================== */
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-xl);
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--transition-fast);
+
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-subtle);
+}
+
+.contact-item:hover {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  transform: translateX(4px);
+}
+
+.contact-item-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-lg);
+  color: var(--color-accent);
+}
+
+.contact-item-text {
+  flex: 1;
+}
+
+.contact-item-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.contact-item-value {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+/* ========================================
+   THEME TOGGLE
+   Floating glass toggle
+   ======================================== */
+
+.theme-toggle {
+  position: fixed;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: var(--z-nav);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+
+  box-shadow:
+    var(--glass-highlight),
+    var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+}
+
+.theme-toggle:hover {
+  background: var(--glass-bg-hover);
+  box-shadow:
+    var(--glass-highlight-strong),
+    var(--glass-shadow-elevated);
+  transform: scale(1.05);
+}
+
+.theme-toggle-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-green));
+  transition: all var(--transition-medium);
+}
+
+[data-theme="dark"] .theme-toggle-icon {
+  background: linear-gradient(135deg, #4ecdc4, #52b788);
+  box-shadow: 0 0 8px rgba(78, 205, 196, 0.4);
+}
+
+/* ========================================
+   FOOTER
+   Subtle glass footer
+   ======================================== */
+
+.glass-footer {
+  padding: var(--space-2xl) 0;
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  background: transparent;
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+.glass-footer p {
+  margin: var(--space-xs) 0;
+}
+
+/* ========================================
+   SCROLL PROGRESS
+   Top progress indicator
+   ======================================== */
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--color-accent),
+    var(--color-teal)
+  );
+  z-index: calc(var(--z-nav) + 1);
+  transition: width 0.1s linear;
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-nav,
+  .glass-panel,
+  .glass-pill,
+  .project-preview,
+  .contact-item,
+  .theme-toggle {
+    transition: none;
+  }
+
+  .glass-panel:hover,
+  .glass-pill:hover,
+  .project-preview:hover,
+  .contact-item:hover,
+  .theme-toggle:hover {
+    transform: none;
+  }
+}
