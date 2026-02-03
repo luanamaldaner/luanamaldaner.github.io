@@ -333,7 +333,7 @@
 @media (max-width: 600px) {
   .header-info {
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: var(--space-md);
   }
 
   .header-text {
@@ -342,8 +342,22 @@
 
   .profile-placeholder,
   .profile-photo {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
+    transition: transform var(--transition-medium);
+  }
+
+  /* Friendly bounce on profile tap */
+  .profile-photo:active {
+    transform: scale(0.95);
+  }
+
+  .site-title {
+    font-size: clamp(24px, 5vw, 32px);
+  }
+
+  .site-subtitle {
+    font-size: var(--font-size-sm);
   }
 }
 
@@ -622,6 +636,21 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--glass-bg-hover);
 }
 
+/* Mobile carousel - always show buttons */
+@media (max-width: 767px) {
+  .carousel-btn {
+    opacity: 0.7;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .carousel-btn:active {
+    transform: translateY(-50%) scale(0.9);
+    opacity: 1;
+  }
+}
+
 .carousel-btn-prev {
   left: var(--space-sm);
 }
@@ -864,6 +893,17 @@ a:hover {
   transform: translateX(4px);
 }
 
+/* Mobile link tap feedback */
+@media (max-width: 767px) {
+  .link-arrow:active::after {
+    transform: translateX(6px);
+  }
+
+  a:active {
+    opacity: 0.8;
+  }
+}
+
 /* ========================================
    ICON PLACEHOLDERS
    Simple text-based icons (no emoji)
@@ -889,20 +929,95 @@ a:hover {
    ======================================== */
 
 @media (max-width: 767px) {
+  /* Hero adjustments for mobile */
+  .hero-title {
+    font-size: clamp(28px, 7vw, 40px);
+  }
+
+  .hero-subtitle {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+  }
+
+  .hero-location {
+    font-size: var(--font-size-xs);
+  }
+
   .hero-actions {
     flex-direction: column;
     align-items: center;
+    gap: var(--space-sm);
   }
 
   .hero-actions .glass-pill {
     width: 100%;
-    max-width: 280px;
+    max-width: 260px;
     justify-content: center;
+    padding: var(--space-sm) var(--space-md);
   }
 
+  /* Experience section mobile */
   .experience-meta {
     flex-direction: column;
-    gap: var(--space-xs);
+    gap: var(--space-2xs);
+  }
+
+  .experience-title {
+    font-size: var(--font-size-md);
+  }
+
+  .experience-company {
+    font-size: var(--font-size-sm);
+  }
+
+  .experience-desc,
+  .experience-list li {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Section typography mobile */
+  .section-title {
+    font-size: clamp(var(--font-size-lg), 4vw, var(--font-size-xl));
+  }
+
+  .section-desc {
+    font-size: var(--font-size-sm);
+  }
+
+  .section-label {
+    font-size: 10px;
+  }
+
+  /* Education mobile */
+  .education-school {
+    font-size: var(--font-size-md);
+  }
+
+  .education-degree {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Leadership mobile */
+  .leadership-role {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Project page mobile */
+  .project-header h1 {
+    font-size: clamp(var(--font-size-xl), 5vw, var(--font-size-2xl));
+  }
+
+  .project-intro {
+    font-size: var(--font-size-sm);
+  }
+
+  .project-section h2 {
+    font-size: var(--font-size-lg);
+  }
+
+  .project-section p,
+  .project-list li {
+    font-size: var(--font-size-sm);
   }
 }
 

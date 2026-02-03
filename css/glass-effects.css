@@ -98,6 +98,12 @@
     padding: var(--space-xs) var(--space-sm);
     font-size: var(--font-size-xs);
   }
+
+  /* Friendly tap feedback on mobile nav */
+  .nav-list a:active {
+    transform: scale(0.95);
+    background: var(--color-accent-subtle);
+  }
 }
 
 /* ========================================
@@ -547,5 +553,72 @@
   .contact-item:hover,
   .theme-toggle:hover {
     transform: none;
+  }
+}
+
+/* ========================================
+   MOBILE INTERACTIVE ENHANCEMENTS
+   Friendly, tactile feedback for touch
+   ======================================== */
+
+@media (max-width: 767px) {
+  /* Bouncy tap feedback for buttons */
+  .glass-pill:active {
+    transform: scale(0.96);
+    transition: transform 0.1s ease;
+  }
+
+  .glass-pill-primary:active {
+    transform: scale(0.96);
+    box-shadow: 0 0 20px rgba(42, 157, 143, 0.4);
+  }
+
+  /* Subtle press effect on cards */
+  .glass-panel:active,
+  .project-preview:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  /* Friendly bounce on skill items */
+  .skill-item:active {
+    transform: scale(0.94);
+    background: var(--color-accent-subtle);
+  }
+
+  /* Contact items tap feedback */
+  .contact-item:active {
+    transform: scale(0.98) translateX(2px);
+    background: var(--color-accent-subtle);
+  }
+
+  /* Theme toggle playful press */
+  .theme-toggle:active {
+    transform: scale(0.9);
+  }
+
+  /* Glass tags interactive feel */
+  .glass-tag:active {
+    transform: scale(0.95);
+    background: var(--color-accent-subtle);
+  }
+
+  /* Social icons friendly tap */
+  .social-icon:active {
+    transform: scale(0.9);
+    background: var(--color-accent-subtle);
+  }
+
+  /* Experience cards subtle feedback */
+  .experience-card:active {
+    transform: scale(0.99);
+    border-color: var(--color-accent);
+  }
+
+  /* Award items tap response */
+  .award-item:active {
+    transform: scale(0.98);
+    background: var(--glass-bg);
+    border-color: var(--color-accent);
   }
 }
