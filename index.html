@@ -102,7 +102,7 @@
         <div class="content-group text-center" data-animate="fade-up">
           <h2 class="section-title">About Me</h2>
           <p class="lead">
-            Originally from Brazil, I moved to Florida and fell in love with science. Now I'm pursuing Biomedical Engineering while working at the Florida Museum.
+            Originally from Brazil, I moved to Florida and fell in love with science. Now I'm pursuing Biomedical Engineering while interning this Spring at the Florida Museum.
           </p>
           <p class="body-text">
             When I'm not in class, you'll find me at the gym, exploring nature trails, or studying at a coffee shop. I speak Portuguese and English fluently, plus conversational Spanish and a bit of German.
@@ -233,10 +233,10 @@
     <!-- Projects -->
     <section id="projects" class="section">
       <div class="container">
-        <p class="section-label" data-animate="fade-up">Projects</p>
+        <p class="section-label" data-animate="fade-up">Featured</p>
         <h2 class="section-title" data-animate="fade-up">Projects</h2>
 
-        <div style="margin-top: var(--space-xl); max-width: 450px;">
+        <div class="projects-grid" style="margin-top: var(--space-xl);">
           <a href="projects/mosquito-tracker.html" class="project-preview" data-animate="fade-up">
             <div class="project-preview-image" style="background-image: url('images/mosquito-tracker.png'); background-size: cover; background-position: center;">
             </div>
@@ -244,11 +244,38 @@
               <h3 class="project-preview-title">Mosquito Tracker</h3>
               <p class="project-preview-desc">App for tracking and reporting mosquito populations to help prevent disease spread.</p>
               <div class="skill-flow" style="margin-top: var(--space-sm);">
-                <span class="glass-tag">Hackathon</span>
+                <span class="glass-tag glass-tag-accent">Hackathon</span>
                 <span class="glass-tag">Health Tech</span>
               </div>
             </div>
           </a>
+                  <div class="project-preview project-wip" data-animate="fade-up">
+            <div class="project-preview-image project-wip-image">
+              <span class="wip-badge">Coming Soon</span>
+            </div>
+            <div class="project-preview-content">
+              <h3 class="project-preview-title">Code for Change</h3>
+              <p class="project-preview-desc">Upcoming hackathon focused on building technology for social good.</p>
+              <div class="skill-flow" style="margin-top: var(--space-sm);">
+                <span class="glass-tag glass-tag-accent">Hackathon</span>
+                <span class="glass-tag">Feb 2026</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-preview project-wip" data-animate="fade-up">
+            <div class="project-preview-image project-wip-image">
+              <span class="wip-badge">Coming Soon</span>
+            </div>
+            <div class="project-preview-content">
+              <h3 class="project-preview-title">Hacklytics</h3>
+              <p class="project-preview-desc">Data science and analytics hackathon at Georgia Tech.</p>
+              <div class="skill-flow" style="margin-top: var(--space-sm);">
+                <span class="glass-tag glass-tag-accent">Hackathon</span>
+                <span class="glass-tag">Feb 2026</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -267,14 +294,14 @@
             <p class="education-degree">B.S. Biomedical Engineering</p>
             <p class="education-meta">Aug 2025 – May 2029 · GPA: 3.8</p>
             <p class="education-details">
-              AI Fundamentals, Computational Math, Biology, Chemistry, Calculus 1-3, Differential Equations, Statistics, Health Disparities
+              AI Fundamentals, Computational Math, Biology 1, Chemistry 1-2, Calculus 1-3, Differential Equations, Statistics, Health Disparities, General Psychology
             </p>
           </div>
 
           <div class="education-entry" data-animate="fade-up">
             <h3 class="education-school">Marjory Stoneman Douglas High School</h3>
             <p class="education-degree">High School Diploma</p>
-            <p class="education-meta">Aug 2021 – May 2025 · GPA: 3.9 / 5.3 · Rank: 13/801</p>
+            <p class="education-meta">Aug 2021 – May 2025 · GPA: 3.9 UW / 5.3 W · Rank: 13/801</p>
             <p class="education-details">
               AP Scholar with Honor & Distinction · Senior of Distinction in Science
             </p>
@@ -290,11 +317,14 @@
 
         <div class="skills-grid" data-animate="fade-up">
           <div class="skill-group">
-            <p class="skill-category">Code</p>
+            <p class="skill-category">Technology</p>
             <div class="skill-flow">
               <span class="skill-item">Python</span>
               <span class="skill-item">Java</span>
               <span class="skill-item">JavaScript</span>
+              <span class="skill-item">HTML</span>
+              <span class="skill-item">Canva</span>
+              <span class="skill-item">Fusion 360</span>
             </div>
           </div>
 
@@ -323,18 +353,26 @@
       </div>
     </section>
 
-    <!-- Awards -->
+    <!-- Awards & Certifications -->
     <section class="section section-compact">
       <div class="container">
         <p class="section-label text-center" data-animate="fade-up">Recognition</p>
-        <h2 class="section-title text-center" data-animate="fade-up">Awards</h2>
+        <h2 class="section-title text-center" data-animate="fade-up">Awards & Certifications</h2>
 
-        <div style="margin-top: var(--space-xl); max-width: 400px; margin-left: auto; margin-right: auto;" data-animate="fade-up">
-          <div class="award-item">
+        <div class="awards-grid" style="margin-top: var(--space-xl); max-width: 600px; margin-left: auto; margin-right: auto;">
+          <div class="award-item" data-animate="fade-up">
             <span class="award-icon">🏆</span>
             <div class="award-content">
               <h3 class="award-title">UF Gator Create Winner</h3>
               <p class="award-desc">Won 3 of 7 tracks in UF's innovation competition</p>
+            </div>
+          </div>
+
+          <div class="award-item" data-animate="fade-up">
+            <span class="award-icon">❤️</span>
+            <div class="award-content">
+              <h3 class="award-title">CPR & AED Certified</h3>
+              <p class="award-desc">American Heart Association certified</p>
             </div>
           </div>
         </div>
