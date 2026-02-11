@@ -564,6 +564,35 @@
 }
 
 /* ========================================
+   WINNER BANNER
+   Diagonal ribbon for award-winning projects
+   ======================================== */
+
+.winner-banner-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.winner-banner {
+  position: absolute;
+  top: 18px;
+  right: -35px;
+  z-index: 10;
+  background: linear-gradient(135deg, #d4af37, #f5d060, #d4af37);
+  color: #1a1a1a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 5px 40px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+
+/* ========================================
    CONTACT LINK
    Glass contact items
    ======================================== */
