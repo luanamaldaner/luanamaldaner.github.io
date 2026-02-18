@@ -10,10 +10,62 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/main.css?v=5">
+
+  <style>
+    .sunlight-rays {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .sun-ray {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: var(--w);
+      height: 200vh;
+      transform-origin: 0% 0%;
+      transform: rotate(var(--angle));
+      opacity: var(--o);
+      background: linear-gradient(
+        to bottom,
+        rgba(218, 165, 32, 0.45) 0%,
+        rgba(218, 165, 32, 0.2) 15%,
+        rgba(218, 165, 32, 0.06) 40%,
+        transparent 70%
+      );
+      animation: ray-breathe var(--dur) ease-in-out var(--del) infinite alternate;
+    }
+
+    @keyframes ray-breathe {
+      0%   { opacity: var(--o); }
+      100% { opacity: calc(var(--o) * 0.3); }
+    }
+
+    [data-theme="dark"] .sunlight-rays { display: none; }
+  </style>
 </head>
 <body>
   <div class="ambient-bg" aria-hidden="true"></div>
+
+  <!-- Sunlight rays (light mode) -->
+  <div class="sunlight-rays" aria-hidden="true">
+    <div class="sun-ray" style="--angle:15deg;  --w:6px;  --o:0.35; --dur:8s;  --del:0s;"></div>
+    <div class="sun-ray" style="--angle:22deg;  --w:40px; --o:0.12; --dur:11s; --del:-2s;"></div>
+    <div class="sun-ray" style="--angle:30deg;  --w:3px;  --o:0.4;  --dur:9s;  --del:-5s;"></div>
+    <div class="sun-ray" style="--angle:38deg;  --w:60px; --o:0.08; --dur:13s; --del:-1s;"></div>
+    <div class="sun-ray" style="--angle:44deg;  --w:5px;  --o:0.3;  --dur:10s; --del:-7s;"></div>
+    <div class="sun-ray" style="--angle:52deg;  --w:25px; --o:0.1;  --dur:12s; --del:-3s;"></div>
+    <div class="sun-ray" style="--angle:60deg;  --w:4px;  --o:0.25; --dur:9s;  --del:-6s;"></div>
+    <div class="sun-ray" style="--angle:68deg;  --w:35px; --o:0.07; --dur:14s; --del:-4s;"></div>
+    <div class="sun-ray" style="--angle:74deg;  --w:3px;  --o:0.2;  --dur:11s; --del:-8s;"></div>
+  </div>
 
   <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
     <span class="theme-toggle-icon"></span>

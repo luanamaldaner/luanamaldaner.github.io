@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Liquid Lift – A hydraulic arm outreach activity designed for 6th–8th graders, built for the UF Outreach Design Competition 2026.">
+  <title>Liquid Lift | Luana Kunzler Maldaner</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/main.css">
+
+  <style>
+    .sketch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: var(--space-lg);
+      margin-top: var(--space-lg);
+    }
+
+    .sketch-card {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+    }
+
+    .sketch-card img {
+      width: 100%;
+      display: block;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+    }
+
+    .sketch-card-body {
+      padding: var(--space-md);
+    }
+
+    .sketch-card-body h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 0 0 var(--space-xs);
+    }
+
+    .sketch-card-body p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .team-photo {
+      width: calc(100% + 4rem);
+      margin-left: -2rem;
+      border-radius: var(--radius-lg);
+      display: block;
+      margin-top: var(--space-lg);
+    }
+
+    .team-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      margin-top: var(--space-md);
+    }
+
+    .team-table th {
+      text-align: left;
+      padding: var(--space-xs) var(--space-sm);
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .team-table td {
+      padding: var(--space-xs) var(--space-sm);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .budget-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-xs) 0;
+      border-bottom: 1px solid var(--glass-border);
+      font-size: 0.875rem;
+    }
+
+    .budget-row:last-child { border-bottom: none; }
+
+    .budget-total {
+      font-weight: 700;
+      font-size: 1rem;
+      padding-top: var(--space-sm);
+    }
+
+    .pdf-link {
+      margin-top: var(--space-md);
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-bg" aria-hidden="true"></div>
+
+  <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+    <span class="theme-toggle-icon"></span>
+  </button>
+
+  <nav class="project-nav">
+    <div class="container">
+      <a href="../index.html" class="back-link">← Back</a>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <article class="project-article">
+      <div class="container container-narrow">
+
+        <header class="project-header" data-animate="fade-up">
+          <p class="project-meta">University of Florida · Outreach Design Competition 2026</p>
+          <h1>Liquid Lift</h1>
+          <p class="project-intro">A hydraulic arm outreach activity that teaches 6th–8th graders Pascal's Law and mechanical advantage through a hands-on "rescue mission" challenge.</p>
+        </header>
+
+        <!-- Team Photo -->
+        <section class="project-section" data-animate="fade-up">
+          <img src="../images/outreach-team-photo.jpg" alt="Liquid Lift team with Albert the Gator mascot at UF Herbert Wertheim College of Engineering" class="team-photo">
+        </section>
+
+        <!-- Overview -->
+        <section class="project-section" data-animate="fade-up">
+          <h2>Activity Overview</h2>
+          <p>
+            Students operate a tabletop robotic arm powered by water-filled syringes and clear tubing. By pushing and pulling syringe plungers, they control the arm to grab and move small objects in a "rescue mission" challenge — discovering how hydraulic pressure transfers force, the same principle behind excavators, car brakes, and prosthetic limbs.
+          </p>
+          <div class="skill-flow" style="margin-top: var(--space-md);">
+            <span class="skill-item">Grade 6–8</span>
+            <span class="skill-item">Mechanical Engineering</span>
+            <span class="skill-item">Biomedical Engineering</span>
+          </div>
+        </section>
+
+        <!-- Learning Objectives -->
+        <section class="project-section" data-animate="fade-up">
+          <h2>Student Learning Objectives</h2>
+          <ol style="padding-left: 1.25rem; line-height: 2;">
+            <li><strong>Explain</strong> how pushing or pulling one syringe moves another through a water-filled tube (Pascal's Law).</li>
+            <li><strong>Predict and test</strong> how syringe force changes how far and how strongly the hydraulic arm moves (force vs. distance).</li>
+            <li><strong>Compare</strong> hydraulics, pneumatics, and electric motors and describe one reason an engineer might choose each.</li>
+          </ol>
+        </section>
+
+        <!-- Concept Sketches -->
+        <section class="project-section" data-animate="fade-up">
+          <h2>Concept Sketches</h2>
+          <div class="sketch-grid">
+            <div class="sketch-card">
+              <img src="../images/outreach-tabletop-sketch.jpg" alt="Bird's eye view of the tabletop layout with tri-fold poster, hydraulic arm, rescue zone, and syringe controls">
+              <div class="sketch-card-body">
+                <h3>Sketch 1 — Tabletop Layout</h3>
+                <p>Bird's eye view of the full setup: tri-fold poster at back (excavator, prosthetic arm, brake system), hydraulic arm center-table, rescue zone with toy objects, and laminated vocabulary cards.</p>
+              </div>
+            </div>
+            <div class="sketch-card">
+              <img src="../images/outreach-gripper-sketch.jpg" alt="Gripper mechanism close-up showing syringe A and B connected by clear tubing and hydraulic connector">
+              <div class="sketch-card-body">
+                <h3>Sketch 2 — Gripper Mechanism</h3>
+                <p>Side-view cross-section of the hydraulic mechanism. Syringe A connects via colored water tubing to Syringe B at the joint. Two popsicle-stick "fingers" open and close via syringe pressure; rubber bands snap the gripper closed.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Team -->
+        <section class="project-section" data-animate="fade-up">
+          <h2>Team — Data Science &amp; Informatics</h2>
+          <table class="team-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Major</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Matheus Maldaner</td><td>AI Systems</td></tr>
+              <tr><td>Luana Maldaner</td><td>Biomedical Engineering</td></tr>
+              <tr><td>Alfred Navarro</td><td>Computer Engineering</td></tr>
+              <tr><td>Nicolas Murguia</td><td>Data Science &amp; Physics</td></tr>
+              <tr><td>Pranav Bhargava</td><td>Computer Science</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Budget -->
+        <section class="project-section" data-animate="fade-up">
+          <h2>Materials &amp; Budget</h2>
+          <p>All materials sourced from Amazon, Walmart, Zoro, and Dollar Tree. Total budget: <strong>$150</strong>.</p>
+          <div style="margin-top: var(--space-md);">
+            <div class="budget-row"><span>20mL Plastic Syringes (10-pack)</span><span>$9.99</span></div>
+            <div class="budget-row"><span>Clear Vinyl Tubing, 10 ft</span><span>$4.70</span></div>
+            <div class="budget-row"><span>Corrugated Sheets (12-pack)</span><span>$26.28</span></div>
+            <div class="budget-row"><span>Wood Craft Sticks (200-pack)</span><span>$4.99</span></div>
+            <div class="budget-row"><span>Hot Glue Gun Kit + 30 Sticks</span><span>$20.99</span></div>
+            <div class="budget-row"><span>Rubber Bands, Brass Fasteners, Food Coloring, Mini Toys</span><span>$33.11</span></div>
+            <div class="budget-row"><span>Poster Board, Laminating Sheets, Markers, Bins, Tape</span><span>$25.12</span></div>
+            <div class="budget-row budget-total"><span>Estimated Total</span><span>$109.08</span></div>
+            <div class="budget-row" style="color: var(--accent); font-weight: 600;"><span>Budget Remaining</span><span>$40.92</span></div>
+          </div>
+        </section>
+
+        <!-- Skills -->
+        <section class="project-section" data-animate="fade-up">
+          <h2>Skills Applied</h2>
+          <div class="skill-flow">
+            <span class="skill-item">Engineering Outreach</span>
+            <span class="skill-item">Instructional Design</span>
+            <span class="skill-item">Hydraulics</span>
+            <span class="skill-item">CAD Prototyping</span>
+            <span class="skill-item">Teamwork</span>
+            <span class="skill-item">Budget Management</span>
+          </div>
+        </section>
+
+        <!-- Full PDF -->
+        <section class="project-section" data-animate="fade-up">
+          <h2>Full Project Report</h2>
+          <p>The complete submission includes concept sketches, a CAD prototype, a teacher handout with Florida B.E.S.T. standards alignment, a full activity script, and an answer key.</p>
+          <a href="../files/liquid-lift-design-project.pdf" target="_blank" rel="noopener noreferrer" class="glass-pill pdf-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            View Full Report (PDF)
+          </a>
+        </section>
+
+        <nav class="project-nav-bottom" data-animate="fade-up">
+          <a href="pet-sitting-business.html" class="glass-pill">← Pet Sitting</a>
+          <a href="../index.html#projects" class="glass-pill">All Projects →</a>
+        </nav>
+
+      </div>
+    </article>
+  </main>
+
+  <footer class="glass-footer">
+    <div class="container">
+      <p>Luana Kunzler Maldaner</p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js" type="module"></script>
+</body>
+</html>

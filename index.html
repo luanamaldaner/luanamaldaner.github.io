@@ -27,7 +27,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/main.css?v=3">
+  <link rel="stylesheet" href="css/main.css?v=5">
+
+  <style>
+    /* Firefly particles */
+    .firefly {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 3;
+      background: radial-gradient(circle, rgba(255, 245, 180, 0.95), rgba(255, 240, 150, 0.3) 50%, transparent 70%);
+    }
+
+    [data-theme="dark"] .firefly { display: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .firefly { animation: none; }
+    }
+  </style>
 </head>
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -270,33 +287,18 @@
             </div>
           </a>
         
-          <div class="project-preview project-wip" data-animate="fade-up">
-            <div class="project-preview-image project-wip-image">
-              <span class="wip-badge">Coming Soon</span>
+          <a href="projects/outreach-design.html" class="project-preview" data-animate="fade-up">
+            <div class="project-preview-image" style="background-image: url('images/outreach-cover.jpg'); background-size: contain; background-position: center; background-repeat: no-repeat;">
             </div>
             <div class="project-preview-content">
-              <h3 class="project-preview-title">Hacklytics</h3>
-              <p class="project-preview-desc">Data science and analytics hackathon at Georgia Tech.</p>
-              <div class="skill-flow" style="margin-top: var(--space-sm);">
-                <span class="glass-tag glass-tag-accent">Hackathon</span>
-                <span class="glass-tag">Feb 2026</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="project-preview project-wip" data-animate="fade-up">
-            <div class="project-preview-image project-wip-image">
-              <span class="wip-badge">Coming Soon</span>
-            </div>
-            <div class="project-preview-content">
-              <h3 class="project-preview-title">Engineering Design Competition</h3>
-              <p class="project-preview-desc">Outreach design competition for elementary and middle school students exploring engineering.</p>
+              <h3 class="project-preview-title">Liquid Lift <span style="font-weight: 400; font-size: 0.75em; color: #888; font-style: oblique 5deg;">- Outreach Design Comp.</span></h3>
+              <p class="project-preview-desc">Hydraulic arm activity teaching Pascal's Law to 6th–8th graders through a hands-on rescue mission challenge.</p>
               <div class="skill-flow" style="margin-top: var(--space-sm);">
                 <span class="glass-tag glass-tag-accent">Outreach</span>
                 <span class="glass-tag">Engineering</span>
               </div>
             </div>
-          </div>
+          </a>
         </div>
       </div>
     </section>
@@ -426,5 +428,6 @@
 
   <script src="js/main.js" type="module"></script>
   <script src="js/shooting-stars.js"></script>
+  <script src="js/fireflies.js"></script>
 </body>
 </html>
