@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DataFables - Turns any topic into a personalized illustrated kids' storybook with branching stories, vocab learning, and narration in 10 languages">
+  <title>DataFables | Luana Kunzler Maldaner</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/main.css?v=5">
+
+  <style>
+    .sunlight-rays {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .sun-ray {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: var(--w);
+      height: 200vh;
+      transform-origin: 0% 0%;
+      transform: rotate(var(--angle));
+      opacity: var(--o);
+      background: linear-gradient(
+        to bottom,
+        rgba(218, 165, 32, 0.45) 0%,
+        rgba(218, 165, 32, 0.2) 15%,
+        rgba(218, 165, 32, 0.06) 40%,
+        transparent 70%
+      );
+      animation: ray-breathe var(--dur) ease-in-out var(--del) infinite alternate;
+    }
+
+    @keyframes ray-breathe {
+      0%   { opacity: var(--o); }
+      100% { opacity: calc(var(--o) * 0.3); }
+    }
+
+    [data-theme="dark"] .sunlight-rays { display: none; }
+  </style>
+</head>
+<body>
+  <div class="ambient-bg" aria-hidden="true"></div>
+
+  <div class="sunlight-rays" aria-hidden="true">
+    <div class="sun-ray" style="--angle:15deg;  --w:6px;  --o:0.35; --dur:8s;  --del:0s;"></div>
+    <div class="sun-ray" style="--angle:22deg;  --w:40px; --o:0.12; --dur:11s; --del:-2s;"></div>
+    <div class="sun-ray" style="--angle:30deg;  --w:3px;  --o:0.4;  --dur:9s;  --del:-5s;"></div>
+    <div class="sun-ray" style="--angle:38deg;  --w:60px; --o:0.08; --dur:13s; --del:-1s;"></div>
+    <div class="sun-ray" style="--angle:44deg;  --w:5px;  --o:0.3;  --dur:10s; --del:-7s;"></div>
+    <div class="sun-ray" style="--angle:52deg;  --w:25px; --o:0.1;  --dur:12s; --del:-3s;"></div>
+    <div class="sun-ray" style="--angle:60deg;  --w:4px;  --o:0.25; --dur:9s;  --del:-6s;"></div>
+    <div class="sun-ray" style="--angle:68deg;  --w:35px; --o:0.07; --dur:14s; --del:-4s;"></div>
+    <div class="sun-ray" style="--angle:74deg;  --w:3px;  --o:0.2;  --dur:11s; --del:-8s;"></div>
+  </div>
+
+  <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+    <span class="theme-toggle-icon"></span>
+  </button>
+
+  <nav class="project-nav">
+    <div class="container">
+      <a href="../index.html" class="back-link">← Back</a>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <article class="project-article">
+      <div class="container container-narrow">
+
+        <header class="project-header" data-animate="fade-up">
+          <p class="project-meta">Hackathon · Data Science · Ed Tech</p>
+          <h1>DataFables</h1>
+          <p class="project-award">3rd Place — Entertainment Track · Hacklytics 2026</p>
+          <p class="project-intro">Turns any topic into a personalized illustrated kids' storybook with branching stories, vocab learning, and narration in 10 languages.</p>
+        </header>
+
+        <div class="project-hero-image" data-animate="fade-up" style="margin-bottom: var(--space-2xl); text-align: center;">
+          <img src="../images/datafables.png" alt="DataFables" style="max-width: 400px; width: 100%;">
+        </div>
+
+        <section class="project-section" data-animate="fade-up">
+          <h2>The Problem</h2>
+          <p>
+            Most educational screen time for kids is passive and generic. Children need interactive, personalized experiences that build literacy, creativity, and language skills simultaneously, without sacrificing engagement.
+          </p>
+        </section>
+
+        <section class="project-section" data-animate="fade-up">
+          <h2>The Solution</h2>
+          <p>
+            DataFables is an interactive storytelling platform where kids choose a genre, create a custom protagonist, and make choices that shape a uniquely generated illustrated story. Stories are calibrated to Lexile reading levels by age, offer pronunciation practice in 10 languages, and reward progress with XP and in-game currency for character customization.
+          </p>
+        </section>
+
+        <section class="project-section" data-animate="fade-up">
+          <h2>Features</h2>
+          <ul class="project-list">
+            <li><strong>Customizable Stories:</strong> Choose from 6 genres, design your protagonist, and make branching narrative choices</li>
+            <li><strong>Age-Appropriate Content:</strong> Stories match Lexile reading levels based on the reader's age range</li>
+            <li><strong>Language Learning:</strong> Pronunciation practice with instant feedback across 10 languages</li>
+            <li><strong>Reward System:</strong> Earn XP and in-game currency through story completion for character customization</li>
+            <li><strong>Global Accessibility:</strong> Fully multilingual interface and story generation</li>
+          </ul>
+        </section>
+
+        <section class="project-section" data-animate="fade-up">
+          <h2>My Contributions</h2>
+          <p>
+            I built the Snowflake integration that powers the knowledge base and implemented the achievements system, including XP tracking and reward logic tied to story completion milestones.
+          </p>
+        </section>
+
+        <section class="project-section" data-animate="fade-up">
+          <h2>Tech Stack</h2>
+          <div class="skill-flow">
+            <span class="skill-item">Snowflake</span>
+            <span class="skill-item">Google Gemini</span>
+            <span class="skill-item">VectorAI DB</span>
+            <span class="skill-item">ElevenLabs</span>
+            <span class="skill-item">SafetyKit</span>
+            <span class="skill-item">Next.js</span>
+            <span class="skill-item">React</span>
+            <span class="skill-item">TypeScript</span>
+          </div>
+        </section>
+
+        <section class="project-section" data-animate="fade-up">
+          <h2>Team</h2>
+          <div class="skill-flow">
+            <span class="skill-item">Luana Kunzler Maldaner</span>
+            <span class="skill-item">viv</span>
+            <span class="skill-item">jaime breitkreutz</span>
+            <span class="skill-item">Nicolas Murguia</span>
+          </div>
+        </section>
+
+        <section class="project-section" data-animate="fade-up">
+          <h2>Links</h2>
+          <p>
+            <a href="https://devpost.com/software/hacklytics-2026" target="_blank" rel="noopener noreferrer" class="glass-pill" style="display: inline-flex;">View on Devpost →</a>
+          </p>
+        </section>
+
+        <nav class="project-nav-bottom" data-animate="fade-up">
+          <a href="../index.html#projects" class="glass-pill">← All Projects</a>
+        </nav>
+
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Luana Kunzler Maldaner</p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js" type="module"></script>
+</body>
+</html>

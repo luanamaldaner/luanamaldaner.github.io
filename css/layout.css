@@ -51,8 +51,8 @@ body {
   content: '';
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.6;
+  filter: blur(30px);
+  opacity: 0.5;
   animation: ambientFloat 12s ease-in-out infinite;
 }
 
@@ -61,7 +61,7 @@ body {
   height: 500px;
   top: -150px;
   right: -100px;
-  background: linear-gradient(135deg, rgba(137, 194, 217, 0.5), rgba(78, 205, 196, 0.4));
+  background: linear-gradient(135deg, rgba(137, 194, 217, 0.9), rgba(78, 205, 196, 0.3), rgba(149, 213, 178, 0.15));
   animation-delay: 0s;
 }
 
@@ -70,7 +70,7 @@ body {
   height: 450px;
   bottom: -100px;
   left: -150px;
-  background: linear-gradient(135deg, rgba(149, 213, 178, 0.5), rgba(82, 183, 136, 0.4));
+  background: linear-gradient(135deg, rgba(149, 213, 178, 0.9), rgba(82, 183, 136, 0.3), rgba(78, 205, 196, 0.15));
   animation-delay: -6s;
 }
 
@@ -216,6 +216,10 @@ main {
 
 .content-group + .content-group {
   margin-top: var(--space-2xl);
+}
+
+.two-col .content-group + .content-group {
+  margin-top: 0;
 }
 
 /* Two-column responsive layout */
