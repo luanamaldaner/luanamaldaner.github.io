@@ -61,7 +61,7 @@
   height: 240px;
   top: 15%;
   left: -110px;
-  background: linear-gradient(315deg, rgba(149, 213, 178, 0.65) 0%, rgba(78, 205, 196, 0.45) 50%, transparent 80%);
+  background: linear-gradient(315deg, rgba(242, 150, 106, 0.55) 0%, rgba(232, 130, 90, 0.35) 50%, transparent 80%);
   animation: decoOrbit2 24s ease-in-out infinite;
 }
 

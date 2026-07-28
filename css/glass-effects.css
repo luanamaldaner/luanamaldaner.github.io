@@ -228,7 +228,9 @@
 }
 
 .glass-tag-accent {
-  color: var(--color-accent);
+  color: var(--color-accent-2);
+  background: var(--color-accent-2-subtle);
+  border-color: rgba(232, 130, 90, 0.2);
 }
 
 .glass-tag:hover {

@@ -30,6 +30,11 @@
   --color-mint: #95d5b2;
   --color-sky: #89c2d9;
 
+  /* Secondary accent - Coral (warm complement, used sparingly) */
+  --color-accent-2: #e8825a;
+  --color-accent-2-hover: #ef9a72;
+  --color-accent-2-subtle: rgba(232, 130, 90, 0.12);
+
   /* ========================================
      GLASS MATERIAL
      ======================================== */
@@ -155,6 +160,10 @@
   --color-accent: #4ecdc4;
   --color-accent-hover: #5fd9d1;
   --color-accent-subtle: rgba(78, 205, 196, 0.15);
+
+  --color-accent-2: #f2966a;
+  --color-accent-2-hover: #f7ab85;
+  --color-accent-2-subtle: rgba(242, 150, 106, 0.18);
 
   --glass-bg: rgba(20, 31, 29, 0.85);
   --glass-bg-hover: rgba(26, 40, 38, 0.9);
