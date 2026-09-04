@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Liquid Lift – A hydraulic arm outreach activity designed for 6th–8th graders, built for the UF Outreach Design Competition 2026.">
+  <meta name="description" content="Liquid Lift - A hydraulic arm outreach activity designed for 3rd-5th graders, built for the UF Outreach Design Competition 2026.">
   <title>Liquid Lift | Luana Kunzler Maldaner</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/minecraft-theme.css?v=65">
 
   <style>
     .sketch-grid {
@@ -102,6 +103,13 @@
   </style>
 </head>
 <body>
+  <!-- Minecraft panorama. Held on one backdrop here; the sub-pages are short
+       and a mid-page dissolve would land arbitrarily. -->
+  <div class="mc-panorama" data-mode="single" aria-hidden="true">
+    <div class="mc-pano mc-pano-1"></div>
+    <div class="mc-pano-scrim"></div>
+  </div>
+
   <div class="ambient-bg" aria-hidden="true"></div>
 
   <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
@@ -121,8 +129,8 @@
         <header class="project-header" data-animate="fade-up">
           <p class="project-meta">University of Florida · Outreach Design Competition 2026</p>
           <h1>Liquid Lift</h1>
-          <p class="project-award">3rd Place - 6th to 8th Grade Track</p>
-          <p class="project-intro">A hydraulic arm outreach activity that teaches 6th–8th graders Pascal's Law and mechanical advantage through a hands-on "rescue mission" challenge.</p>
+          <p class="project-award">3rd Place - 3rd to 5th Grade Track</p>
+          <p class="project-intro">A hydraulic arm outreach activity that teaches 3rd-5th graders Pascal's Law and mechanical advantage through a hands-on "rescue mission" challenge.</p>
         </header>
 
         <!-- Team Photo -->
@@ -134,12 +142,12 @@
         <section class="project-section" data-animate="fade-up">
           <h2>Activity Overview</h2>
           <p>
-            Students operate a tabletop robotic arm powered by water-filled syringes and clear tubing. By pushing and pulling syringe plungers, they control the arm to grab and move small objects in a "rescue mission" challenge — discovering how hydraulic pressure transfers force, the same principle behind excavators, car brakes, and prosthetic limbs.
+            Students operate a tabletop robotic arm powered by water-filled syringes and clear tubing. By pushing and pulling syringe plungers, they control the arm to grab and move small objects in a "rescue mission" challenge - discovering how hydraulic pressure transfers force, the same principle behind excavators, car brakes, and prosthetic limbs.
           </p>
           <div class="skill-flow" style="margin-top: var(--space-md);">
-            <span class="skill-item">Grade 6–8</span>
+            <span class="skill-item">Grade 6-8</span>
             <span class="skill-item">Mechanical Engineering</span>
-            <span class="skill-item">Biomedical Engineering</span>
+            <span class="skill-item">Data Science &amp; Microbiology</span>
           </div>
         </section>
 
@@ -160,14 +168,14 @@
             <div class="sketch-card">
               <img src="../images/outreach-tabletop-sketch.jpg" alt="Bird's eye view of the tabletop layout with tri-fold poster, hydraulic arm, rescue zone, and syringe controls">
               <div class="sketch-card-body">
-                <h3>Sketch 1 — Tabletop Layout</h3>
+                <h3>Sketch 1 - Tabletop Layout</h3>
                 <p>Bird's eye view of the full setup: tri-fold poster at back (excavator, prosthetic arm, brake system), hydraulic arm center-table, rescue zone with toy objects, and laminated vocabulary cards.</p>
               </div>
             </div>
             <div class="sketch-card">
               <img src="../images/outreach-gripper-sketch.jpg" alt="Gripper mechanism close-up showing syringe A and B connected by clear tubing and hydraulic connector">
               <div class="sketch-card-body">
-                <h3>Sketch 2 — Gripper Mechanism</h3>
+                <h3>Sketch 2 - Gripper Mechanism</h3>
                 <p>Side-view cross-section of the hydraulic mechanism. Syringe A connects via colored water tubing to Syringe B at the joint. Two popsicle-stick "fingers" open and close via syringe pressure; rubber bands snap the gripper closed.</p>
               </div>
             </div>
@@ -176,7 +184,7 @@
 
         <!-- Team -->
         <section class="project-section" data-animate="fade-up">
-          <h2>Team — Data Science &amp; Informatics</h2>
+          <h2>Team - Data Science &amp; Informatics</h2>
           <table class="team-table">
             <thead>
               <tr>
@@ -186,7 +194,7 @@
             </thead>
             <tbody>
               <tr><td>Matheus Maldaner</td><td>AI Systems</td></tr>
-              <tr><td>Luana Maldaner</td><td>Biomedical Engineering</td></tr>
+              <tr><td>Luana Maldaner</td><td>Data Science &amp; Microbiology</td></tr>
               <tr><td>Alfred Navarro</td><td>Computer Engineering</td></tr>
               <tr><td>Nicolas Murguia</td><td>Data Science &amp; Physics</td></tr>
               <tr><td>Pranav Bhargava</td><td>Computer Science</td></tr>

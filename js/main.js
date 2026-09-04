@@ -5,11 +5,17 @@
 
 import ThemeSwitcher from './theme-switcher.js';
 import ScrollAnimations from './scroll-animations.js';
+import Panorama from './panorama.js';
+import Splash from './splash.js';
+import Music from './music.js';
 
 class App {
   constructor() {
     this.themeSwitcher = null;
     this.scrollAnimations = null;
+    this.panorama = null;
+    this.splash = null;
+    this.music = null;
     this.nav = null;
     this.lastScrollY = 0;
     this.ticking = false;
@@ -27,6 +33,9 @@ class App {
 
   onReady() {
     this.initThemeSwitcher();
+    this.initPanorama();
+    this.initSplash();
+    this.initMusic();
     this.initScrollAnimations();
     this.initSmoothScroll();
     this.initScrollProgress();
@@ -40,6 +49,30 @@ class App {
       this.themeSwitcher = new ThemeSwitcher();
     } catch (e) {
       console.error('Theme switcher error:', e);
+    }
+  }
+
+  initPanorama() {
+    try {
+      this.panorama = new Panorama();
+    } catch (e) {
+      console.error('Panorama error:', e);
+    }
+  }
+
+  initSplash() {
+    try {
+      this.splash = new Splash();
+    } catch (e) {
+      console.error('Splash error:', e);
+    }
+  }
+
+  initMusic() {
+    try {
+      this.music = new Music();
+    } catch (e) {
+      console.error('Music error:', e);
     }
   }
 
@@ -157,10 +190,12 @@ class App {
             this.nav.classList.remove('hidden');
           }
 
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
+          // Sections carry 64px of top padding, so aligning the section's
+          // top edge to the viewport left the heading sitting low with a
+          // dead gap above it. Scroll past most of that padding.
+          const ANCHOR_OFFSET = 52;
+          const y = target.getBoundingClientRect().top + window.scrollY + ANCHOR_OFFSET;
+          window.scrollTo({ top: y, behavior: 'smooth' });
 
           // Update URL
           history.pushState(null, null, href);

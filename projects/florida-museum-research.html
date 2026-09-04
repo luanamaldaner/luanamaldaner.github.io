@@ -11,8 +11,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/minecraft-theme.css?v=65">
 </head>
 <body>
+  <!-- Minecraft panorama. Held on one backdrop here; the sub-pages are short
+       and a mid-page dissolve would land arbitrarily. -->
+  <div class="mc-panorama" data-mode="single" aria-hidden="true">
+    <div class="mc-pano mc-pano-1"></div>
+    <div class="mc-pano-scrim"></div>
+  </div>
+
   <div class="ambient-bg" aria-hidden="true"></div>
 
   <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
@@ -44,16 +52,16 @@
 
         <figure class="project-image" data-animate="fade-up">
           <img src="../images/dickinson-hall.jpg" alt="Dickinson Hall at the University of Florida, home of the Florida Museum of Natural History">
-          <figcaption>Dickinson Hall — Home of the Florida Museum of Natural History</figcaption>
+          <figcaption>Dickinson Hall - Home of the Florida Museum of Natural History</figcaption>
         </figure>
 
         <section class="project-section" data-animate="fade-up">
           <h2>What I Do</h2>
           <ul class="project-list">
-            <li><strong>Specimen Curation</strong> — Handling and organizing plant specimens according to scientific standards</li>
-            <li><strong>Digital Photography</strong> — Capturing high-quality images for digital archives</li>
-            <li><strong>Database Management</strong> — Entering specimen information into research databases</li>
-            <li><strong>Mounting & Filing</strong> — Properly mounting specimens on herbarium sheets</li>
+            <li><strong>Specimen Curation</strong> - Handling and organizing plant specimens according to scientific standards</li>
+            <li><strong>Digital Photography</strong> - Capturing high-quality images for digital archives</li>
+            <li><strong>Database Management</strong> - Entering specimen information into research databases</li>
+            <li><strong>Mounting & Filing</strong> - Properly mounting specimens on herbarium sheets</li>
           </ul>
         </section>
 

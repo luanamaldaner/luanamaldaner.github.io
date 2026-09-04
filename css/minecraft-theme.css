@@ -1,0 +1,1382 @@
+/**
+ * Minecraft Theme  (v3 — panorama pass)
+ * Loaded after main.css.
+ *
+ * The v2 approach — small flat sprites scattered on a CSS gradient — read as
+ * sparse and off-scale. This version follows how Minecraft's own title screen
+ * works instead:
+ *
+ *   1. A full-bleed photographic PANORAMA sits fixed behind everything.
+ *      Three acts (cherry grove -> underground -> lush cave) cross-fade as
+ *      you scroll. Day/night swaps the act-1 image on the theme toggle.
+ *   2. The GUI floats on top of it. Buttons are vanilla MC grey buttons
+ *      (blue-grey + yellow text on hover). Text panels use the MC tooltip
+ *      treatment — near-black translucent with the purple gradient border —
+ *      so the scenery stays visible through the gaps instead of being
+ *      covered by big grey boxes.
+ *   3. Everything bevels on a strict 2px/3px grid so nothing looks off-scale.
+ *
+ * Panorama images are expected at images/panorama/ (see README note below).
+ * Until they exist, each act falls back to a flat colour so the site still
+ * renders — it just won't be scenic yet.
+ */
+
+@font-face {
+  font-family: 'Monocraft';
+  src: url('../fonts/Monocraft.ttf') format('truetype');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+:root {
+  --font-primary: 'Monocraft', 'Courier New', monospace;
+
+  /* --- Vanilla GUI greys (widgets.png) --- */
+  --mc-btn-top: #8d8d8d;
+  --mc-btn-bot: #5e5e5e;
+  --mc-btn-hi: rgba(255, 255, 255, 0.35);
+  --mc-btn-lo: rgba(0, 0, 0, 0.45);
+  --mc-btn-hover-top: #a6b2c6;   /* MC highlights buttons blue-grey */
+  --mc-btn-hover-bot: #6e7b8f;
+  --mc-outline: #000000;
+
+  /* --- Tooltip / advancement panel --- */
+  --mc-tip-bg: rgba(16, 11, 24, 0.74);
+  --mc-tip-bg-solid: #100a16;
+  --mc-tip-border-a: #4b2ba8;    /* purple gradient border, top */
+  --mc-tip-border-b: #2b1a5e;    /* purple gradient border, bottom */
+
+  /* --- Text --- */
+  --mc-light: #ffffff;
+  --mc-light-soft: #d8d8d8;
+  --mc-gold: #fcdc5f;            /* menu title / hovered button gold */
+  --mc-yellow: #ffffa0;
+  --mc-green: #7cb342;
+  --mc-aqua: #55ffff;
+  --mc-pink: #f4bede;
+  --mc-textshadow: #3f3f3f;
+
+  /* --- Remap the site's existing tokens --- */
+  --color-bg-primary: #0f1116;
+  --color-bg-secondary: #0b0d11;
+  --color-bg-tertiary: var(--mc-tip-bg-solid);
+
+  --color-text-primary: var(--mc-light);
+  --color-text-secondary: var(--mc-light-soft);
+  --color-text-tertiary: #a8a8a8;
+
+  --color-accent: var(--mc-green);
+  --color-accent-hover: #93cc57;
+  --color-accent-light: #a5e06a;
+  --color-accent-subtle: rgba(124, 179, 66, 0.18);
+
+  --color-accent-2: var(--mc-gold);
+  --color-accent-2-hover: #ffe884;
+  --color-accent-2-subtle: rgba(252, 220, 95, 0.22);
+
+  --color-sky: var(--mc-aqua);
+  --color-green: var(--mc-green);
+  --color-mint: var(--mc-aqua);
+
+  --glass-bg: var(--mc-tip-bg);
+  --glass-bg-hover: rgba(30, 21, 42, 0.60);
+  --glass-bg-strong: rgba(14, 9, 22, 0.62);
+  --glass-bg-subtle: rgba(16, 11, 24, 0.66);
+  --glass-border: var(--mc-outline);
+  --glass-border-subtle: var(--mc-outline);
+  --glass-blur: 0px;
+  --glass-blur-strong: 0px;
+  --glass-blur-subtle: 0px;
+  --glass-highlight: none;
+  --glass-highlight-strong: none;
+  --glass-shadow: 0 4px 0 0 rgba(0, 0, 0, 0.55);
+  --glass-shadow-elevated: 0 6px 0 0 rgba(0, 0, 0, 0.6);
+  --glass-glow: none;
+}
+
+/* ========================================
+   GLOBAL
+   ======================================== */
+
+body {
+  font-family: var(--font-primary);
+  color: var(--mc-light);
+  background: #0f1116;
+}
+
+/* Real photos must not be pixelated */
+img,
+.profile-photo,
+.experience-card-image img,
+.carousel-slide,
+.project-preview-image {
+  image-rendering: auto;
+}
+
+/* Kill leftover glass-era ambiance */
+.ambient-bg,
+.sunlight-rays,
+.sun-ray,
+.deco-shapes,
+.deco-shape,
+.deco-float,
+.firefly,
+.shooting-stars,
+.section-divider {
+  display: none !important;
+}
+
+h1, h2, h3, .site-title, .section-title, .hero-title,
+.leadership-role, .education-school, .experience-title,
+.award-title, .project-preview-title, .skill-category,
+.section-label, .nav-link, .site-subtitle {
+  letter-spacing: 0 !important;
+  font-family: var(--font-primary);
+}
+
+/* ========================================
+   PANORAMA — the fixed scenic backdrop
+   ======================================== */
+
+.mc-panorama {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mc-pano {
+  position: absolute;
+  /* oversized so the slow pan never exposes an edge */
+  top: -3%;
+  left: -3%;
+  width: 106%;
+  height: 106%;
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  will-change: opacity;
+  animation: mcPanoDrift 64s ease-in-out infinite alternate;
+}
+
+/* Four backdrops, chosen for distinct palettes so it doesn't read as three
+   sunsets in a row: warm sunset -> lavender day -> turquoise water -> warm
+   sunset. All layers share identical drift timing; when they drifted apart
+   the scene appeared to slide sideways mid-dissolve. */
+.mc-pano-1 { opacity: 1; background-color: #6f5b7a; }
+.mc-pano-2 { background-color: #8f6fb0; }
+.mc-pano-3 { background-color: #4fb0a8; }
+.mc-pano-4 { background-color: #c98b46; }
+
+.mc-pano-1 { background-image: url('../images/panorama/act1_day.jpg'); }
+.mc-pano-2 { background-image: url('../images/panorama/act2_day.jpg'); }
+.mc-pano-3 { background-image: url('../images/panorama/act3_day.jpg'); }
+.mc-pano-4 { background-image: url('../images/panorama/act4_day.jpg'); }
+
+[data-theme="dark"] .mc-pano-1 { background-image: url('../images/panorama/act1_night.jpg'); background-color: #131a2e; }
+[data-theme="dark"] .mc-pano-2 { background-image: url('../images/panorama/act2_night.jpg'); background-color: #241a33; }
+[data-theme="dark"] .mc-pano-3 { background-image: url('../images/panorama/act3_night.jpg'); background-color: #0f2b30; }
+[data-theme="dark"] .mc-pano-4 { background-image: url('../images/panorama/act4_night.jpg'); background-color: #1a2340; }
+
+@keyframes mcPanoDrift {
+  from { transform: translate3d(-1.4%, 0, 0) scale(1.03); }
+  to   { transform: translate3d(1.4%, -0.8%, 0) scale(1.06); }
+}
+
+/* Readability scrim. MC darkens its own panorama behind menus for exactly
+   this reason. Kept light so the scenery still reads as the subject. */
+.mc-pano-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom,
+      rgba(0, 0, 0, 0.42) 0%,
+      rgba(0, 0, 0, 0.24) 22%,
+      rgba(0, 0, 0, 0.24) 78%,
+      rgba(0, 0, 0, 0.46) 100%),
+    radial-gradient(120% 80% at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.38) 100%);
+}
+
+[data-theme="dark"] .mc-pano-scrim {
+  background:
+    linear-gradient(to bottom,
+      rgba(0, 0, 0, 0.5) 0%,
+      rgba(0, 0, 0, 0.32) 22%,
+      rgba(0, 0, 0, 0.32) 78%,
+      rgba(0, 0, 0, 0.55) 100%),
+    radial-gradient(120% 80% at 50% 50%, transparent 38%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+/* ========================================
+   WEATHER — petals by day, fireflies by night
+   ======================================== */
+
+.mc-weather {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mc-petal {
+  position: absolute;
+  top: -24px;
+  width: 8px;
+  height: 8px;
+  background: #f0a8d2;
+  box-shadow: inset -2px -2px 0 0 rgba(0, 0, 0, 0.18);
+  image-rendering: pixelated;
+  opacity: 0;
+  animation: mcPetalFall linear infinite;
+}
+
+.mc-petal:nth-child(even) { background: #f8cfe6; width: 6px; height: 6px; }
+.mc-petal:nth-child(3n)   { background: #e58bbe; }
+
+@keyframes mcPetalFall {
+  0%   { transform: translate3d(0, -10vh, 0); opacity: 0; }
+  8%   { opacity: 0.95; }
+  50%  { transform: translate3d(40px, 50vh, 0); }
+  92%  { opacity: 0.8; }
+  100% { transform: translate3d(-20px, 112vh, 0); opacity: 0; }
+}
+
+[data-theme="dark"] .mc-petal { opacity: 0; animation: none; display: none; }
+
+/* fireflies only at night */
+.mc-firefly-mc {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff3b0;
+  box-shadow: 0 0 8px 3px rgba(255, 224, 130, 0.75);
+  opacity: 0;
+  display: none;
+}
+
+[data-theme="dark"] .mc-firefly-mc {
+  display: block;
+  animation: mcFireflyBob 12s ease-in-out infinite;
+}
+
+@keyframes mcFireflyBob {
+  0%, 100% { transform: translate3d(0, 0, 0);        opacity: 0.15; }
+  25%      { transform: translate3d(26px, -34px, 0); opacity: 0.95; }
+  50%      { transform: translate3d(58px, -8px, 0);  opacity: 0.5; }
+  75%      { transform: translate3d(22px, -44px, 0); opacity: 0.9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-pano, .mc-petal, .mc-firefly-mc { animation: none; }
+}
+
+/* ========================================
+   TEXT
+   ======================================== */
+
+.section-title,
+.site-title,
+.hero-title,
+.section-desc,
+.section-label,
+.site-subtitle,
+.hero-subtitle,
+.hero-location,
+.meta-text,
+.site-footer,
+.site-footer p {
+  color: var(--mc-light);
+  text-shadow: 2px 2px 0 var(--mc-textshadow);
+}
+
+.site-title,
+.section-title,
+.hero-title {
+  text-shadow: 3px 3px 0 var(--mc-textshadow);
+}
+
+.section-title { color: var(--mc-gold); }
+.section-label { color: var(--mc-green); }
+
+/* ========================================
+   PANELS — MC tooltip treatment
+   Dark + translucent so the panorama reads through the page, with the
+   vanilla purple gradient border drawn via a layered background.
+   ======================================== */
+
+.glass-panel,
+.glass-panel-subtle,
+.glass-panel-strong,
+.experience-card,
+.project-preview,
+.award-item,
+.contact-item,
+.leadership-entry,
+.education-entry,
+.skill-group,
+#about .content-group {
+  position: relative;
+  --tip-a: #4b2ba8;            /* vanilla tooltip border, top */
+  --tip-b: #2b1a5e;            /* ...fading toward the bottom */
+  background: var(--mc-tip-bg);
+  border: 2px solid var(--mc-outline);
+  border-radius: 0;
+  /* Only the drop shadow lives here. The purple ring is drawn once, by the
+     ::after below — previously it was ALSO drawn as an inset box-shadow, so
+     every panel carried two stacked rings. */
+  box-shadow: 0 4px 0 0 rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(5px) saturate(1.05);
+  -webkit-backdrop-filter: blur(5px) saturate(1.05);
+  color: var(--mc-light);
+  transition: transform 0.1s steps(2), box-shadow 0.1s steps(2);
+}
+
+/* The single purple ring, as a top-to-bottom gradient like vanilla. The
+   selector list matches the one above exactly — glass-panel-subtle,
+   glass-panel-strong and contact-item were previously missing from it and
+   rendered a flat ring while their neighbours had a gradient. */
+.glass-panel::after,
+.glass-panel-subtle::after,
+.glass-panel-strong::after,
+.experience-card::after,
+.project-preview::after,
+.award-item::after,
+.contact-item::after,
+.leadership-entry::after,
+.education-entry::after,
+.skill-group::after,
+#about .content-group::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--tip-a) 0%, var(--tip-b) 100%);
+  border: 2px solid transparent;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.leadership-entry,
+.education-entry,
+.skill-group,
+#about .content-group {
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.education-entry:last-child { margin-bottom: 0; }
+
+/* Light text inside the dark panels, with the MC shadow. */
+.experience-card p, .experience-card li, .experience-card span, .experience-card h3,
+.project-preview-content p, .project-preview-content li, .project-preview-content span, .project-preview-content h3,
+.award-item p, .award-item span, .award-item h3, .award-item div,
+.leadership-entry p, .leadership-entry span,
+.education-entry p, .education-entry span,
+#about .content-group p, #about .content-group h2, #about .content-group span,
+.skill-group .skill-category {
+  color: var(--mc-light);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.75);
+}
+
+.experience-company,
+.leadership-org,
+.education-degree,
+.project-preview-title,
+.skill-group .skill-category {
+  color: var(--mc-gold) !important;
+}
+
+.experience-card:hover,
+.project-preview:hover,
+.award-item:hover {
+  transform: translateY(-2px);
+  --tip-a: #6f4ae0;
+  --tip-b: #3d2680;
+  box-shadow: 0 6px 0 0 rgba(0, 0, 0, 0.55);
+}
+
+.experience-card-image {
+  border-bottom: 2px solid var(--mc-outline);
+}
+
+.winner-banner {
+  background: var(--mc-gold);
+  color: #3a2c05;
+  border-top: 2px solid var(--mc-outline);
+  border-bottom: 2px solid var(--mc-outline);
+  text-shadow: none;
+}
+
+/* ========================================
+   SLOTS — tags & skill chips (sunken GUI slot)
+   ======================================== */
+
+.glass-tag,
+.skill-item,
+.project-tag {
+  background: #2a2a2a;
+  border: 2px solid var(--mc-outline);
+  border-radius: 0;
+  box-shadow:
+    inset 2px 2px 0 0 rgba(0, 0, 0, 0.55),
+    inset -2px -2px 0 0 rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.75);
+  /* the inherited padding squashed these into unreadable slivers */
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px !important;
+  min-height: 30px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.skill-flow,
+.project-preview-content .skill-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+/* ========================================
+   PROJECTS
+   ======================================== */
+
+/* Cards were stretching to the tallest sibling, leaving big voids under the
+   short descriptions. Let each size to its own content instead. */
+.projects-grid {
+  align-items: stretch;
+}
+
+.project-preview-content {
+  padding: var(--space-lg);
+}
+
+/* the "- Hacklytics 2026" style sub-label: was #888 oblique on a dark panel */
+.project-preview-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.7em;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--mc-aqua);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+.project-preview-desc {
+  color: var(--mc-light-soft) !important;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.75);
+  line-height: 1.5;
+}
+
+.glass-tag:hover,
+.skill-item:hover {
+  background: #3a3a3a;
+  color: var(--mc-yellow);
+}
+
+.glass-tag-accent {
+  background: #4a3a08;
+  border-color: var(--mc-outline);
+  color: var(--mc-gold);
+}
+
+/* ========================================
+   BUTTONS — vanilla Minecraft widget buttons
+   ======================================== */
+
+/* Stone grain tile blended over the face — a flat gradient alone reads as a
+   generic web button, the grain is what makes it read as MC widget texture. */
+.nav-link,
+.social-icon,
+.theme-toggle,
+.carousel-btn {
+  background-image:
+    url('../images/textures/gui_grain.png'),
+    linear-gradient(to bottom,
+      var(--mc-btn-top) 0%,
+      var(--mc-btn-top) 46%,
+      #6a6a6a 46%,
+      var(--mc-btn-bot) 100%);
+  background-size: 24px 24px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: overlay, normal;
+  image-rendering: pixelated;
+  border: 2px solid var(--mc-outline);
+  border-radius: 0;
+  box-shadow:
+    inset 0 2px 0 0 var(--mc-btn-hi),
+    inset 2px 0 0 0 rgba(255, 255, 255, 0.18),
+    inset 0 -2px 0 0 var(--mc-btn-lo),
+    inset -2px 0 0 0 rgba(0, 0, 0, 0.3);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #ffffff;
+  text-shadow: 2px 2px 0 var(--mc-textshadow);
+  transition: none;
+}
+
+.nav-link { text-decoration: none; }
+
+/* MC hover: button face goes blue-grey, label goes yellow. */
+.nav-link:hover,
+.social-icon:hover,
+.theme-toggle:hover,
+.carousel-btn:hover {
+  background-image:
+    url('../images/textures/gui_grain.png'),
+    linear-gradient(to bottom,
+      var(--mc-btn-hover-top) 0%,
+      var(--mc-btn-hover-top) 46%,
+      #7d8a9e 46%,
+      var(--mc-btn-hover-bot) 100%);
+  border-color: var(--mc-outline);
+  color: var(--mc-yellow);
+}
+
+.nav-link:active,
+.social-icon:active,
+.theme-toggle:active {
+  box-shadow:
+    inset 0 2px 0 0 var(--mc-btn-lo),
+    inset 0 -2px 0 0 var(--mc-btn-hi);
+}
+
+.nav-link.active {
+  background: linear-gradient(to bottom, #5f8f36 0%, #5f8f36 46%, #4c7a2a 46%, #40691f 100%);
+  color: #ffffff;
+}
+
+/* Profile photo — framed like a GUI slot */
+.profile-photo,
+.profile-placeholder {
+  border-radius: 0;
+  border: 3px solid var(--mc-outline);
+  box-shadow:
+    inset 2px 2px 0 0 rgba(0, 0, 0, 0.4),
+    inset -2px -2px 0 0 rgba(255, 255, 255, 0.25),
+    0 4px 0 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Timeline dots/line from the old theme */
+.experience-item { padding-left: 0; }
+.experience-item::before,
+.experience-item::after { display: none; }
+
+/* ========================================
+   SECTION LABEL — grass-block bullet
+   ======================================== */
+
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-label::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: url('../images/textures/grass_top.png');
+  background-size: 12px 12px;
+  image-rendering: pixelated;
+  border: 1px solid var(--mc-outline);
+}
+
+.text-center.section-label { justify-content: center; }
+
+/* ========================================
+   XP BAR — top scroll progress
+   ======================================== */
+
+.scroll-progress {
+  height: 8px;
+  background: #6ede2e;
+  box-shadow: inset 0 -3px 0 0 #4a9e1f, 0 1px 0 0 var(--mc-outline);
+}
+
+/* Content must sit above any decorative layer inside a section. */
+.section > .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ========================================
+   TITLE SCREEN
+   The header is laid out like Minecraft's main menu: logo up top with an
+   angled yellow splash, a centred stack of wide buttons, and small print
+   pinned to the bottom corners.
+   ======================================== */
+
+.site-header {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* generous top padding so the portrait clears the progress bar instead of
+     being clipped when the stack is taller than the viewport */
+  padding: calc(var(--space-2xl) + 40px) var(--space-lg) calc(var(--space-2xl) + 34px);
+  overflow: visible;
+}
+
+.site-header .header-content,
+.site-header .header-info,
+.site-header .header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  gap: 0;
+}
+
+/* ---- avatar ----
+   Minecraft player standing at the right of the title screen. */
+/* Vertically centred on the header so it lines up with the title and menu
+   block, rather than being pinned to the bottom edge independently of them.
+   The -50% is baked into the bob keyframes since both use `transform`. */
+.mc-avatar {
+  position: absolute;
+  right: clamp(16px, 7vw, 150px);
+  top: 50%;
+  height: clamp(240px, 46vh, 430px);
+  width: auto;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.5));
+  animation: mcAvatarBob 4.2s ease-in-out infinite alternate;
+}
+
+/* nudged below dead centre so it sits lower against the button stack */
+@keyframes mcAvatarBob {
+  from { transform: translateY(calc(-50% + 30px)); }
+  to   { transform: translateY(calc(-50% + 23px)); }
+}
+
+/* ---- title ----
+   Flat Minecraft UI text. The extruded stone wordmark read as airbrushed;
+   MC's own interface type is simply white with a hard offset shadow. */
+.mc-logo-block {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 26px;
+}
+
+.site-title.mc-logo {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.7vw, 3.5rem);
+  line-height: 1.1;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-shadow: 4px 4px 0 var(--mc-textshadow);
+}
+
+/* ---- major ---- */
+.mc-major {
+  /* extra top gap opens the band the splash drops into */
+  margin: 30px 0 0;
+  color: var(--mc-light-soft);
+  font-size: clamp(0.72rem, 1.5vw, 1.1rem);
+  text-shadow: 2px 2px 0 var(--mc-textshadow);
+}
+
+/* ---- splash text ----
+   Diagonal, hanging off the LOWER-RIGHT of the title block — the corner MC
+   hangs "Full of stars!" from. It sits in the empty wedge to the right of the
+   (narrower, centred) major line, so it clears the name entirely rather than
+   printing across the last letters.
+   Splash strings must stay short or the rotation sweeps into the major line. */
+.mc-splash {
+  position: absolute;
+  right: -58px;
+  top: 47%;
+  transform-origin: center;
+  color: #ffff00;
+  font-size: clamp(0.68rem, 1.25vw, 1.02rem);
+  text-shadow: 2px 2px 0 #3f3f00;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: mcSplash 0.85s ease-in-out infinite alternate;
+}
+
+@keyframes mcSplash {
+  from { transform: rotate(-22deg) scale(1); }
+  to   { transform: rotate(-22deg) scale(1.06); }
+}
+
+.site-header .site-subtitle {
+  margin: var(--space-md) 0 var(--space-xl);
+  font-size: clamp(0.8rem, 2vw, 1rem);
+}
+
+/* ---- the button stack ---- */
+.main-nav.mc-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(420px, 88vw);
+  margin: 0 auto;
+}
+
+.mc-menu .nav-link {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  padding: 0 12px;
+}
+
+/* social icons become the small square buttons on the bottom row */
+.site-header .social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: var(--space-lg);
+  order: 2;
+}
+
+.site-header .social-icon {
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- bottom corner small print ---- */
+.mc-version,
+.mc-attrib {
+  position: absolute;
+  bottom: 8px;
+  margin: 0;
+  font-size: clamp(0.6rem, 1.4vw, 0.8rem);
+  color: #ffffff;
+  text-shadow: 2px 2px 0 var(--mc-textshadow);
+  pointer-events: none;
+}
+
+.mc-version { left: 10px; }
+.mc-attrib  { right: 10px; }
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+/* Below this the title's right edge (where the splash pins) reaches the
+   avatar. There isn't room for title + diagonal splash + avatar. */
+@media (max-width: 900px) {
+  .mc-avatar { display: none; }
+}
+
+/* Below this the title has narrowed enough that a corner diagonal crosses the
+   major line and the avatar. Fall back to level and centred. The avatar's own
+   breakpoint above is deliberately left alone. */
+@media (max-width: 1000px) {
+  .mc-splash {
+    position: static;
+    display: inline-block;
+    margin-top: 18px;
+    white-space: normal;
+  }
+  @keyframes mcSplash {
+    from { transform: scale(1); }
+    to   { transform: scale(1.06); }
+  }
+}
+
+@media (max-width: 700px) {
+  .mc-pano { animation: none; }
+  .mc-petal { width: 6px; height: 6px; }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-splash { animation: none; }
+}
+
+/* ========================================
+   ENTRY TITLES
+   Monocraft renders small for its point size — at 19px these were hard to
+   read against the scenery. Bumped and given a heavier shadow.
+   ======================================== */
+
+.education-school {
+  font-size: 25px !important;
+}
+
+.experience-title {
+  font-size: 24px !important;
+  line-height: 1.25;
+}
+
+.leadership-role,
+.project-preview-title,
+.award-title {
+  font-size: 22px !important;
+  line-height: 1.25;
+}
+
+.experience-company,
+.leadership-org,
+.education-degree {
+  font-size: 17px !important;
+}
+
+.experience-title,
+.education-school,
+.leadership-role,
+.project-preview-title,
+.award-title {
+  text-shadow:
+    2px 2px 0 rgba(0, 0, 0, 0.95),
+    3px 3px 0 rgba(0, 0, 0, 0.7),
+    0 0 8px rgba(0, 0, 0, 0.85);
+}
+
+@media (max-width: 700px) {
+  .experience-title,
+  .education-school { font-size: 21px !important; }
+  .leadership-role,
+  .project-preview-title,
+  .award-title { font-size: 18px !important; }
+  .experience-company,
+  .leadership-org,
+  .education-degree { font-size: 16px !important; }
+}
+
+/* ========================================
+   SECTION HEADINGS ON SCENERY
+   No backing plate — a dark halo built from stacked shadows keeps the type
+   legible over bright scenery without boxing it in.
+   ======================================== */
+
+.section-label,
+.section-title,
+.section-desc {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  text-shadow:
+    0 0 10px rgba(0, 0, 0, 0.95),
+    0 0 4px rgba(0, 0, 0, 0.9),
+    2px 2px 0 rgba(0, 0, 0, 0.9),
+    -2px 2px 0 rgba(0, 0, 0, 0.7),
+    2px -2px 0 rgba(0, 0, 0, 0.7),
+    -2px -2px 0 rgba(0, 0, 0, 0.7);
+}
+
+.section-label { color: #a6e457; }
+
+/* ========================================
+   META LINES — separate the facts with dots
+   ======================================== */
+
+.experience-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 9px;
+}
+
+.experience-meta span + span::before {
+  content: '·';
+  margin-right: 9px;
+  opacity: 0.75;
+}
+
+.experience-meta span,
+.leadership-date,
+.education-meta {
+  color: var(--mc-light-soft) !important;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+/* ========================================
+   DATES — pushed to the right edge of their panel
+   ======================================== */
+
+.experience-meta {
+  justify-content: flex-end;
+  text-align: right;
+  width: 100%;
+}
+
+/* Only single-line dates go right. The education meta carries three facts
+   and wraps, and right-aligning a wrapped line just leaves a ragged indent. */
+.leadership-date {
+  display: block;
+  text-align: right;
+}
+
+/* ========================================
+   MUSIC BUTTON — note block, sits under the theme toggle
+   ======================================== */
+
+.mc-music-btn {
+  top: calc(var(--space-lg) + 62px) !important;
+  cursor: pointer;
+}
+
+.mc-music-btn svg { image-rendering: pixelated; }
+
+.mc-music-btn.playing {
+  color: var(--mc-gold);
+}
+
+.mc-music-btn.playing svg {
+  animation: mcNoteBob 1.1s steps(2) infinite alternate;
+}
+
+@keyframes mcNoteBob {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-music-btn.playing svg { animation: none; }
+}
+
+/* ========================================
+   GROUPED LEADERSHIP ROLES
+   Two stints at the same org share one box, so the org name is stated once
+   at the top and each role sits under it separated by a rule.
+   ======================================== */
+
+.leadership-entry > .leadership-org {
+  font-size: 22px !important;
+  margin-bottom: var(--space-sm);
+}
+
+.leadership-stint + .leadership-stint {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 2px solid rgba(120, 96, 190, 0.45);
+}
+
+.leadership-stint .leadership-role {
+  margin-bottom: 2px;
+}
+
+/* ========================================
+   PROJECT SUB-PAGE CHROME
+   These kept their rounded pill shapes from the previous design.
+   ======================================== */
+
+.back-link {
+  border-radius: 0;
+  background-image:
+    url('../images/textures/gui_grain.png'),
+    linear-gradient(to bottom,
+      var(--mc-btn-top) 0%, var(--mc-btn-top) 46%,
+      #6a6a6a 46%, var(--mc-btn-bot) 100%);
+  background-size: 24px 24px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: overlay, normal;
+  image-rendering: pixelated;
+  border: 2px solid var(--mc-outline);
+  box-shadow:
+    inset 0 2px 0 0 var(--mc-btn-hi),
+    inset 0 -2px 0 0 var(--mc-btn-lo);
+  color: #ffffff;
+  text-shadow: 2px 2px 0 var(--mc-textshadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.back-link:hover {
+  background-image:
+    url('../images/textures/gui_grain.png'),
+    linear-gradient(to bottom,
+      var(--mc-btn-hover-top) 0%, var(--mc-btn-hover-top) 46%,
+      #7d8a9e 46%, var(--mc-btn-hover-bot) 100%);
+  color: var(--mc-yellow);
+}
+
+.project-award {
+  border-radius: 0;
+  background: var(--mc-gold);
+  border: 2px solid var(--mc-outline);
+  color: #3a2c05;
+  text-shadow: none;
+  box-shadow: 0 3px 0 0 rgba(0, 0, 0, 0.45);
+}
+
+.project-meta {
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
+}
+
+/* ========================================
+   DATES ON THE TITLE LINE  (see note below on the narrow column)
+   Previously the date sat on its own row below the heading, which wasted a
+   line in every card. A two-column grid puts it on the heading's line,
+   right-aligned, with the body copy spanning underneath.
+   ======================================== */
+
+.experience-card-content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: var(--space-md);
+  align-items: start;
+}
+
+.experience-card-content > .experience-header { grid-column: 1; grid-row: 1; }
+.experience-card-content > .experience-meta   { grid-column: 2; grid-row: 1; }
+.experience-card-content > .experience-list,
+.experience-card-content > *:not(.experience-header):not(.experience-meta) {
+  grid-column: 1 / -1;
+}
+
+/* The meta shares the heading's row, so it has to stay narrow or it starves
+   the title and forces it into a four-line wrap. Stacked and right-aligned
+   at a smaller size, the column is ~160px instead of ~300px. */
+.experience-card-content > .experience-meta {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  margin-top: 5px;
+  width: auto;
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+/* stacked, so the inline dot separator is redundant */
+.experience-card-content > .experience-meta span + span::before {
+  content: none;
+  margin: 0;
+}
+
+.leadership-stint {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: var(--space-md);
+  align-items: baseline;
+}
+
+.leadership-stint > .leadership-role { grid-column: 1; grid-row: 1; }
+.leadership-stint > .leadership-date { grid-column: 2; grid-row: 1; white-space: nowrap; }
+.leadership-stint > .leadership-desc { grid-column: 1 / -1; }
+
+/* single-role entries (IEEE, high-school clubs) use the same shape */
+.leadership-entry:not(:has(.leadership-stint)) {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: var(--space-md);
+  align-items: baseline;
+}
+.leadership-entry:not(:has(.leadership-stint)) > .leadership-role { grid-column: 1; grid-row: 1; }
+.leadership-entry:not(:has(.leadership-stint)) > .leadership-date { grid-column: 2; grid-row: 1; white-space: nowrap; }
+.leadership-entry:not(:has(.leadership-stint)) > .leadership-org,
+.leadership-entry:not(:has(.leadership-stint)) > .leadership-desc { grid-column: 1 / -1; }
+
+@media (max-width: 700px) {
+  .experience-card-content,
+  .leadership-stint,
+  .leadership-entry:not(:has(.leadership-stint)) { display: block; }
+  .experience-meta { white-space: normal; }
+}
+
+/* ========================================
+   SMALL LABELS THAT WERE TOO SMALL
+   ======================================== */
+
+/* TECHNOLOGY / LANGUAGES / INTERESTS */
+.skill-group .skill-category {
+  font-size: 19px !important;
+  letter-spacing: 1px !important;
+  margin-bottom: var(--space-sm);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9);
+}
+
+/* "UNIVERSITY OF FLORIDA" / "HIGH SCHOOL" column headers */
+.meta-text {
+  font-size: 20px !important;
+  letter-spacing: 1px !important;
+  color: var(--mc-light) !important;
+  text-shadow:
+    2px 2px 0 rgba(0, 0, 0, 0.95),
+    0 0 8px rgba(0, 0, 0, 0.85);
+}
+
+/* ========================================
+   PROJECT SUB-PAGE BODY COPY
+   This text sat directly on the panorama with nothing behind it, which is
+   why it was hard to read. Each section now gets the same translucent panel
+   the main page uses, plus a size bump.
+   ======================================== */
+
+.project-section {
+  position: relative;
+  background: var(--mc-tip-bg);
+  border: 2px solid var(--mc-outline);
+  box-shadow: 0 4px 0 0 rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(5px) saturate(1.05);
+  -webkit-backdrop-filter: blur(5px) saturate(1.05);
+  padding: var(--space-lg);
+}
+
+.project-section h2 {
+  font-size: 24px !important;
+  color: var(--mc-gold);
+  text-shadow:
+    2px 2px 0 rgba(0, 0, 0, 0.95),
+    0 0 8px rgba(0, 0, 0, 0.85);
+}
+
+.project-section p,
+.project-list li {
+  font-size: 17px !important;
+  line-height: 1.65;
+  color: var(--mc-light) !important;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.85);
+}
+
+.project-intro {
+  font-size: 19px !important;
+  color: var(--mc-light) !important;
+  text-shadow:
+    2px 2px 0 rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.project-section table,
+.project-section td,
+.project-section th {
+  color: var(--mc-light) !important;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.85);
+  font-size: 16px !important;
+}
+
+.glass-pill {
+  border-radius: 0;
+  border: 2px solid var(--mc-outline);
+  background: #2a2a2a;
+  color: #ffffff;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+/* Sections whose whole body is already boxed — pill lists (Technologies,
+   Team) and link rows — don't need the panel behind them too. Only the
+   heading keeps its shadow so it still reads against the scenery. */
+.project-section:has(> .skill-flow),
+.project-section:has(> p > .glass-pill),
+.project-section:has(> .glass-pill) {
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0;
+}
+
+/* ========================================
+   LEADERSHIP BULLETS
+   Same treatment as the experience cards, replacing the wall-of-text
+   paragraphs these entries used to carry.
+   ======================================== */
+
+.leadership-list {
+  list-style: none;
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+  grid-column: 1 / -1;
+}
+
+.leadership-list li {
+  position: relative;
+  padding-left: 16px;
+  margin-bottom: 6px;
+  color: var(--mc-light);
+  font-size: 15px;
+  line-height: 1.55;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+.leadership-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--mc-green);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+}
+
+.leadership-list li:last-child { margin-bottom: 0; }
+
+/* ========================================
+   COMPANY LINE MATCHES THE LOCATION LINE
+   Same size and weight as the date/location column; the gold is the only
+   thing separating them.
+   ======================================== */
+
+.experience-company {
+  font-size: 15px !important;
+  color: var(--mc-gold) !important;
+  margin-top: 2px;
+}
+
+.experience-card-content > .experience-meta {
+  font-size: 15px;
+}
+
+/* ========================================
+   PANELS, MADE PROPERLY MINECRAFT
+   Three things separate an MC GUI panel from a generic dark box:
+     1. Notched corners — vanilla leaves the corner pixel out, so the frame
+        reads as stepped rather than as a rounded/sharp rectangle.
+     2. A chunky border on a consistent pixel scale (3px = 1 GUI px at 3x).
+     3. A hard inner bevel: light on the top-left, dark on the bottom-right,
+        with no gradient or blur anywhere.
+   The soft CSS drop shadow is dropped too — MC GUI is flat.
+   ======================================== */
+
+.glass-panel,
+.glass-panel-subtle,
+.glass-panel-strong,
+.experience-card,
+.project-preview,
+.award-item,
+.contact-item,
+.leadership-entry,
+.education-entry,
+.skill-group,
+.project-section,
+#about .content-group {
+  border: 3px solid var(--mc-outline);
+  box-shadow:
+    inset 3px 3px 0 0 rgba(255, 255, 255, 0.11),
+    inset -3px -3px 0 0 rgba(0, 0, 0, 0.5);
+  /* one notched pixel at each corner */
+  clip-path: polygon(
+    4px 0, calc(100% - 4px) 0,
+    100% 4px, 100% calc(100% - 4px),
+    calc(100% - 4px) 100%, 4px 100%,
+    0 calc(100% - 4px), 0 4px
+  );
+}
+
+/* the purple ring follows the notch, and thickens to match the frame */
+.glass-panel::after,
+.glass-panel-subtle::after,
+.glass-panel-strong::after,
+.experience-card::after,
+.project-preview::after,
+.award-item::after,
+.contact-item::after,
+.leadership-entry::after,
+.education-entry::after,
+.skill-group::after,
+#about .content-group::after {
+  border-width: 3px;
+  clip-path: polygon(
+    4px 0, calc(100% - 4px) 0,
+    100% 4px, 100% calc(100% - 4px),
+    calc(100% - 4px) 100%, 4px 100%,
+    0 calc(100% - 4px), 0 4px
+  );
+}
+
+/* hover lifts by brightening the ring, not by moving the box */
+.experience-card:hover,
+.project-preview:hover,
+.award-item:hover {
+  transform: none;
+  box-shadow:
+    inset 3px 3px 0 0 rgba(255, 255, 255, 0.16),
+    inset -3px -3px 0 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Slots get the same treatment at 2px, one step down the scale. */
+.glass-tag,
+.skill-item,
+.project-tag {
+  border-width: 2px;
+  box-shadow:
+    inset 2px 2px 0 0 rgba(0, 0, 0, 0.6),
+    inset -2px -2px 0 0 rgba(255, 255, 255, 0.18);
+  clip-path: polygon(
+    3px 0, calc(100% - 3px) 0,
+    100% 3px, 100% calc(100% - 3px),
+    calc(100% - 3px) 100%, 3px 100%,
+    0 calc(100% - 3px), 0 3px
+  );
+}
+
+/* Buttons too, so the whole GUI sits on one grid. */
+.nav-link,
+.social-icon,
+.theme-toggle,
+.carousel-btn,
+.back-link,
+.glass-pill {
+  clip-path: polygon(
+    3px 0, calc(100% - 3px) 0,
+    100% 3px, 100% calc(100% - 3px),
+    calc(100% - 3px) 100%, 3px 100%,
+    0 calc(100% - 3px), 0 3px
+  );
+}
+
+/* ========================================
+   EVEN PANELS
+   Cards in the same row now match height so their bottom edges line up.
+   Each card is a column flex so its tag row is pinned to the bottom rather
+   than floating wherever the copy happens to end.
+   ======================================== */
+
+.projects-grid,
+.awards-grid,
+.skills-grid {
+  align-items: stretch;
+}
+
+/* education entries sit straight in the .two-col, without a wrapper */
+.two-col { align-items: stretch; }
+.two-col > .education-entry { height: 100%; }
+
+.two-col > .content-group,
+.two-col > .content-group > .experience-item,
+.two-col > .content-group > .experience-item > .experience-card {
+  height: 100%;
+}
+
+.project-preview,
+.award-item,
+.experience-card,
+.skill-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-preview-content,
+.experience-card-content {
+  flex: 1 1 auto;
+}
+
+/* push the tag row to the foot of the card */
+.project-preview-content .skill-flow {
+  margin-top: auto;
+  padding-top: var(--space-sm);
+}
+
+.award-item { align-items: center; flex-direction: row; }
