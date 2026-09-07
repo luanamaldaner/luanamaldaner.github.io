@@ -29,7 +29,7 @@ const STAGES = {
   },
 };
 
-const TOTAL_MS = 1500;
+const TOTAL_MS = 1050;
 
 export default class Skin {
   constructor() {
@@ -92,8 +92,8 @@ export default class Skin {
       setTimeout(() => {
         this.loader.classList.remove('showing', 'fading');
         this.busy = false;
-      }, 180);
-    }, TOTAL_MS + 200);
+      }, 150);
+    }, TOTAL_MS + 140);
   }
 
   save() {
