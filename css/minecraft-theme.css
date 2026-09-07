@@ -409,12 +409,34 @@ h1, h2, h3, .site-title, .section-title, .hero-title,
   border-bottom: 2px solid var(--mc-outline);
 }
 
+/* A straight gold plate rather than the rotated corner ribbon. Rotated 45deg
+   across a corner there simply isn't room for a label as long as "3rd Place" -
+   it kept getting clipped mid-word - and a flat plate suits the blocky GUI
+   better anyway. The rotated version still applies in classic mode. */
 .winner-banner {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  left: auto;
+  bottom: auto;
+  width: auto;
+  transform: none;
+  padding: 5px 10px;
   background: var(--mc-gold);
   color: #3a2c05;
-  border-top: 2px solid var(--mc-outline);
-  border-bottom: 2px solid var(--mc-outline);
+  border: 2px solid var(--mc-outline);
+  box-shadow: 0 3px 0 0 rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  letter-spacing: 1px;
+  line-height: 1;
   text-shadow: none;
+  z-index: 10;
+  clip-path: polygon(
+    3px 0, calc(100% - 3px) 0,
+    100% 3px, 100% calc(100% - 3px),
+    calc(100% - 3px) 100%, 3px 100%,
+    0 calc(100% - 3px), 0 3px
+  );
 }
 
 /* ========================================
@@ -930,10 +952,7 @@ h1, h2, h3, .site-title, .section-title, .hero-title,
    MUSIC BUTTON — note block, sits under the theme toggle
    ======================================== */
 
-.mc-music-btn {
-  top: calc(var(--space-lg) + 62px) !important;
-  cursor: pointer;
-}
+.mc-music-btn { cursor: pointer; }
 
 .mc-music-btn svg { image-rendering: pixelated; }
 
@@ -1380,3 +1399,77 @@ h1, h2, h3, .site-title, .section-title, .hero-title,
 }
 
 .award-item { align-items: center; flex-direction: row; }
+
+/* ========================================
+   CORNER BUTTON STACK
+   theme toggle / music / skin, evenly spaced down the right edge
+   ======================================== */
+
+.theme-toggle .icon-moon { display: none; }
+[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+.theme-toggle svg { image-rendering: pixelated; }
+[data-theme="dark"] #theme-toggle { color: #dfe6ff; }
+#theme-toggle { color: var(--mc-gold); }
+
+/* ========================================
+   TEAMMATE LINKS
+   Names that point at someone's own site. Kept visually identical to the
+   plain names beside them apart from the aqua tint, so a linked teammate
+   doesn't shout louder than an unlinked one.
+   ======================================== */
+
+.team-link {
+  color: var(--mc-aqua) !important;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+td .team-link {
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.85);
+}
+
+.team-link:hover {
+  color: var(--mc-yellow) !important;
+  text-decoration: underline;
+}
+
+span.skill-item + .team-link,
+.team-link.skill-item {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ========================================
+   GRID SHRINK FIX
+   Grid and flex children default to min-width:auto, so they refuse to shrink
+   below their content. In the 768-800px band that made the two-column layout
+   overflow the viewport by ~50px. min-width:0 lets the columns actually fit,
+   and the date column is allowed to wrap there rather than forcing width.
+   ======================================== */
+
+.two-col > *,
+.projects-grid > *,
+.awards-grid > *,
+.skills-grid > * {
+  min-width: 0;
+}
+
+.experience-card-content,
+.leadership-stint {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .experience-card-content > .experience-meta { white-space: normal; }
+  .leadership-stint > .leadership-date { white-space: normal; }
+}
+
+/* ========================================
+   HEADER PORTRAIT
+   Shown in Classic mode only. Minecraft mode has the avatar instead, and
+   this sheet is switched off in Classic — so hiding it here is enough.
+   ======================================== */
+
+.site-header .profile-photo { display: none !important; }

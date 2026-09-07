@@ -8,6 +8,8 @@ import ScrollAnimations from './scroll-animations.js';
 import Panorama from './panorama.js';
 import Splash from './splash.js';
 import Music from './music.js';
+import Skin from './skin.js';
+import Click from './click.js';
 
 class App {
   constructor() {
@@ -16,6 +18,8 @@ class App {
     this.panorama = null;
     this.splash = null;
     this.music = null;
+    this.skin = null;
+    this.click = null;
     this.nav = null;
     this.lastScrollY = 0;
     this.ticking = false;
@@ -36,6 +40,8 @@ class App {
     this.initPanorama();
     this.initSplash();
     this.initMusic();
+    this.initSkin();
+    this.initClick();
     this.initScrollAnimations();
     this.initSmoothScroll();
     this.initScrollProgress();
@@ -73,6 +79,22 @@ class App {
       this.music = new Music();
     } catch (e) {
       console.error('Music error:', e);
+    }
+  }
+
+  initSkin() {
+    try {
+      this.skin = new Skin();
+    } catch (e) {
+      console.error('Skin error:', e);
+    }
+  }
+
+  initClick() {
+    try {
+      this.click = new Click();
+    } catch (e) {
+      console.error('Click error:', e);
     }
   }
 
@@ -190,12 +212,18 @@ class App {
             this.nav.classList.remove('hidden');
           }
 
-          // Sections carry 64px of top padding, so aligning the section's
-          // top edge to the viewport left the heading sitting low with a
-          // dead gap above it. Scroll past most of that padding.
-          const ANCHOR_OFFSET = 52;
-          const y = target.getBoundingClientRect().top + window.scrollY + ANCHOR_OFFSET;
-          window.scrollTo({ top: y, behavior: 'smooth' });
+          // Aim at the section's first heading rather than the section box.
+          // A fixed offset can't work: most sections carry 64px of top padding
+          // but #about carries 32px, so any single number either leaves a gap
+          // or overshoots and clips the heading. Anchoring to the heading
+          // itself lands correctly whatever the padding is.
+          const heading = target.querySelector(
+            '.section-label, .section-title, h1, h2, h3'
+          );
+          const HEADING_GAP = 28;
+          const anchor = heading || target;
+          const y = anchor.getBoundingClientRect().top + window.scrollY - HEADING_GAP;
+          window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
 
           // Update URL
           history.pushState(null, null, href);

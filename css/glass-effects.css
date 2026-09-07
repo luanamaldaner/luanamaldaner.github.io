@@ -577,17 +577,22 @@
 
 .winner-banner {
   position: absolute;
-  top: 18px;
-  right: -35px;
+  top: 34px;
+  right: -46px;
   z-index: 10;
+  /* Fixed width, not padding-driven. With horizontal padding the strip grew
+     with its label, so "3RD PLACE" sat further left across the corner than
+     "WINNER" did. A set width keeps every ribbon on the same diagonal and
+     centres the text inside it whatever the wording. */
+  width: 200px;
+  padding: 5px 0;
   background: linear-gradient(135deg, #ffd84d, #ffe87a, #ffd84d);
   color: #5a3e00;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   text-align: center;
-  padding: 5px 40px;
   transform: rotate(45deg);
   pointer-events: none;
 }
