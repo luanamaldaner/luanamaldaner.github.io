@@ -271,6 +271,15 @@
 
   <div class="ambient-bg" aria-hidden="true"></div>
 
+  <button id="music-toggle" class="theme-toggle mc-music-btn" aria-label="Turn music on" aria-pressed="false">
+    <svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges">
+      <path d="M6 2h7v2H6zM6 4h2v6H6zM11 4h2v5h-2zM3 9h4v2H3zM3 11h1v2H3zM4 13h2v1H4zM6 11h1v2H6zM9 8h4v2H9zM9 10h1v2H9zM10 12h2v1h-2zM12 10h1v2h-1z"/>
+    </svg>
+  </button>
+  <audio id="mc-music" preload="none" loop>
+    <source src="../files/ambient-loop.wav" type="audio/wav">
+  </audio>
+
   <button id="skin-toggle" class="theme-toggle mc-skin-btn" aria-label="Switch to classic mode" aria-pressed="false">
     <span class="skin-label">Classic</span>
   </button>
