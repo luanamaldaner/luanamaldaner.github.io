@@ -409,34 +409,34 @@ h1, h2, h3, .site-title, .section-title, .hero-title,
   border-bottom: 2px solid var(--mc-outline);
 }
 
-/* A straight gold plate rather than the rotated corner ribbon. Rotated 45deg
-   across a corner there simply isn't room for a label as long as "3rd Place" -
-   it kept getting clipped mid-word - and a flat plate suits the blocky GUI
-   better anyway. The rotated version still applies in classic mode. */
+/* Diagonal corner ribbon, MC-styled. The earlier straight badge was a
+   retreat after the rotated version kept clipping "3rd Place" mid-word; the
+   real fix is a wide fixed strip sat far enough in from the corner that the
+   chord across it is longer than the label. Geometry verified in-browser. */
 .winner-banner {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 30px;
+  right: -62px;
   left: auto;
   bottom: auto;
-  width: auto;
-  transform: none;
-  padding: 5px 10px;
+  width: 210px;
+  transform: rotate(45deg);
+  padding: 6px 0;
   background: var(--mc-gold);
   color: #3a2c05;
-  border: 2px solid var(--mc-outline);
-  box-shadow: 0 3px 0 0 rgba(0, 0, 0, 0.45);
-  font-size: 12px;
+  border-top: 2px solid var(--mc-outline);
+  border-bottom: 2px solid var(--mc-outline);
+  box-shadow: none;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 1px;
   line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
   text-shadow: none;
+  clip-path: none;
+  pointer-events: none;
   z-index: 10;
-  clip-path: polygon(
-    3px 0, calc(100% - 3px) 0,
-    100% 3px, 100% calc(100% - 3px),
-    calc(100% - 3px) 100%, 3px 100%,
-    0 calc(100% - 3px), 0 3px
-  );
 }
 
 /* ========================================
