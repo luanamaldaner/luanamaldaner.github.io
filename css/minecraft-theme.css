@@ -566,12 +566,33 @@ h1, h2, h3, .site-title, .section-title, .hero-title,
   color: var(--mc-yellow);
 }
 
+/* Depth. These buttons carry a clip-path for the notched corners, which also
+   clips box-shadow - an outer shadow simply would not render. filter:
+   drop-shadow applies after clipping, so it follows the notched silhouette
+   and sits outside it. Hard-edged, no blur, to stay in the pixel idiom. */
+.nav-link,
+.social-icon,
+.theme-toggle,
+.carousel-btn,
+.back-link {
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.5));
+  transition: filter 0.06s steps(1), transform 0.06s steps(1);
+}
+
+/* Pressed: the face sinks onto its own shadow and the bevel inverts, so the
+   button reads as pushed in rather than merely recoloured. */
 .nav-link:active,
 .social-icon:active,
-.theme-toggle:active {
+.theme-toggle:active,
+.carousel-btn:active,
+.back-link:active {
+  transform: translateY(3px);
+  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0.5));
   box-shadow:
     inset 0 2px 0 0 var(--mc-btn-lo),
-    inset 0 -2px 0 0 var(--mc-btn-hi);
+    inset 2px 0 0 0 rgba(0, 0, 0, 0.35),
+    inset 0 -2px 0 0 var(--mc-btn-hi),
+    inset -2px 0 0 0 rgba(255, 255, 255, 0.16);
 }
 
 .nav-link.active {
