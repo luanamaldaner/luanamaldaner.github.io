@@ -1,0 +1,25 @@
+name = "dash-helper"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+preview_urls = false
+
+# Sends due notifications.
+[triggers]
+crons = ["*/5 * * * *"]
+
+[observability]
+enabled = false
+
+# Holds notification times + device push addresses only (no titles, no Canvas data).
+[[kv_namespaces]]
+binding = "DASH_KV"
+id = "1aa69225114d44778985b2d6a5dd58f8"
+
+# Secrets (set with `wrangler secret put`, never committed):
+#   DASH_KEY           - lets the dashboard update its notification schedule
+#   VAPID_PRIVATE_JWK  - signs push messages
+#   ANTHROPIC_API_KEY  - API key for meal photo estimates
+[vars]
+VAPID_PUBLIC_KEY = "BCHXNkYXF9tbc0sr7iIH19DBNMyN3lFaBCnNNZgXOsIrI0fok-VxH7iv-N_rnpsayz4Zn1AHb5dir3r6ke3sPps"
