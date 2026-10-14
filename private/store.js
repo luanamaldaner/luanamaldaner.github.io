@@ -13,18 +13,18 @@ export const REPO = {
 
 const LS_VAULT = 'pv.vault';
 const LS_SHA = 'pv.sha';
-const COLLECTIONS = ['todos', 'events', 'notes', 'food', 'weight'];
-const OBJECTS = ['settings', 'github', 'canvas', 'push'];
+const COLLECTIONS = ['todos', 'events', 'notes', 'food', 'weight', 'days', 'focus'];
+const OBJECTS = ['settings', 'github', 'canvas', 'push', 'inbox'];
 const TOMBSTONE_DAYS = 45;
 
 export function emptyState() {
   const now = Date.now();
   return {
     v: 1,
-    todos: [], events: [], notes: [], food: [], weight: [],
+    todos: [], events: [], notes: [], food: [], weight: [], days: [], focus: [],
     settings: {
       name: '',
-      goals: { cal: 2000, protein: 150, carbs: 200, fat: 60, sugar: 50, fiber: 28 },
+      goals: { cal: 2000, protein: 150, carbs: 200, fat: 60, sugar: 50, fiber: 28, water: 8 },
       autoLockMin: 10,
       updatedAt: now,
     },
@@ -32,6 +32,8 @@ export function emptyState() {
     canvas: { feed: '', updatedAt: 0 },
     // subscription is per device, so it lives in this browser, not here.
     push: { dashKey: '', briefTime: '08:00', leadMin: 60, updatedAt: 0 },
+    // key pair for the task inbox; the private half never leaves the vault
+    inbox: { pub: '', priv: null, updatedAt: 0 },
   };
 }
 
@@ -44,6 +46,7 @@ function normalize(s) {
   out.github = { ...base.github, ...(s && s.github) };
   out.canvas = { ...base.canvas, ...(s && s.canvas) };
   out.push = { ...base.push, ...(s && s.push) };
+  out.inbox = { ...base.inbox, ...(s && s.inbox) };
   return out;
 }
 

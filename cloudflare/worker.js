@@ -6,6 +6,9 @@
 // 2. /push/...    Phone notifications. Stores only *when* to notify and how
 //    many items are due (no titles), plus the push address of your device.
 //    A cron trigger sends due notifications every 5 minutes.
+// 3. /inbox       A drop box for new tasks. Items arrive already encrypted to
+//    the dashboard's public key, so this helper can't read them; the
+//    dashboard picks them up on unlock and then clears them.
 
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -23,25 +26,31 @@ export default {
       'Access-Control-Max-Age': '86400',
       Vary: 'Origin',
     } : null;
-    if (!cors) return new Response('Forbidden', { status: 403 });
-    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-
     const url = new URL(req.url);
+    // Scripts (no browser Origin) may use the inbox; everything else is browser-only.
+    if (!cors && !url.pathname.startsWith('/inbox')) return new Response('Forbidden', { status: 403 });
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors || {} });
+
     try {
       let res;
       if (url.pathname === '/canvas-feed') res = await canvasFeed(req);
       else if (url.pathname === '/meal' && req.method === 'POST') res = await estimateMeal(req, env);
+      else if (url.pathname === '/inbox/key' && req.method === 'GET') res = await inboxGetKey(env);
+      else if (url.pathname === '/inbox/key' && req.method === 'POST') res = await inboxSetKey(req, env);
+      else if (url.pathname === '/inbox' && req.method === 'POST') res = await inboxAdd(req, env);
+      else if (url.pathname === '/inbox' && req.method === 'GET') res = await inboxList(req, env);
+      else if (url.pathname === '/inbox/ack' && req.method === 'POST') res = await inboxAck(req, env);
       else if (url.pathname === '/push/config') res = json({ vapidPublicKey: env.VAPID_PUBLIC_KEY });
       else if (url.pathname === '/push/schedule' && req.method === 'POST') res = await setSchedule(req, env);
       else if (url.pathname === '/push/test' && req.method === 'POST') res = await testPush(req, env);
       else res = new Response('Not found', { status: 404 });
       const out = new Response(res.body, res);
-      for (const [k, v] of Object.entries(cors)) out.headers.set(k, v);
+      for (const [k, v] of Object.entries(cors || {})) out.headers.set(k, v);
       out.headers.set('Cache-Control', 'no-store');
       return out;
     } catch (e) {
       return new Response(JSON.stringify({ error: String(e && e.message || e) }), {
-        status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
+        status: 500, headers: { ...(cors || {}), 'Content-Type': 'application/json' } });
     }
   },
 
@@ -68,6 +77,51 @@ async function canvasFeed(req) {
   // Canvas rejects requests without a User-Agent.
   const upstream = await fetch(feed, { headers: { Accept: 'text/calendar', 'User-Agent': 'dash-helper (personal calendar sync)' } });
   return new Response(upstream.body, { status: upstream.status, headers: { 'Content-Type': 'text/calendar; charset=utf-8' } });
+}
+
+// ------------------------------------------------------------- inbox
+
+const MAX_INBOX = 200;
+const b64ish = v => typeof v === 'string' && /^[A-Za-z0-9_\-+/=]{8,8000}$/.test(v);
+
+async function inboxGetKey(env) {
+  const key = await env.DASH_KV.get('inbox-key');
+  return key ? json({ publicKey: key }) : json({ error: 'The dashboard hasn’t set up its inbox yet. Unlock it once.' }, 404);
+}
+
+async function inboxSetKey(req, env) {
+  if (!(await authed(req, env))) return new Response('Unauthorized', { status: 401 });
+  const { publicKey } = await req.json();
+  if (!b64ish(publicKey) || publicKey.length > 200) return json({ error: 'Bad key' }, 400);
+  await env.DASH_KV.put('inbox-key', publicKey);
+  return json({ ok: true });
+}
+
+// Body: { epk, iv, ct } — an item sealed to the dashboard's public key.
+async function inboxAdd(req, env) {
+  if (!(await authed(req, env))) return new Response('Unauthorized', { status: 401 });
+  const { epk, iv, ct } = await req.json();
+  if (![epk, iv, ct].every(b64ish)) return json({ error: 'Item must be encrypted (epk, iv, ct).' }, 400);
+  const items = JSON.parse(await env.DASH_KV.get('inbox') || '[]');
+  if (items.length >= MAX_INBOX) return json({ error: 'Inbox is full. Unlock the dashboard to empty it.' }, 429);
+  const id = b64u(crypto.getRandomValues(new Uint8Array(9)));
+  items.push({ id, epk, iv, ct, at: Date.now() });
+  await env.DASH_KV.put('inbox', JSON.stringify(items));
+  return json({ ok: true, id });
+}
+
+async function inboxList(req, env) {
+  if (!(await authed(req, env))) return new Response('Unauthorized', { status: 401 });
+  return json({ items: JSON.parse(await env.DASH_KV.get('inbox') || '[]') });
+}
+
+async function inboxAck(req, env) {
+  if (!(await authed(req, env))) return new Response('Unauthorized', { status: 401 });
+  const { ids } = await req.json();
+  const drop = new Set(Array.isArray(ids) ? ids : []);
+  const items = JSON.parse(await env.DASH_KV.get('inbox') || '[]').filter(i => !drop.has(i.id));
+  await env.DASH_KV.put('inbox', JSON.stringify(items));
+  return json({ ok: true, left: items.length });
 }
 
 // ------------------------------------------------------------- meal photos
@@ -108,7 +162,7 @@ Identify each distinct food or drink, estimate its portion from visual cues (pla
 
 async function estimateMeal(req, env) {
   if (!(await authed(req, env))) return new Response('Unauthorized', { status: 401 });
-  if (!env.ANTHROPIC_API_KEY) return json({ error: 'The Anthropic API key has not been added to the helper yet.' }, 503);
+  if (!env.ANTHROPIC_API_KEY) return json({ error: 'Photo estimates need a paid photo key, which isn’t set up. Use “From a chat” below instead: it’s free.' }, 503);
   const { image, note } = await req.json();
   if (typeof image !== 'string' || image.length < 100 || image.length > 8_000_000) return json({ error: 'Photo missing or too large.' }, 400);
 
@@ -128,7 +182,7 @@ async function estimateMeal(req, env) {
       messages: [{ role: 'user', content }],
     });
   } catch (e) {
-    if (e instanceof Anthropic.AuthenticationError) return json({ error: 'The Anthropic API key was rejected.' }, 502);
+    if (e instanceof Anthropic.AuthenticationError) return json({ error: 'The photo key was rejected. It may have expired or run out of credit.' }, 502);
     if (e instanceof Anthropic.RateLimitError) return json({ error: 'Too many photos at once. Try again in a minute.' }, 429);
     if (e instanceof Anthropic.APIError) return json({ error: `The photo couldn't be processed (${e.status ?? 'error'}).` }, 502);
     throw e;

@@ -476,3 +476,72 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .card-tasks .add-row-sub .tag-input { flex: 1 1 0; min-width: 0; }
 .card-tasks .add-row-sub .btn { flex: none; }
 .asg-meta { row-gap: 0; }
+.inbox-note { display: block; width: 100%; margin: -4px 0 10px; padding: 6px 10px; border: 0; border-radius: 8px; background: var(--petal-soft); color: var(--petal); font-size: 12px; text-align: left; cursor: pointer; }
+.quick-preview { font-size: 12px; color: var(--petal); min-height: 0; margin: -2px 2px 0; }
+.quick-preview:empty { display: none; }
+
+/* ---------- countdowns ---------- */
+.countdowns { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.countdowns li { display: flex; gap: 14px; align-items: center; }
+.cd-num { flex: none; width: 54px; height: 54px; border-radius: 14px; display: grid; place-content: center; text-align: center; background: color-mix(in srgb, var(--tag, var(--accent)) 10%, transparent); color: var(--tag, var(--accent)); }
+.cd-num strong { font-family: var(--serif); font-size: 22px; line-height: 1; font-weight: 500; }
+.cd-num span { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+.cd-num.soon { background: var(--petal-soft); color: var(--petal); }
+.cd-body { min-width: 0; }
+.cd-title { font-weight: 500; overflow-wrap: anywhere; }
+.cd-date { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+
+/* ---------- garden ---------- */
+.garden { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.garden-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.garden-streak { color: var(--petal); font-weight: 500; }
+.garden-row { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(14, 1fr); align-items: end; }
+.garden-row li { display: grid; place-items: center; padding-bottom: 3px; border-bottom: 2px solid transparent; }
+.garden-row li.is-today { border-bottom-color: var(--petal); }
+.glyph { width: 100%; max-width: 20px; height: 26px; overflow: visible; }
+.g-dot { fill: var(--line-strong); }
+.g-stem { stroke: var(--m-protein); stroke-width: 1.6; stroke-linecap: round; fill: none; }
+.g-leaf { fill: color-mix(in srgb, var(--m-protein) 75%, var(--card)); }
+.g-petal { fill: var(--m-carbs); }
+.g-center { fill: #f2d27a; }
+
+/* ---------- focus ---------- */
+.focus-card { display: grid; justify-items: center; gap: 14px; padding: 22px 20px 26px; }
+.focus-kind { font-family: var(--serif); font-style: italic; color: var(--petal); font-size: 15px; }
+.focus-dial { position: relative; width: min(280px, 72vw); aspect-ratio: 1; }
+.focus-art { width: 100%; height: 100%; overflow: visible; }
+.focus-track { fill: none; stroke: var(--track); stroke-width: 7; }
+.focus-ring { fill: none; stroke: var(--m-protein); stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset .5s linear; }
+.focus-ring.break { stroke: var(--m-carbs); }
+.focus-bud { transition: transform .5s linear; }
+.focus-art.bloomed .focus-bud { animation: bloom-open .9s cubic-bezier(.2, 1.4, .4, 1); }
+.focus-time { position: absolute; left: 0; right: 0; bottom: 8%; text-align: center; font-family: var(--serif); font-size: 30px; letter-spacing: .02em; }
+.focus-card select { max-width: 340px; }
+.focus-lengths { justify-content: center; }
+.chip-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.btn-wide { min-width: 220px; }
+.center-row { justify-content: center; }
+.center-link { justify-self: center; }
+.focus-done { margin: 0; font-family: var(--serif); font-size: 18px; color: var(--petal); }
+.nav-badge { margin-left: auto; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--petal); }
+@media (max-width: 720px) { .nav-badge { display: none; } }
+.nav-item .nav-badge { margin-right: 14px; }
+.todo-split > :only-child { grid-column: 1 / -1; }
+
+/* ---------- quick add overlay ---------- */
+.quick-overlay { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--text) 18%, transparent); display: grid; align-items: start; justify-items: center; padding: 14vh 16px 16px; }
+.quick-panel { width: min(560px, 100%); background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, .18); padding: 14px; }
+.quick-box { display: grid; gap: 6px; }
+.quick-box input { font-size: 17px; padding: 12px 14px; border-radius: 12px; }
+.quick-hint { font-size: 11px; color: var(--muted); margin: 8px 4px 0; }
+
+/* ---------- water ---------- */
+.drops { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.drop-btn { border: 0; background: none; padding: 2px; cursor: pointer; border-radius: 8px; }
+.drop-btn:hover { background: var(--accent-soft); }
+.drop { width: 24px; height: 30px; }
+.drop path { fill: none; stroke: color-mix(in srgb, #5aa7c8 70%, var(--muted)); stroke-width: 1.5; }
+.drop.full path { fill: #8cc9e2; stroke: #5aa7c8; }
+.setting-row .lock-theme { position: static; }
+@media (max-width: 720px) { .side-foot .theme-btn { display: none; } }
+.chat-paste { resize: vertical; min-height: 70px; font-size: 13px; }

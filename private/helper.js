@@ -148,3 +148,14 @@ export async function estimateMeal(dashKey, dataUrl, note) {
   if (!r.ok) throw new Error(j.error || `Helper error ${r.status}`);
   return j;
 }
+
+// ---------------------------------------------------------------- task inbox
+
+async function inboxCall(path, dashKey, init = {}) {
+  const r = await fetch(`${HELPER}${path}`, { ...init, headers: { 'Content-Type': 'application/json', 'X-Dash-Key': dashKey }, cache: 'no-store' });
+  if (!r.ok) throw new Error(`Inbox error ${r.status}`);
+  return r.json();
+}
+export const setInboxKey = (dashKey, publicKey) => inboxCall('/inbox/key', dashKey, { method: 'POST', body: JSON.stringify({ publicKey }) });
+export const fetchInbox = async dashKey => (await inboxCall('/inbox', dashKey)).items || [];
+export const ackInbox = (dashKey, ids) => inboxCall('/inbox/ack', dashKey, { method: 'POST', body: JSON.stringify({ ids }) });

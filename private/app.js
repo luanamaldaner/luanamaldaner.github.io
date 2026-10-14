@@ -12,7 +12,11 @@ import {
 import {
   CANVAS_WEB, FEED_RE, fetchFeed, pushSupported, needsHomeScreen,
   currentSubscription, subscribe, unsubscribe, sendSchedule, testPush, shrinkPhoto, estimateMeal,
+  setInboxKey, fetchInbox, ackInbox,
 } from './helper.js';
+import { newInboxKeys, openItem } from './inbox.js';
+import { parseQuick } from './quickadd.js';
+import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -33,6 +37,9 @@ let focusAfter = null;
 const sync = { status: 'idle', at: 0, msg: '' };
 let saveTimer = null, saving = false, dirty = false;
 let lastActive = Date.now(), hiddenAt = 0;
+const inboxState = { keySent: false, busy: false, added: 0, addedFood: 0 };
+// Focus timer: lives outside render so it keeps going while you move around the app.
+const focus = { mode: 'idle', kind: 'focus', minutes: 25, endAt: 0, remaining: 0, taskId: '', timer: null };
 const canvasSync = { status: 'idle', at: 0, msg: '' };
 const pushState = { sub: null, lastSent: '', timer: null };
 // Meal photo flow (memory only; the photo is never saved).
@@ -117,6 +124,7 @@ const ICONS = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
   auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
+  focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
 };
 function icon(name, cls = 'icon') {
@@ -365,6 +373,64 @@ async function enter(state, keyInfo, needsSave) {
   setInterval(() => { if (!document.hidden) syncCanvas(); }, 30 * 60e3);
   try { pushState.sub = await currentSubscription(); } catch {}
   queuePushSchedule(1000);
+  checkInbox();
+  setInterval(() => { if (!document.hidden) checkInbox(); }, 3 * 60e3);
+}
+
+// ---------------------------------------------------------------- task inbox
+
+// Picks up tasks sent from elsewhere (e.g. add-task.mjs). They arrive sealed
+// to this vault's public key, so the helper holding them can't read them.
+async function checkInbox() {
+  if (!S || !K || !S.push.dashKey || inboxState.busy) return;
+  inboxState.busy = true;
+  try {
+    if (!S.inbox.priv || !S.inbox.pub) {
+      S.inbox = { ...(await newInboxKeys()), updatedAt: Date.now() };
+      inboxState.keySent = false;
+      scheduleSave(200);
+    }
+    if (!inboxState.keySent) { await setInboxKey(S.push.dashKey, S.inbox.pub); inboxState.keySent = true; }
+    const items = await fetchInbox(S.push.dashKey);
+    if (!items.length) return;
+    const opened = [];
+    let added = 0;
+    for (const it of items) {
+      let t;
+      try { t = await openItem(S.inbox.priv, it); } catch { continue; } // sealed to another key: leave it
+      opened.push(it.id);
+      const id = `inbox-${String(it.id).replace(/[^A-Za-z0-9_-]/g, '')}`;
+      if (t && t.type === 'food') {
+        if (typeof t.name === 'string' && t.name.trim() && !S.food.some(x => x.id === id)) {
+          S.food.push(touch({
+            id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || '') ? t.date : todayStr(), name: t.name.trim().slice(0, 80),
+            ...Object.fromEntries(NUTRIENTS.map(m => [m.key, Math.max(0, Number(t[m.key]) || 0)])),
+          }));
+          inboxState.addedFood++;
+          added++;
+        }
+        continue;
+      }
+      if (!t || typeof t.title !== 'string' || !t.title.trim() || S.todos.some(x => x.id === id)) continue;
+      S.todos.push(touch({
+        id, title: t.title.trim().slice(0, 200),
+        due: /^\d{4}-\d{2}-\d{2}$/.test(t.due || '') ? t.due : '',
+        time: /^\d{2}:\d{2}$/.test(t.time || '') ? t.time : '',
+        tag: typeof t.tag === 'string' ? t.tag.trim().slice(0, 40) : '',
+        done: false, createdAt: Date.now(),
+      }));
+      added++;
+    }
+    if (added) {
+      inboxState.added += added;
+      rerenderSafely();
+      // make sure they're saved before the inbox is emptied
+      scheduleSave(0);
+      for (let i = 0; i < 100 && (dirty || saving); i++) await new Promise(r => setTimeout(r, 100));
+    }
+    if (opened.length) await ackInbox(S.push.dashKey, opened);
+  } catch { /* offline or helper unreachable: try again later */ }
+  finally { inboxState.busy = false; }
 }
 
 // ---------------------------------------------------------------- Canvas sync
@@ -483,17 +549,18 @@ function startAutoLock() {
   const bump = () => { lastActive = Date.now(); };
   ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(e => addEventListener(e, bump, { passive: true }));
   const limit = () => (S ? S.settings.autoLockMin : 10) * 60e3;
-  setInterval(() => { if (S && Date.now() - lastActive > limit()) lock(); }, 15e3);
+  setInterval(() => { if (S && focus.mode !== 'running' && Date.now() - lastActive > limit()) lock(); }, 15e3);
   document.addEventListener('visibilitychange', async () => {
     if (!S) return;
     if (document.hidden) { hiddenAt = Date.now(); if (dirty) doSave(); return; }
-    if (hiddenAt && Date.now() - hiddenAt > limit()) { lock(); return; }
+    if (hiddenAt && focus.mode !== 'running' && Date.now() - hiddenAt > limit()) { lock(); return; }
     lastActive = Date.now();
     // Pick up edits made on another device while this tab was in the background.
     if (S.github.token && !dirty && !saving) {
       try { const res = await pull(S, K); if (res.changed) { S = res.state; rerenderSafely(); } } catch {}
     }
     syncCanvas();
+    checkInbox();
     queuePushSchedule(2000);
   });
   setInterval(() => { const el = document.getElementById('sync'); if (el && S) el.replaceWith(syncBadge()); }, 30e3);
@@ -504,6 +571,7 @@ function startAutoLock() {
 const VIEWS = {
   today: { label: 'Today', icon: 'today', render: renderToday },
   calories: { label: 'Calories', icon: 'calories', render: renderCalories },
+  focus: { label: 'Focus', icon: 'focus', render: renderFocus },
   notes: { label: 'Quick Notes', icon: 'notes', render: renderNotes },
   settings: { label: 'Settings', icon: 'settings', render: renderSettings },
 };
@@ -517,7 +585,8 @@ function render() {
       href: `#${key}`, class: `nav-item${view === key ? ' active' : ''}`,
       'aria-current': view === key ? 'page' : null,
       onclick: e => { e.preventDefault(); go(key); },
-    }, icon(v.icon), h('span', { text: v.label }))));
+    }, icon(v.icon), h('span', { text: v.label }),
+    key === 'focus' && focus.mode === 'running' ? h('span', { id: 'focus-nav-badge', class: 'nav-badge', text: fmtClock(focusLeft()) }) : null)));
 
   const side = h('aside', { class: 'side' },
     h('div', { class: 'brand' },
@@ -581,6 +650,8 @@ function brief() {
   if (evs.length) parts.push(`${dueToday.length ? 'Then' : 'On the calendar:'} ${evs.map(e => `${e.title} at ${fmtTime(e.time)}`).join(', ')}.`);
   const next = todos.find(t => t.due && t.due > today);
   if (next) parts.push(`Next up: ${next.title} (${fmtShort(next.due)}).`);
+  const soonExam = upcomingExams().find(x => x.days <= 7);
+  if (soonExam) parts.push(`${soonExam.title} ${soonExam.days === 0 ? 'is today' : soonExam.days === 1 ? 'is tomorrow' : `in ${soonExam.days} days`}.`);
   return parts.join(' ') || 'Nothing due today. Enjoy it.';
 }
 
@@ -604,11 +675,12 @@ function renderToday() {
         const asg = todos.filter(t => isAssignment(t) && t.due && t.due <= week).length;
         const tasks = todos.filter(t => !isAssignment(t)).length;
         const n = (k, w) => `${k} ${w}${k === 1 ? '' : 's'}`;
-        return [n(evToday.length, 'event'), asg ? `${n(asg, 'assignment')} this week` : null, n(tasks, 'task')].filter(Boolean).join(' · ');
+        const fm = focusMinutes(today);
+        return [n(evToday.length, 'event'), asg ? `${n(asg, 'assignment')} this week` : null, n(tasks, 'task'), fm ? `${fm} min focused` : null].filter(Boolean).join(' · ');
       })() })),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, calendarCard(today), h('div', { class: 'todo-split' }, assignmentsCard(), tasksCard())),
-      h('div', { class: 'col col-narrow' }, flowerCard(), caloriesMini(), notesMini())),
+      h('div', { class: 'col col-narrow' }, flowerCard(), countdownCard(), caloriesMini(), notesMini())),
     tagList());
 }
 
@@ -764,34 +836,52 @@ function doneOf(test) {
 function tasksCard() {
   const open = openTodos().filter(t => !isAssignment(t));
   const title = h('input', {
-    id: 'todo-new', placeholder: 'Add a task (or paste a list)…', 'aria-label': 'New task', autocomplete: 'off',
+    id: 'todo-new', placeholder: 'Try “Orgo flashcards fri 3pm #orgo”', 'aria-label': 'New task', autocomplete: 'off',
+    oninput: () => showPreview(),
     onpaste: e => {
       const lines = (e.clipboardData ? e.clipboardData.getData('text') : '').split(/\r?\n/)
         .map(l => l.replace(/^\s*(?:[*\-•–]|\d+[.)]|\[[ x]?\])\s*/i, '').trim()).filter(Boolean);
       if (lines.length < 2) return;
       e.preventDefault();
       commit(() => {
-        lines.forEach(text => S.todos.push(touch({ id: uid(), title: text.slice(0, 200), due: due.value, time: '', tag: tag.value.trim(), done: false, createdAt: Date.now() })));
+        lines.forEach(text => {
+          const q = parseQuick(text);
+          S.todos.push(touch({ id: uid(), title: q.title.slice(0, 200), due: due.value || q.due, time: q.time, tag: tag.value.trim() || q.tag, done: false, createdAt: Date.now() }));
+        });
         focusAfter = 'todo-new';
       });
     },
   });
   const due = h('input', { type: 'date', 'aria-label': 'Due date' });
   const tag = h('input', { placeholder: 'Tag', list: 'tags', class: 'tag-input', 'aria-label': 'Tag' });
+  const preview = h('div', { class: 'quick-preview', 'aria-live': 'polite' });
+  function showPreview() {
+    const q = parseQuick(title.value);
+    const bits = [];
+    if (q.due && !due.value) bits.push(fmtShort(q.due) + (daysBetween(todayStr(), q.due) < 7 ? ` (${fmtWeekday(q.due)})` : ''));
+    if (q.time) bits.push(fmtTime(q.time));
+    if (q.tag && !tag.value.trim()) bits.push(`#${q.tag}`);
+    preview.textContent = bits.length ? `✿ ${bits.join(' · ')}` : '';
+  }
   const form = h('form', {
     class: 'add-row',
     onsubmit: ev => {
       ev.preventDefault();
       const text = title.value.trim();
       if (!text) return;
+      const q = parseQuick(text);
       commit(() => {
-        S.todos.push(touch({ id: uid(), title: text, due: due.value, time: '', tag: tag.value.trim(), done: false, createdAt: Date.now() }));
+        S.todos.push(touch({ id: uid(), title: q.title.slice(0, 200), due: due.value || q.due, time: q.time, tag: tag.value.trim() || q.tag, done: false, createdAt: Date.now() }));
         focusAfter = 'todo-new';
       });
     },
-  }, title, h('div', { class: 'add-row-sub' }, due, tag, h('button', { class: 'btn btn-primary', type: 'submit', 'aria-label': 'Add task' }, icon('plus'))));
+  }, title, preview, h('div', { class: 'add-row-sub' }, due, tag, h('button', { class: 'btn btn-primary', type: 'submit', 'aria-label': 'Add task' }, icon('plus'))));
 
   const c = card('Tasks', h('span', { class: 'card-meta', text: `${open.length} open` }),
+    inboxState.added ? h('button', {
+      type: 'button', class: 'inbox-note', title: 'Dismiss',
+      onclick: () => { inboxState.added = 0; render(); },
+    }, `✿ ${inboxState.added} new from your inbox`) : null,
     form,
     open.length ? groupedTodos(open, 'tasks') : h('p', { class: 'empty', text: 'All clear. Go smell some flowers ✿' }),
     ...doneSection('tasks', doneOf(t => !isAssignment(t))));
@@ -837,8 +927,68 @@ function stemAt(t) {
   return [0, 1].map(k => STEM.reduce((acc, p, i) => acc + p[k] * c[i], 0));
 }
 
+// Remember how each day went, so the garden can show it later.
+function recordDay(total, done) {
+  const date = todayStr();
+  const id = `day-${date}`;
+  let rec = S.days.find(d => d.id === id);
+  if (rec && !rec.deleted && rec.total === total && rec.done === done) return;
+  if (!rec) { rec = { id, date }; S.days.push(rec); }
+  Object.assign(rec, { total, done, deleted: false });
+  touch(rec);
+  scheduleSave(2000);
+}
+
+function bloomStreak() {
+  const byDate = new Map(live('days').map(d => [d.date, d]));
+  const bloomed = d => d && d.total > 0 && d.done >= d.total;
+  let day = todayStr();
+  if (!bloomed(byDate.get(day))) day = addDays(day, -1); // today still counts as "in progress"
+  let n = 0;
+  while (bloomed(byDate.get(day))) { n++; day = addDays(day, -1); }
+  return n;
+}
+
+function gardenGlyph(rec) {
+  const svg = s('svg', { viewBox: '0 0 20 26', class: 'glyph', 'aria-hidden': 'true' });
+  if (!rec || !rec.total) { svg.append(s('circle', { cx: 10, cy: 21, r: 1.6, class: 'g-dot' })); return svg; }
+  const p = Math.min(1, rec.done / rec.total);
+  if (p >= 1) {
+    svg.append(s('path', { d: 'M10 24 L10 12', class: 'g-stem' }));
+    for (let i = 0; i < 5; i++) {
+      const a = (i * 72 - 90) * Math.PI / 180;
+      svg.append(s('circle', { cx: (10 + Math.cos(a) * 3.6).toFixed(1), cy: (9 + Math.sin(a) * 3.6).toFixed(1), r: 2.9, class: 'g-petal' }));
+    }
+    svg.append(s('circle', { cx: 10, cy: 9, r: 1.9, class: 'g-center' }));
+    return svg;
+  }
+  const top = 24 - (4 + 12 * p);
+  svg.append(s('path', { d: `M10 24 L10 ${top.toFixed(1)}`, class: 'g-stem' }));
+  if (p > 0) svg.append(s('path', { d: `M10 ${(top + 4).toFixed(1)} c3 -3 6 -3 7 -1 c-2 2 -4 3 -7 1z`, class: 'g-leaf' }));
+  return svg;
+}
+
+function gardenStrip() {
+  const today = todayStr();
+  const byDate = new Map(live('days').map(d => [d.date, d]));
+  const cells = [];
+  for (let i = 13; i >= 0; i--) {
+    const date = addDays(today, -i);
+    const rec = byDate.get(date);
+    const label = `${fmtShort(date)}: ${rec && rec.total ? `${rec.done} of ${rec.total} done` : 'nothing due'}`;
+    cells.push(h('li', { class: date === today ? 'is-today' : null, title: label, 'aria-label': label }, gardenGlyph(rec)));
+  }
+  const streak = bloomStreak();
+  return h('div', { class: 'garden' },
+    h('div', { class: 'garden-head' },
+      h('span', { text: 'Your garden · last 2 weeks' }),
+      streak >= 2 ? h('span', { class: 'garden-streak', text: `✿ ${streak}-day streak` }) : null),
+    h('ul', { class: 'garden-row' }, cells));
+}
+
 function flowerCard() {
   const { total, done } = dayProgress();
+  recordDay(total, done);
   const p = total ? done / total : 0;
   const bloomed = total > 0 && done === total;
   const from = lastGrowth === null ? p : lastGrowth;
@@ -893,7 +1043,290 @@ function flowerCard() {
   return card('Today’s flower', null,
     h('div', { class: 'grow-wrap' }, svg),
     total && !bloomed ? h('div', { class: 'grow-bar' }, h('div', { class: 'grow-bar-fill', style: `width:${Math.round(p * 100)}%` })) : null,
-    h('p', { class: `grow-caption${bloomed ? ' bloomed' : ''}`, text: caption }));
+    h('p', { class: `grow-caption${bloomed ? ' bloomed' : ''}`, text: caption }),
+    gardenStrip());
+}
+
+// ---------------------------------------------------------------- focus timer
+
+const FOCUS_LENGTHS = [15, 25, 45, 60];
+const BREAK_LENGTHS = [5, 10];
+
+function focusMinutes(day) {
+  return live('focus').filter(f => f.date === day).reduce((a, f) => a + (f.minutes || 0), 0);
+}
+
+function focusLeft() {
+  if (focus.mode === 'running') return Math.max(0, focus.endAt - Date.now());
+  if (focus.mode === 'paused') return focus.remaining;
+  if (focus.mode === 'done') return 0;
+  return focus.minutes * 60e3;
+}
+
+function fmtClock(ms) {
+  const sec = Math.ceil(ms / 1000);
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+}
+
+function focusTasks() {
+  return openTodos().slice(0, 40);
+}
+
+function chime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[784, 0], [1047, 0.18], [1319, 0.36]].forEach(([f, t]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.6);
+      o.connect(g).connect(ctx.destination);
+      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.65);
+    });
+    setTimeout(() => ctx.close(), 1500);
+  } catch {}
+}
+
+async function focusNotify(text) {
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration('./') : null;
+    if (reg) reg.showNotification('Dashboard', { body: text, icon: 'icon-192.png', tag: 'focus' });
+    else new Notification('Dashboard', { body: text, icon: 'icon-192.png' });
+  } catch {}
+}
+
+function startFocus(kind, minutes) {
+  clearInterval(focus.timer);
+  Object.assign(focus, { mode: 'running', kind, minutes, endAt: Date.now() + minutes * 60e3, remaining: 0 });
+  focus.timer = setInterval(focusTick, 500);
+  render();
+}
+
+function pauseFocus() {
+  if (focus.mode !== 'running') return;
+  focus.remaining = Math.max(0, focus.endAt - Date.now());
+  focus.mode = 'paused';
+  clearInterval(focus.timer);
+  render();
+}
+
+function resumeFocus() {
+  if (focus.mode !== 'paused') return;
+  focus.endAt = Date.now() + focus.remaining;
+  focus.mode = 'running';
+  focus.timer = setInterval(focusTick, 500);
+  render();
+}
+
+function stopFocus(save) {
+  clearInterval(focus.timer);
+  const spent = Math.round((focus.minutes * 60e3 - focusLeft()) / 60e3);
+  if (save && focus.kind === 'focus' && spent >= 1) logFocus(spent);
+  Object.assign(focus, { mode: 'idle', kind: 'focus', endAt: 0, remaining: 0 });
+  document.title = 'Dashboard';
+  render();
+}
+
+function logFocus(minutes) {
+  const t = live('todos').find(x => x.id === focus.taskId);
+  S.focus.push(touch({ id: uid(), date: todayStr(), minutes, taskId: t ? t.id : '', title: t ? t.title : '', endedAt: Date.now() }));
+  scheduleSave(500);
+}
+
+function focusTick() {
+  if (!S) { clearInterval(focus.timer); return; }
+  const left = focusLeft();
+  if (left <= 0) {
+    clearInterval(focus.timer);
+    if (focus.kind === 'focus') logFocus(focus.minutes);
+    focus.mode = 'done';
+    chime();
+    focusNotify(focus.kind === 'focus' ? `${focus.minutes} minutes done. Your flower bloomed ✿` : 'Break’s over. Ready for another round?');
+    rerenderSafely();
+    return;
+  }
+  // light update without a full re-render
+  const time = document.getElementById('focus-time');
+  if (time) time.textContent = fmtClock(left);
+  const p = 1 - left / (focus.minutes * 60e3);
+  const ring = document.getElementById('focus-ring');
+  if (ring) ring.setAttribute('stroke-dashoffset', (100 * (1 - p)).toFixed(2));
+  const bud = document.getElementById('focus-bud');
+  if (bud) bud.style.transform = `scale(${(0.35 + 0.65 * p).toFixed(3)})`;
+  const badge = document.getElementById('focus-nav-badge');
+  if (badge) badge.textContent = fmtClock(left);
+  document.title = `${fmtClock(left)} · ${focus.kind === 'focus' ? 'Focus' : 'Break'}`;
+}
+
+function focusFlower(p, bloomed) {
+  const svg = s('svg', { viewBox: '0 0 200 200', class: `focus-art${bloomed ? ' bloomed' : ''}`, role: 'img', 'aria-label': bloomed ? 'Flower in bloom' : 'Flower growing' });
+  svg.append(s('circle', { cx: 100, cy: 100, r: 88, class: 'focus-track', pathLength: 100 }));
+  svg.append(s('circle', {
+    id: 'focus-ring', cx: 100, cy: 100, r: 88, class: `focus-ring${focus.kind === 'break' ? ' break' : ''}`, pathLength: 100,
+    'stroke-dasharray': 100, 'stroke-dashoffset': (100 * (1 - p)).toFixed(2), transform: 'rotate(-90 100 100)',
+  }));
+  svg.append(s('path', { d: 'M100 150 C96 130 104 118 100 100', class: 'grow-stem' }));
+  svg.append(s('path', { d: 'M99 132c-10 -9 -22 -9 -28 -3c8 7 19 8 28 3z', class: 'grow-leaf' }));
+  svg.append(s('path', { d: 'M101 120c9 -8 20 -8 26 -2c-7 7 -18 7 -26 2z', class: 'grow-leaf' }));
+  const g = s('g', { id: 'focus-bud', class: 'focus-bud', style: `transform-origin:100px 96px;transform:scale(${bloomed ? 1 : (0.35 + 0.65 * p).toFixed(3)})` });
+  if (bloomed || focus.kind === 'break') {
+    for (let i = 0; i < 6; i++) g.append(s('ellipse', { cx: 100, cy: 82, rx: 9, ry: 14, class: 'grow-petal', transform: `rotate(${i * 60} 100 96)` }));
+    g.append(s('circle', { cx: 100, cy: 96, r: 7, class: 'grow-center' }));
+  } else {
+    g.append(s('ellipse', { cx: 100, cy: 90, rx: 10, ry: 15, class: 'grow-bud' }));
+  }
+  svg.append(g);
+  return svg;
+}
+
+function renderFocus() {
+  const left = focusLeft();
+  const total = focus.minutes * 60e3;
+  const p = focus.mode === 'idle' ? 0 : 1 - left / total;
+  const bloomed = focus.mode === 'done' && focus.kind === 'focus';
+  const tasks = focusTasks();
+
+  const select = h('select', {
+    'aria-label': 'What are you working on?', disabled: focus.mode === 'running',
+    onchange: e => { focus.taskId = e.target.value; },
+  }, h('option', { value: '', text: 'Just focusing' }),
+  tasks.map(t => h('option', { value: t.id, text: `${t.title}${t.tag ? ` · ${t.tag}` : ''}`, selected: t.id === focus.taskId })));
+
+  const chips = (list, kind) => h('div', { class: 'chips focus-lengths' }, list.map(m => h('button', {
+    type: 'button', class: `chip chip-btn${focus.minutes === m && focus.kind === kind ? ' on' : ''}`,
+    onclick: () => { focus.minutes = m; focus.kind = kind; render(); },
+  }, `${m} min`)));
+
+  let controls;
+  if (focus.mode === 'idle') {
+    controls = [
+      chips(FOCUS_LENGTHS, 'focus'),
+      h('button', { class: 'btn btn-primary btn-wide', type: 'button', onclick: () => startFocus('focus', focus.kind === 'focus' ? focus.minutes : 25) }, 'Start focusing'),
+    ];
+  } else if (focus.mode === 'running' || focus.mode === 'paused') {
+    controls = [h('div', { class: 'row center-row' },
+      focus.mode === 'running'
+        ? h('button', { class: 'btn', type: 'button', text: 'Pause', onclick: pauseFocus })
+        : h('button', { class: 'btn btn-primary', type: 'button', text: 'Resume', onclick: resumeFocus }),
+      h('button', { class: 'btn', type: 'button', text: focus.kind === 'focus' ? 'Stop & save' : 'Skip break', onclick: () => stopFocus(true) }),
+      focus.kind === 'focus' ? h('button', { class: 'btn btn-danger', type: 'button', text: 'Discard', onclick: () => stopFocus(false) }) : null)];
+  } else {
+    const t = live('todos').find(x => x.id === focus.taskId && !x.done);
+    controls = [
+      h('p', { class: 'focus-done', text: focus.kind === 'focus' ? `Nice work. ${focus.minutes} minutes ✿` : 'Break’s over.' }),
+      h('div', { class: 'row center-row' },
+        focus.kind === 'focus' ? BREAK_LENGTHS.map(m => h('button', { class: 'btn', type: 'button', text: `${m}-min break`, onclick: () => startFocus('break', m) })) : null,
+        h('button', { class: 'btn btn-primary', type: 'button', text: 'Another round', onclick: () => startFocus('focus', focus.kind === 'focus' ? focus.minutes : 25) }),
+        h('button', { class: 'btn', type: 'button', text: 'Done for now', onclick: () => { focus.mode = 'idle'; focus.kind = 'focus'; document.title = 'Dashboard'; render(); } })),
+      t ? h('button', { class: 'link center-link', type: 'button', text: `Mark “${t.title}” as done`, onclick: () => commit(() => { t.done = true; t.doneAt = Date.now(); touch(t); }) }) : null,
+    ];
+  }
+
+  const today = todayStr();
+  const sessions = live('focus').filter(f => f.date === today).sort((a, b) => b.endedAt - a.endedAt);
+  let week = 0;
+  for (let i = 0; i < 7; i++) week += focusMinutes(addDays(today, -i));
+
+  return h('div', { class: 'page' },
+    h('header', { class: 'page-head' }, h('h1', { text: 'Focus' })),
+    h('div', { class: 'grid' },
+      h('div', { class: 'col' },
+        h('section', { class: 'card focus-card' },
+          h('div', { class: 'focus-kind', text: focus.mode === 'done' ? (focus.kind === 'break' ? 'Break complete' : 'Session complete') : focus.kind === 'break' ? 'On a break' : focus.mode === 'idle' ? 'Ready when you are' : focus.mode === 'paused' ? 'Paused' : 'Focusing' }),
+          h('div', { class: 'focus-dial' }, focusFlower(p, bloomed), h('div', { id: 'focus-time', class: 'focus-time', text: fmtClock(left) })),
+          focus.mode === 'done' ? null : select,
+          ...controls)),
+      h('div', { class: 'col col-narrow' },
+        card('Today', h('span', { class: 'card-meta', text: `${focusMinutes(today)} min` }),
+          sessions.length ? h('ul', { class: 'mini-list' }, sessions.map(f => h('li', null,
+            h('span', { text: f.title || 'Focus session' }),
+            h('span', { class: 'muted small', text: `${f.minutes} min` }))))
+            : h('p', { class: 'empty', text: 'No sessions yet today ✿' }),
+          h('dl', { class: 'stats' }, h('div', null, h('dt', { text: 'Last 7 days' }), h('dd', { text: `${week} min` })))),
+        card('How it works', null, h('ul', { class: 'bullets' },
+          h('li', { text: 'Pick a task and a length, then start. The bud grows as you go and blooms at the end.' }),
+          h('li', { text: 'The timer keeps running while you use the rest of the dashboard.' }),
+          h('li', { text: 'Your dashboard won’t auto-lock during a session.' }))))));
+}
+
+// ---------------------------------------------------------------- quick add from anywhere
+
+let quickOpen = false;
+
+function openQuickAdd() {
+  if (!S || quickOpen) return;
+  quickOpen = true;
+  const input = h('input', { placeholder: 'Add a task… e.g. “Lab report thu 11:59pm #bio”', 'aria-label': 'Quick add task', autocomplete: 'off' });
+  const preview = h('div', { class: 'quick-preview' });
+  const close = () => { quickOpen = false; overlay.remove(); };
+  const update = () => {
+    const q = parseQuick(input.value);
+    const bits = [];
+    if (q.due) bits.push(fmtShort(q.due) + (daysBetween(todayStr(), q.due) < 7 ? ` (${fmtWeekday(q.due)})` : ''));
+    if (q.time) bits.push(fmtTime(q.time));
+    if (q.tag) bits.push(`#${q.tag}`);
+    preview.textContent = bits.length ? `✿ ${bits.join(' · ')}` : '';
+  };
+  input.addEventListener('input', update);
+  const form = h('form', {
+    class: 'quick-box',
+    onsubmit: ev => {
+      ev.preventDefault();
+      const text = input.value.trim();
+      if (!text) return close();
+      const q = parseQuick(text);
+      commit(() => { S.todos.push(touch({ id: uid(), title: q.title.slice(0, 200), due: q.due, time: q.time, tag: q.tag, done: false, createdAt: Date.now() })); });
+      input.value = ''; update();
+      hint.textContent = `Added “${q.title}”. Add another, or press Esc.`;
+    },
+  }, input, preview);
+  const hint = h('div', { class: 'quick-hint', text: 'Enter to add · Esc to close' });
+  const overlay = h('div', { class: 'quick-overlay', onclick: e => { if (e.target === overlay) close(); } },
+    h('div', { class: 'quick-panel', role: 'dialog', 'aria-label': 'Quick add' }, form, hint));
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  document.body.append(overlay);
+  input.focus();
+}
+
+addEventListener('keydown', e => {
+  if (!S) return;
+  const a = document.activeElement;
+  const typing = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable);
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openQuickAdd(); }
+  else if (e.key === '/' && !typing) { e.preventDefault(); openQuickAdd(); }
+});
+
+// ---------------------------------------------------------------- countdowns
+
+const EXAM_RE = /\b(exams?|midterms?|finals?|final exam)\b/i;
+
+function upcomingExams() {
+  const today = todayStr(), last = addDays(today, 45);
+  const seen = new Set();
+  const out = [];
+  const add = (title, date, tag) => {
+    const key = `${title.toLowerCase()}|${date}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ title, date, tag, days: daysBetween(today, date) });
+  };
+  for (const e of live('events')) if (e.date >= today && e.date <= last && EXAM_RE.test(e.title)) add(e.title, e.date, e.tag);
+  for (const t of live('todos')) if (!t.done && t.due && t.due >= today && t.due <= last && EXAM_RE.test(t.title)) add(t.title, t.due, t.tag);
+  return out.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4);
+}
+
+function countdownCard() {
+  const exams = upcomingExams();
+  if (!exams.length) return null;
+  return card('Countdowns', null, h('ul', { class: 'countdowns' }, exams.map(x => h('li', { class: tagColor(x.tag) },
+    h('div', { class: `cd-num${x.days <= 3 ? ' soon' : ''}` },
+      h('strong', { text: x.days === 0 ? '✿' : String(x.days) }),
+      h('span', { text: x.days === 0 ? 'today' : x.days === 1 ? 'day' : 'days' })),
+    h('div', { class: 'cd-body' },
+      h('div', { class: 'cd-title', text: x.title }),
+      h('div', { class: 'cd-date' }, x.tag ? h('span', { class: 'asg-course', text: x.tag }) : null, fmtLong(x.date)))))));
 }
 
 function notesMini() {
@@ -1089,6 +1522,7 @@ function renderCalories() {
     h('div', { class: 'grid' },
       h('div', { class: 'col' },
         mealCard(day),
+        chatFoodCard(day),
         card('Log', null, form,
           recents.length ? h('div', { class: 'quick' },
             h('div', { class: 'subhead', text: 'Quick add' }),
@@ -1108,6 +1542,7 @@ function renderCalories() {
           h('div', { class: 'rings-big' }, rings(t, 168)),
           legend(t),
           h('p', { class: 'muted small center', text: left >= 0 ? `${left.toLocaleString()} cal left` : `${(-left).toLocaleString()} cal over` })),
+        waterCard(day),
         card('Weight', null, weightForm,
           ws ? h('dl', { class: 'stats' },
             h('div', null, h('dt', { text: 'Latest' }), h('dd', { text: `${Number(ws.latest.lbs).toFixed(1)} lb · ${fmtShort(ws.latest.date)}` })),
@@ -1197,6 +1632,67 @@ function mealCard(day) {
       h('button', { class: 'btn btn-primary', type: 'submit', text: `Log it${day === todayStr() ? '' : ` for ${fmtShort(day)}`}` }),
       h('button', { class: 'btn', type: 'button', text: 'Discard', onclick: reset }))),
     h('p', { class: 'muted small', text: 'Photo estimates can be off by 20% or more. Adjust the numbers if you know better.' }));
+}
+
+// Water: glasses per day, kept on that day's record.
+function waterFor(day) {
+  const rec = live('days').find(d => d.date === day);
+  return rec && rec.water ? rec.water : 0;
+}
+
+function setWater(day, n) {
+  commit(() => {
+    const id = `day-${day}`;
+    let rec = S.days.find(d => d.id === id);
+    if (!rec) { rec = { id, date: day }; S.days.push(rec); }
+    rec.water = Math.max(0, Math.min(16, n));
+    rec.deleted = false;
+    touch(rec);
+  });
+}
+
+function chatFoodCard(day) {
+  const box = h('textarea', { class: 'chat-paste', rows: 3, 'aria-label': 'Paste a chat reply', placeholder: 'Paste the chat’s reply here, e.g.\nChicken burrito bowl | 650 | 45 | 70 | 18 | 5 | 8' });
+  const status = h('p', { class: 'small', role: 'status' });
+  const copyBtn = h('button', { class: 'btn btn-small', type: 'button', onclick: async () => {
+    try { await navigator.clipboard.writeText(CHAT_PROMPT); copyBtn.textContent = 'Copied ✿'; }
+    catch { status.textContent = CHAT_PROMPT; status.className = 'small muted'; }
+    setTimeout(() => { copyBtn.textContent = 'Copy prompt'; }, 2000);
+  } }, 'Copy prompt');
+  const form = h('form', {
+    class: 'stack',
+    onsubmit: ev => {
+      ev.preventDefault();
+      const foods = parseFoodText(box.value);
+      if (!foods.length) {
+        status.textContent = 'Couldn’t find any foods with calories in that. Use the copied prompt so the reply comes back one food per line.';
+        status.className = 'small form-error';
+        return;
+      }
+      commit(() => { foods.forEach(f => addFood(f, day)); });
+    },
+  }, box, h('div', { class: 'row' }, h('button', { class: 'btn btn-primary', type: 'submit', text: `Add to ${day === todayStr() ? 'today' : fmtShort(day)}` }), copyBtn), status);
+  return card('From a chat', inboxState.addedFood ? h('span', { class: 'card-meta', text: `${inboxState.addedFood} from inbox` }) : null,
+    h('p', { class: 'muted small', text: 'Free option: send a meal photo to any chat assistant with the copied prompt, then paste its reply here.' }),
+    form);
+}
+
+function waterCard(day) {
+  const goal = Number(S.settings.goals.water) || 8;
+  const n = waterFor(day);
+  const drops = [];
+  for (let i = 0; i < Math.max(goal, n); i++) {
+    const full = i < n;
+    const svg = s('svg', { viewBox: '0 0 24 30', class: `drop${full ? ' full' : ''}`, 'aria-hidden': 'true' });
+    svg.append(s('path', { d: 'M12 2C9 8 4 13 4 19a8 8 0 0 0 16 0c0-6-5-11-8-17z' }));
+    drops.push(h('button', {
+      type: 'button', class: 'drop-btn', 'aria-label': full ? `Remove glass ${i + 1}` : `Add glass ${i + 1}`,
+      onclick: () => setWater(day, i + 1 === n ? i : i + 1),
+    }, svg));
+  }
+  return card('Water', h('span', { class: 'card-meta', text: `${n} / ${goal} glasses` }),
+    h('div', { class: 'drops' }, drops),
+    h('p', { class: 'muted small', text: n >= goal ? 'Hydrated ✿' : 'Tap a drop to log a glass.' }));
 }
 
 function fmtGrams(v) { return v === null ? '—' : `${v} g/day`; }
@@ -1381,7 +1877,7 @@ function renderSettings() {
     const key = h('input', { type: 'password', placeholder: 'Helper key', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Notification key' });
     nBody = [
       h('p', { text: 'Paste your helper key. It turns on notifications and meal photos. You only need to do this once; it syncs to your other devices inside the vault.' }),
-      h('form', { class: 'add-row', onsubmit: ev => { ev.preventDefault(); if (key.value.trim()) commit(() => { S.push = { ...p, dashKey: key.value.trim(), updatedAt: Date.now() }; }); } },
+      h('form', { class: 'add-row', onsubmit: ev => { ev.preventDefault(); if (key.value.trim()) { commit(() => { S.push = { ...p, dashKey: key.value.trim(), updatedAt: Date.now() }; }); inboxState.keySent = false; checkInbox(); } } },
         key, h('button', { class: 'btn btn-primary', type: 'submit', text: 'Save' })),
     ];
   } else if (!pushSupported() && !needsHomeScreen()) {
@@ -1429,6 +1925,17 @@ function renderSettings() {
   }
   const nCard = card('Notifications', null, ...nBody);
 
+  // Task inbox
+  const inboxReady = !!(S.push.dashKey && S.inbox.pub);
+  const ibCard = card('Task inbox', null,
+    h('p', { text: inboxReady
+      ? 'Ready. Tasks sent to your inbox are encrypted before they leave the sender, and show up in Tasks the next time this dashboard is open.'
+      : 'Add your helper key above to turn on the inbox. Then tasks can be sent here from other places, encrypted end to end.' }),
+    inboxReady ? h('p', { class: 'muted small' }, 'From a terminal in your website folder: ',
+      h('code', { text: 'node cloudflare/add-task.mjs "Read ch. 5" --due 2026-10-28 --tag orgo' })) : null,
+    h('p', { class: 'muted small', text: 'The helper only ever holds scrambled data; the key to open it lives inside your vault.' }));
+
+
   // Goals
   const goalInputs = Object.fromEntries(NUTRIENTS.map(m => [m.key, h('input', { type: 'number', min: '0', value: g.goals[m.key], 'aria-label': `${m.label} goal` })]));
   const goals = card('Daily goals', null, h('form', {
@@ -1474,6 +1981,11 @@ function renderSettings() {
     },
   }, cur, nw, nw2, pwBtn, pwMsg);
 
+  const appearance = card('Appearance', null,
+    h('div', { class: 'setting-row' },
+      h('div', null, h('strong', { text: 'Light or dark' }), h('p', { class: 'muted small', text: 'Saved on this device. Follows your system until you choose.' })),
+      themeButton(true)));
+
   const security = card('Security', null,
     h('div', { class: 'setting-row' }, h('div', null, h('strong', { text: 'Auto-lock' }), h('p', { class: 'muted small', text: 'Locks after this long without activity.' })), autoLock),
     h('div', { class: 'subhead', text: 'Change passphrase' }), pwForm,
@@ -1501,7 +2013,7 @@ function renderSettings() {
 
   return h('div', { class: 'page' },
     h('header', { class: 'page-head' }, h('h1', { text: 'Settings' })),
-    h('div', { class: 'settings' }, ghCard, cvCard, nCard, profile, goals, security, about));
+    h('div', { class: 'settings' }, ghCard, cvCard, nCard, ibCard, profile, goals, appearance, security, about));
 }
 
 // ---------------------------------------------------------------- go
