@@ -8,7 +8,7 @@ import { createKey, unlock, open, strength, MIN_LENGTH, MIN_BITS } from './crypt
 import {
   REPO, emptyState, normalize, merge, uid, readLocal, readRemote, save, pull,
   checkToken, rekey, forgetLocal,
-} from './store.js?v=2';
+} from './store.js?v=3';
 import {
   CANVAS_WEB, FEED_RE, fetchFeed, pushSupported, needsHomeScreen,
   currentSubscription, subscribe, unsubscribe, sendSchedule, testPush, shrinkPhoto, estimateMeal,
@@ -204,7 +204,9 @@ function commit(fn) {
   scheduleSave();
 }
 
-function scheduleSave(delay = 900) {
+// Saves wait until you've stopped tapping for a few seconds, so a burst of
+// edits becomes one save. Hiding the tab saves straight away.
+function scheduleSave(delay = 4000) {
   dirty = true;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(doSave, delay);
@@ -225,6 +227,7 @@ async function doSave() {
   } catch (e) {
     if (e.code === 'KEY_MISMATCH') setSync('error', 'Your passphrase was changed on another device. Lock and unlock with the new one.');
     else if (e.code === 'BAD_TOKEN') setSync('error', 'GitHub token expired or was revoked. Add a new one in Settings.');
+    else if (e.code === 'BAD_HELPER_KEY') setSync('error', 'The helper key was rejected, so changes are only saved on this device. Check it in Settings.');
     else if (e.code === 'NO_PERMISSION') setSync('error', 'GitHub token can’t save to the repo. Check its permissions in Settings.');
     else if (!navigator.onLine || e instanceof TypeError) setSync('offline');
     else setSync('error', e.message);
@@ -367,7 +370,7 @@ async function enter(state, keyInfo, needsSave) {
   S = normalize(state); K = keyInfo;
   if (location.hash.slice(1) in VIEWS) view = location.hash.slice(1);
   render();
-  if (S.github.token) {
+  if (S.github.token || S.push.dashKey) {
     try {
       const res = await pull(S, K);
       if (res.changed) { S = res.state; rerenderSafely(); }
@@ -566,7 +569,7 @@ function startAutoLock() {
     if (hiddenAt && focus.mode !== 'running' && Date.now() - hiddenAt > limit()) { lock(); return; }
     lastActive = Date.now();
     // Pick up edits made on another device while this tab was in the background.
-    if (S.github.token && !dirty && !saving) {
+    if ((S.github.token || S.push.dashKey) && !dirty && !saving) {
       try { const res = await pull(S, K); if (res.changed) { S = res.state; rerenderSafely(); } } catch {}
     }
     syncCanvas();

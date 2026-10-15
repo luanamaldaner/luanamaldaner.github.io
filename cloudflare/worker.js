@@ -9,6 +9,10 @@
 // 3. /inbox       A drop box for new tasks. Items arrive already encrypted to
 //    the dashboard's public key, so this helper can't read them; the
 //    dashboard picks them up on unlock and then clears them.
+// 4. /vault       The encrypted dashboard data (the same ciphertext that used
+//    to be committed to GitHub as vault.json). Saves use a revision number
+//    so two devices can't overwrite each other: a stale save gets a 409 with
+//    the current copy, and the dashboard merges and retries.
 
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -21,14 +25,14 @@ export default {
     const origin = req.headers.get('Origin') || '';
     const cors = ALLOWED_ORIGINS.includes(origin) ? {
       'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, X-Canvas-Feed, X-Dash-Key',
       'Access-Control-Max-Age': '86400',
       Vary: 'Origin',
     } : null;
     const url = new URL(req.url);
-    // Scripts (no browser Origin) may use the inbox; everything else is browser-only.
-    if (!cors && !url.pathname.startsWith('/inbox')) return new Response('Forbidden', { status: 403 });
+    // Scripts (no browser Origin) may use the inbox and the vault; everything else is browser-only.
+    if (!cors && !url.pathname.startsWith('/inbox') && url.pathname !== '/vault') return new Response('Forbidden', { status: 403 });
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors || {} });
 
     try {
@@ -40,6 +44,8 @@ export default {
       else if (url.pathname === '/inbox' && req.method === 'POST') res = await inboxAdd(req, env);
       else if (url.pathname === '/inbox' && req.method === 'GET') res = await inboxList(req, env);
       else if (url.pathname === '/inbox/ack' && req.method === 'POST') res = await inboxAck(req, env);
+      else if (url.pathname === '/vault' && req.method === 'GET') res = await vaultGet(env);
+      else if (url.pathname === '/vault' && req.method === 'PUT') res = await vaultPut(req, env);
       else if (url.pathname === '/push/config') res = json({ vapidPublicKey: env.VAPID_PUBLIC_KEY });
       else if (url.pathname === '/push/schedule' && req.method === 'POST') res = await setSchedule(req, env);
       else if (url.pathname === '/push/test' && req.method === 'POST') res = await testPush(req, env);
@@ -122,6 +128,45 @@ async function inboxAck(req, env) {
   const items = JSON.parse(await env.DASH_KV.get('inbox') || '[]').filter(i => !drop.has(i.id));
   await env.DASH_KV.put('inbox', JSON.stringify(items));
   return json({ ok: true, left: items.length });
+}
+
+// ------------------------------------------------------------- vault
+
+const MAX_VAULT = 5_000_000;
+
+// Reading needs no key: it's ciphertext, exactly what vault.json on GitHub
+// has always exposed. Writing needs the dashboard key.
+async function vaultGet(env) {
+  const raw = await env.DASH_KV.get('vault');
+  if (!raw) return json({ error: 'empty' }, 404);
+  const { file, rev, at } = JSON.parse(raw);
+  return json({ file, rev, at });
+}
+
+// Body: { file, base } where base is the revision the client last saw.
+async function vaultPut(req, env) {
+  if (!(await authed(req, env))) return new Response('Unauthorized', { status: 401 });
+  const text = await req.text();
+  if (text.length > MAX_VAULT) return json({ error: 'Vault too large' }, 413);
+  let body;
+  try { body = JSON.parse(text); } catch { return json({ error: 'Bad JSON' }, 400); }
+  const { file, base } = body || {};
+  if (!file || typeof file.iv !== 'string' || typeof file.ct !== 'string' || typeof file.kdf !== 'object') {
+    return json({ error: 'Vault must be encrypted (kdf, iv, ct).' }, 400);
+  }
+  const raw = await env.DASH_KV.get('vault');
+  const cur = raw ? JSON.parse(raw) : null;
+  const rev = cur ? cur.rev : 0;
+  if (base !== rev) return json({ error: 'conflict', rev, file: cur && cur.file }, 409);
+  // keep one backup per day of the copy being replaced, for 30 days
+  if (raw) {
+    const day = new Date().toISOString().slice(0, 10);
+    const bk = `vault-backup-${day}`;
+    if (!(await env.DASH_KV.get(bk))) await env.DASH_KV.put(bk, raw, { expirationTtl: 30 * 86400 });
+  }
+  const next = { file, rev: rev + 1, at: Date.now() };
+  await env.DASH_KV.put('vault', JSON.stringify(next));
+  return json({ rev: next.rev, at: next.at });
 }
 
 // ------------------------------------------------------------- meal photos

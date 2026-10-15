@@ -1,6 +1,9 @@
-// Vault storage: an encrypted copy in this browser, plus (once a GitHub
-// token is added) an encrypted copy committed to the website repo so every
-// device sees the same data. Only ciphertext ever leaves this file.
+// Vault storage: an encrypted copy in this browser, plus an encrypted copy in
+// the Cloudflare helper (KV) so every device sees the same data. Older
+// versions committed the vault to the website repo as vault.json; that copy is
+// still read and merged on every pull (so edits from tabs running the old code
+// aren't lost), and is used for saving only when no helper key is set up.
+// Only ciphertext ever leaves this file.
 
 import { seal, open } from './crypto.js';
 
@@ -13,6 +16,8 @@ export const REPO = {
 
 const LS_VAULT = 'pv.vault';
 const LS_SHA = 'pv.sha';
+const LS_REV = 'pv.rev';
+export const VAULT_URL = 'https://dash-helper.qwsfzueh.workers.dev/vault';
 const COLLECTIONS = ['todos', 'events', 'notes', 'food', 'weight', 'days', 'focus', 'internships', 'orgo'];
 const OBJECTS = ['settings', 'github', 'canvas', 'push', 'inbox'];
 const TOMBSTONE_DAYS = 45;
@@ -94,8 +99,47 @@ function localSha() {
   try { return localStorage.getItem(LS_SHA) || ''; } catch { return ''; }
 }
 
+function localRev() {
+  try { return Number(localStorage.getItem(LS_REV)) || 0; } catch { return 0; }
+}
+
+function setLocalRev(rev) {
+  try { localStorage.setItem(LS_REV, String(rev || 0)); } catch {}
+}
+
 export function forgetLocal() {
-  try { localStorage.removeItem(LS_VAULT); localStorage.removeItem(LS_SHA); } catch {}
+  try { localStorage.removeItem(LS_VAULT); localStorage.removeItem(LS_SHA); localStorage.removeItem(LS_REV); } catch {}
+}
+
+// ---------- Cloudflare copy ----------
+
+/** { file, rev } | null (nothing stored yet) | undefined (unreachable). */
+async function readKV() {
+  try {
+    const r = await fetch(VAULT_URL, { cache: 'no-store' });
+    if (r.status === 404) return null;
+    if (r.ok) { const j = await r.json(); return { file: j.file, rev: j.rev || 0 }; }
+  } catch {}
+  return undefined;
+}
+
+async function writeKV(file, base, dashKey) {
+  const r = await fetch(VAULT_URL, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Dash-Key': dashKey },
+    body: JSON.stringify({ file, base }),
+  });
+  if (r.ok) return (await r.json()).rev;
+  if (r.status === 409) {
+    const j = await r.json();
+    const e = new Error('Another device saved first.');
+    e.code = 'CONFLICT'; e.rev = j.rev; e.file = j.file;
+    throw e;
+  }
+  const e = new Error(r.status === 401 ? 'The helper key was rejected. Check it in Settings.' : `Cloud save failed (${r.status}).`);
+  e.status = r.status;
+  if (r.status === 401) e.code = 'BAD_HELPER_KEY';
+  throw e;
 }
 
 // ---------- GitHub copy ----------
@@ -121,7 +165,7 @@ function headers(token) {
 }
 
 /** Fetch the committed vault. Returns { file, sha } or null if none exists yet. */
-export async function readRemote(token) {
+async function readGitHub(token) {
   try {
     const r = await fetch(`${API}?ref=${REPO.branch}`, { headers: headers(token), cache: 'no-store' });
     if (r.status === 404) return null;
@@ -158,6 +202,18 @@ async function writeRemote(file, sha, token) {
   throw e;
 }
 
+/**
+ * Fetch both remote copies. Returns { file, sha, rev, kv, gh }, null when
+ * neither exists yet, or undefined when both are unreachable. `file` prefers
+ * the Cloudflare copy.
+ */
+export async function readRemote(token) {
+  const [kv, gh] = await Promise.all([readKV(), readGitHub(token).catch(e => { if (e.code === 'BAD_TOKEN') return undefined; throw e; })]);
+  if (kv === undefined && gh === undefined) return undefined;
+  if (!kv && !gh) return null;
+  return { file: (kv && kv.file) || (gh && gh.file), sha: gh ? gh.sha : null, rev: kv ? kv.rev : 0, kv, gh };
+}
+
 /** Check that a token can write to the website repo. */
 export async function checkToken(token) {
   const r = await fetch(`https://api.github.com/repos/${REPO.owner}/${REPO.repo}`,
@@ -179,6 +235,24 @@ export async function checkToken(token) {
 export async function save(state, keyInfo) {
   let file = await seal(state, keyInfo);
   writeLocal(file);
+  const dashKey = state.push && state.push.dashKey;
+  if (dashKey) {
+    let base = localRev();
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        setLocalRev(await writeKV(file, base, dashKey));
+        return { state, synced: true };
+      } catch (e) {
+        if (e.code !== 'CONFLICT') throw e;
+        // someone else saved first: merge their copy into ours and try again
+        if (e.file) state = merge(state, await open(e.file, keyInfo));
+        file = await seal(state, keyInfo);
+        writeLocal(file);
+        base = e.rev;
+      }
+    }
+    throw new Error('Could not save after several tries.');
+  }
   const token = state.github.token;
   if (!token) return { state, synced: false };
 
@@ -206,9 +280,19 @@ export async function save(state, keyInfo) {
 export async function pull(state, keyInfo) {
   const remote = await readRemote(state.github.token);
   if (!remote) return { state, changed: false };
-  if (remote.sha) writeLocal(readLocal() || remote.file, remote.sha);
-  const theirs = await open(remote.file, keyInfo);
-  const merged = merge(state, theirs);
+  let merged = state;
+  if (remote.kv) {
+    merged = merge(merged, await open(remote.kv.file, keyInfo));
+    // only move our revision forward if we have no unsaved edits of our own
+    if (remote.kv.rev > localRev()) setLocalRev(remote.kv.rev);
+  }
+  if (remote.gh) {
+    if (remote.sha) writeLocal(readLocal() || remote.gh.file, remote.sha);
+    try { merged = merge(merged, await open(remote.gh.file, keyInfo)); } catch (e) {
+      // after a passphrase change the old GitHub copy can't be opened; the cloud copy wins
+      if (!(remote.kv && e.code === 'KEY_MISMATCH')) throw e;
+    }
+  }
   return { state: merged, changed: JSON.stringify(merged) !== JSON.stringify(state) };
 }
 
@@ -216,11 +300,19 @@ export async function pull(state, keyInfo) {
 export async function rekey(state, newKeyInfo) {
   const file = await seal(state, newKeyInfo);
   writeLocal(file);
-  if (!state.github.token) return false;
-  const remote = await readRemote(state.github.token);
-  const sha = await writeRemote(file, remote && remote.sha, state.github.token);
-  writeLocal(file, sha);
-  return true;
+  let done = false;
+  if (state.push && state.push.dashKey) {
+    const kv = await readKV();
+    setLocalRev(await writeKV(file, kv ? kv.rev : 0, state.push.dashKey));
+    done = true;
+  }
+  if (state.github.token) {
+    const gh = await readGitHub(state.github.token);
+    const sha = await writeRemote(file, gh && gh.sha, state.github.token);
+    writeLocal(file, sha);
+    done = true;
+  }
+  return done;
 }
 
 export { normalize };
