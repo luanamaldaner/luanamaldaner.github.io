@@ -944,8 +944,8 @@ function flowerGadget() {
   const bloomed = total > 0 && done === total;
   const from = lastGrowth === null ? p : lastGrowth;
   lastGrowth = p;
-  const reach = 0.12 + 0.88 * p;          // how much of the stem is visible
-  const reachFrom = 0.12 + 0.88 * from;
+  const reach = 0.3 + 0.7 * p;            // how much of the stem is visible (starts as a seedling with a leaf)
+  const reachFrom = 0.3 + 0.7 * from;
 
   const svg = s('svg', { viewBox: '0 0 120 170', class: `grow${bloomed ? ' bloomed' : ''}`, role: 'img',
     'aria-label': total ? `Flower ${bloomed ? 'in full bloom' : `growing, ${done} of ${total} tasks done`}` : 'Seedling resting, nothing due today' });
