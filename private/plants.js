@@ -1,7 +1,7 @@
-// Little botanical drawings for the focus timer and the forests. Longer focus
-// sessions grow bigger plants; within a size the species and colours vary by seed.
-// Shapes are fixed paths written here, never user data. Colours come from CSS
-// classes (see "forest" in style.css), so plants follow the light/dark theme.
+// Little botanical flowers for the task garden. Each course gets its own
+// flower; colours vary by seed. Shapes are fixed paths written here, never user
+// data. Colours come from CSS classes (see "forest" in style.css), so the
+// flowers follow the light/dark theme.
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const n2 = v => (typeof v === 'number' ? +v.toFixed(2) : v);
@@ -29,29 +29,8 @@ function rng(seed) {
 }
 const pick = (r, list) => list[Math.floor(r() * list.length)];
 
-// ---------------------------------------------------------------- species
-
-// Focus grows a forest (greenery and trees); finished tasks grow a flower garden.
-// min = minutes of focus needed; h = rough height, used to fit plants in a frame.
+// Finished tasks grow a flower garden. h = rough height, used to fit flowers in a frame.
 export const SPECIES = {
-  // focus forest
-  sprout:    { label: 'Sprout', min: 0, h: 9 },
-  sapling:   { label: 'Sapling', min: 10, h: 17 },
-  fern:      { label: 'Fern', min: 10, h: 14 },
-  mushroom:  { label: 'Mushrooms', min: 10, h: 10 },
-  boxwood:   { label: 'Shrub', min: 20, h: 16 },
-  berry:     { label: 'Berry bush', min: 20, h: 18 },
-  hydrangea: { label: 'Hydrangea', min: 20, h: 18 },
-  birch:     { label: 'Birch', min: 35, h: 30 },
-  cypress:   { label: 'Cypress', min: 35, h: 32 },
-  oak:       { label: 'Oak', min: 55, h: 36 },
-  pine:      { label: 'Pine', min: 55, h: 38 },
-  maple:     { label: 'Maple', min: 55, h: 36 },
-  cherry:    { label: 'Cherry blossom', min: 55, h: 36 },
-  sakura:    { label: 'Grand sakura', min: 90, h: 46 },
-  golden:    { label: 'Golden tree', min: 90, h: 46 },
-  ancient:   { label: 'Ancient pine', min: 90, h: 48 },
-  // task garden
   daisy:     { label: 'Daisy', h: 20 },
   tulip:     { label: 'Tulip', h: 20 },
   bell:      { label: 'Bluebell', h: 19 },
@@ -61,24 +40,14 @@ export const SPECIES = {
   cosmos:    { label: 'Cosmos', h: 24 },
   poppy:     { label: 'Poppy', h: 21 },
 };
-export const TIERS = [
-  { min: 90, label: 'grand trees', kinds: ['sakura', 'golden', 'ancient'] },
-  { min: 55, label: 'trees', kinds: ['oak', 'pine', 'maple', 'cherry'] },
-  { min: 35, label: 'young trees', kinds: ['birch', 'cypress'] },
-  { min: 20, label: 'shrubs', kinds: ['boxwood', 'berry', 'hydrangea'] },
-  { min: 10, label: 'saplings, ferns & mushrooms', kinds: ['sapling', 'fern', 'mushroom'] },
-  { min: 0, label: 'a sprout', kinds: ['sprout'] },
-];
-// Flowers used for finished tasks, one species per course/tag.
-const TASK_KINDS = ['daisy', 'tulip', 'bell', 'rose', 'sunflower', 'lavender', 'cosmos', 'poppy'];
+const KINDS = Object.keys(SPECIES);
 
-export function tierFor(minutes) { return TIERS.find(t => minutes >= t.min); }
-export function plantForMinutes(minutes, seed) { return pick(rng(`kind:${seed}`), tierFor(minutes).kinds); }
-export function plantForTag(tag) { return tag ? TASK_KINDS[hash(`tag:${tag.toLowerCase()}`) % TASK_KINDS.length] : 'daisy'; }
+/** The flower for a course: always the same one for the same tag. */
+export function plantForTag(tag) { return tag ? KINDS[hash(`tag:${tag.toLowerCase()}`) % KINDS.length] : 'daisy'; }
 
 // ---------------------------------------------------------------- drawing
 // Base at (0, 0), growing up into negative y. Colour classes:
-//   p-stem  p-leaf  p-vein  p-trunk  p-canopy*  p-center  f-<colour> for petals
+//   p-stem  p-leaf  p-vein  p-center  f-<colour> for petals
 
 const at = (x, y, rot = 0) => `translate(${n2(x)} ${n2(y)}) rotate(${n2(rot)})`;
 const stem = (d, cls = 'p-stem') => el('path', { d, class: cls });
@@ -96,31 +65,8 @@ function petal(x, y, rot, len, w, cls) {
 function ring(x, y, count, len, w, cls, start = 0) {
   return Array.from({ length: count }, (_, i) => petal(x, y, start + i * 360 / count, len, w, cls));
 }
-// A tiny five-petal floret, for shrubs and blossom trees.
-function floret(x, y, size, cls) {
-  return el('g', null, ...ring(x, y, 5, size, size * 0.55, cls), el('circle', { cx: x, cy: y, r: size * 0.22, class: 'p-center' }));
-}
-// A soft, scalloped canopy outline around an ellipse.
-function cloud(cx, cy, rx, ry, bumps, r) {
-  const pts = Array.from({ length: bumps }, (_, i) => {
-    const a = (i / bumps) * Math.PI * 2 - Math.PI / 2;
-    const j = 0.92 + r() * 0.12;
-    return [cx + Math.cos(a) * rx * j, cy + Math.sin(a) * ry * j];
-  });
-  let d = `M${n2(pts[0][0])} ${n2(pts[0][1])}`;
-  for (let i = 0; i < bumps; i++) {
-    const [x1, y1] = pts[i], [x2, y2] = pts[(i + 1) % bumps];
-    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    const ox = mx + (mx - cx) * 0.32, oy = my + (my - cy) * 0.32; // bulge outward
-    d += `Q${n2(ox)} ${n2(oy)} ${n2(x2)} ${n2(y2)}`;
-  }
-  return d + 'z';
-}
 
 const DRAW = {
-  sprout() {
-    return [stem('M0 0C0 -3 0.4 -5 0 -6.5'), leaf(0, -6.2, -58, 4.6, 1.9), leaf(0, -6.4, 52, 5, 2)];
-  },
   daisy(r) {
     const c = pick(r, ['f-white', 'f-white', 'f-blush', 'f-lilac']);
     return [stem('M0 0C-0.8 -6 0.8 -11 0 -15.5'), leaf(0, -4, -52, 5.5), leaf(0.2, -8, 48, 4.6),
@@ -173,139 +119,63 @@ const DRAW = {
       ...ring(0, -18, 4, 4.4, 3.4, c, 45), ...ring(0, -18, 4, 3.2, 2.6, c, 0),
       el('circle', { cx: 0, cy: -18, r: 1.25, class: 'p-poppy-eye' })];
   },
-  sapling(r) {
-    const out = [stem('M0 0C-0.3 -5 0.3 -10 0 -15', 'p-sapling'), stem('M0 -8Q-2.4 -9.6 -3.6 -11.6', 'p-branch'), stem('M0 -10.5Q2.2 -11.8 3.4 -14', 'p-branch')];
-    for (const [x, y, a] of [[-3.6, -11.6, -40], [3.4, -14, 38], [0, -15, -6], [-1.2, -6, -70], [1.4, -12.6, 62]]) out.push(leaf(x, y, a + (r() - 0.5) * 16, 4.4, 2));
-    return out;
-  },
-  fern(r) {
-    const out = [];
-    for (const [a, len] of [[-58, 11], [-28, 14], [4, 15], [32, 13.5], [60, 10.5]]) {
-      const g = el('g', { transform: at(0, 0, a + (r() - 0.5) * 6) });
-      g.append(stem(`M0 0Q${n2(len * 0.12)} ${n2(-len * 0.55)} 0 ${n2(-len)}`));
-      for (let i = 1; i < 6; i++) {
-        const y = -len * i / 6, s = 3.2 * (1 - i / 7);
-        g.append(leaf(0, y, -70, s, 0.9), leaf(0, y, 70, s, 0.9));
-      }
-      out.push(g);
-    }
-    return out;
-  },
-  mushroom(r) {
-    const c = pick(r, ['p-cap-rust', 'p-cap-peach', 'p-cap-blush']);
-    const cap = (x, s) => [
-      el('path', { d: `M${n2(x - 1 * s)} 0L${n2(x - 0.8 * s)} ${n2(-4 * s)}L${n2(x + 0.8 * s)} ${n2(-4 * s)}L${n2(x + 1 * s)} 0z`, class: 'p-stalk' }),
-      el('path', { d: `M${n2(x - 4.2 * s)} ${n2(-3.6 * s)}C${n2(x - 4 * s)} ${n2(-8.6 * s)} ${n2(x + 4 * s)} ${n2(-8.6 * s)} ${n2(x + 4.2 * s)} ${n2(-3.6 * s)}Q${n2(x)} ${n2(-2.6 * s)} ${n2(x - 4.2 * s)} ${n2(-3.6 * s)}z`, class: c }),
-      el('circle', { cx: x - 1.5 * s, cy: -6 * s, r: 0.6 * s, class: 'p-dot' }), el('circle', { cx: x + 1.4 * s, cy: -6.6 * s, r: 0.5 * s, class: 'p-dot' }),
-    ];
-    return [stem('M-6 0Q-5 -2 -6.5 -3.4'), stem('M6 0Q5.2 -1.8 6.6 -3'), ...cap(-1.4, 1.15), ...cap(3.6, 0.75)];
-  },
-  boxwood(r) { return shrub(r, null, false); },
-  hydrangea(r) { return shrub(r, ['f-sky', 'f-lilac', 'f-blush']); },
-  berry(r) { return shrub(r, null); },
-  birch(r) {
-    const out = [el('path', { d: 'M-1.1 0C-0.8 -8 -0.7 -15 -0.5 -20L0.5 -20C0.7 -15 0.8 -8 1.1 0z', class: 'p-birch' })];
-    for (let i = 0; i < 4; i++) { const y = -3 - i * 4.2 - r() * 1.5; out.push(el('path', { d: `M${n2(-0.9 + r() * 0.4)} ${n2(y)}h${n2(0.7 + r() * 0.5)}`, class: 'p-birch-mark' })); }
-    out.push(stem('M0 -14Q-3 -16 -4 -19', 'p-branch'), stem('M0 -17Q2.5 -18.5 3.4 -21.5', 'p-branch'),
-      el('path', { d: cloud(-2.5, -22.5, 5.5, 5, 8, r), class: 'p-canopy-light' }),
-      el('path', { d: cloud(3, -25.5, 5, 4.6, 8, r), class: 'p-canopy-light' }));
-    return out;
-  },
-  cypress(r) {
-    return [el('path', { d: 'M-0.9 0L-0.6 -5L0.6 -5L0.9 0z', class: 'p-trunk' }),
-      el('path', { d: 'M0 -32C3.4 -26 5 -17 3.6 -9C3 -5.6 1.8 -4 0 -3.6C-1.8 -4 -3 -5.6 -3.6 -9C-5 -17 -3.4 -26 0 -32z', class: 'p-canopy-pine' }),
-      ...[[-1.2, -12], [1.4, -17], [-1, -22], [0.9, -26.5]].map(([x, y]) => el('path', { d: `M${x} ${y}q${n2(1 + r())} -1.2 ${n2(1.8 + r())} 0`, class: 'p-texture' }))];
-  },
-  oak(r) { return tree(r, 'p-canopy', null); },
-  maple(r) { return tree(r, pick(r, ['p-canopy-amber', 'p-canopy-rust']), null); },
-  cherry(r) { return tree(r, 'p-canopy-blossom', ['f-white', 'f-pink']); },
-  pine(r) { return pine(false); },
-  sakura(r) { return grand(tree(r, 'p-canopy-blossom', ['f-white', 'f-pink', 'f-blush'], 14), r, 'f-blush'); },
-  golden(r) { return grand(tree(r, 'p-canopy-gold', ['f-butter'], 10), r, 'f-butter'); },
-  ancient(r) { return grand(pine(true), r, 'f-white'); },
 };
 
-function shrub(r, colours, berries = true) {
-  const out = [
-    stem('M-3 0Q-2.4 -3 -4 -5', 'p-branch'), stem('M2.5 0Q2.2 -3 4 -5.5', 'p-branch'),
-    el('path', { d: cloud(0, -9, 9.5, 7, 9, r), class: 'p-canopy' }),
-  ];
-  const spots = [[-5.5, -10], [-1.5, -13.5], [3.8, -12.5], [6, -7.5], [0.5, -8.5], [-4.5, -5.8], [2.8, -4.8]];
-  for (const [x, y] of spots) {
-    if (colours) {
-      const c = pick(r, colours);
-      out.push(floret(x, y, 1.5, c), floret(x + 1.6, y + 1.1, 1.2, c));
-    } else if (berries) {
-      out.push(el('circle', { cx: x, cy: y, r: 0.95, class: 'p-berry' }), el('circle', { cx: x + 1.5, cy: y + 0.8, r: 0.8, class: 'p-berry' }));
-    } else {
-      out.push(el('path', { d: `M${n2(x - 1.2)} ${n2(y)}q1.2 -0.9 2.4 -0.1`, class: 'p-texture' }));
-    }
-  }
-  return out;
-}
-
-function tree(r, canopy, blossoms, count = 9) {
-  const out = [
-    el('path', { d: 'M-1.4 0C-1 -5 -0.9 -10 -0.6 -14L0.6 -14C0.9 -10 1 -5 1.4 0z', class: 'p-trunk' }),
-    stem('M-0.2 -10Q-3 -12.5 -4.5 -15.5', 'p-branch'), stem('M0.2 -12Q2.5 -14 4 -17', 'p-branch'),
-    el('path', { d: cloud(0, -24, 11.5, 10.5, 11, r), class: canopy }),
-  ];
-  // a few loose strokes for texture
-  for (let i = 0; i < 5; i++) {
-    const x = -7 + r() * 14, y = -31 + r() * 13;
-    out.push(el('path', { d: `M${n2(x)} ${n2(y)}q1.2 -0.9 2.4 -0.1`, class: 'p-texture' }));
-  }
-  if (blossoms) for (let i = 0; i < count; i++) out.push(floret(-8.5 + r() * 17, -32 + r() * 16, 1.3, pick(r, blossoms)));
-  return out;
-}
-
-function pine(snow) {
-  const out = [el('path', { d: 'M-1 0L-0.7 -7L0.7 -7L1 0z', class: 'p-trunk' })];
-  const layers = [[10, -6, -21], [8, -14, -29], [5.6, -22, -37.5]];
-  for (const [w, y, top] of layers) {
-    const mid = (y + top) / 2;
-    out.push(el('path', { d: `M${n2(-w)} ${y}Q${n2(-w * 0.4)} ${n2(mid + 2)} 0 ${top}Q${n2(w * 0.4)} ${n2(mid + 2)} ${n2(w)} ${y}Q0 ${n2(y + 2.2)} ${n2(-w)} ${y}z`, class: 'p-canopy-pine' }));
-    if (snow) {
-      const sy = top + (y - top) * 0.3, sw = w * 0.26;
-      out.push(el('path', { d: `M0 ${top}Q${n2(sw * 0.6)} ${n2(top + 2)} ${n2(sw)} ${n2(sy)}Q0 ${n2(sy - 1)} ${n2(-sw)} ${n2(sy)}Q${n2(-sw * 0.6)} ${n2(top + 2)} 0 ${top}z`, class: 'p-snow' }));
-    }
-  }
-  return out;
-}
-
-// Grand trees: drawn larger, with a few drifting petals.
-function grand(parts, r, c) {
-  const extra = [];
-  for (let i = 0; i < 4; i++) extra.push(petal(-15 + r() * 30, -44 + r() * 34, Math.round(r() * 180), 1.8, 1, c));
-  return [el('g', { transform: 'scale(1.25)' }, ...parts), ...extra];
-}
-
-/** A plant as an SVG <g>, base at (0, 0). */
+/** A flower as an SVG <g>, base at (0, 0). */
 export function plant(kind, seed, title) {
-  const g = el('g', { class: 'plant' }, ...(DRAW[kind] || DRAW.sprout)(rng(`look:${seed}`)));
+  const g = el('g', { class: 'plant' }, ...(DRAW[kind] || DRAW.daisy)(rng(`look:${seed}`)));
   if (title) { const t = el('title'); t.textContent = title; g.prepend(t); }
   return g;
 }
 
-/** A plant in its own little <svg>, for legends. */
+/** A flower in its own little <svg>, for legends. */
 export function plantIcon(kind, seed, cls = 'plant-icon') {
-  const hgt = Math.max(20, SPECIES[kind].h * (SPECIES[kind].min >= 90 ? 1.25 : 1) + 4);
+  const hgt = SPECIES[kind].h + 4;
   return el('svg', { viewBox: `${n2(-hgt / 2)} ${n2(-hgt + 1.5)} ${n2(hgt)} ${n2(hgt)}`, class: cls, 'aria-hidden': 'true' }, plant(kind, seed));
 }
 
 /**
- * One garden row: plants lined up along a soil line, evenly spaced.
- * items: [{ kind, seed, title }]
+ * A square patch of garden seen from above at an angle: one flower per item
+ * on a tidy grid, the first ones at the back. items: [{ kind, seed, title }]
  */
-export function gardenRow(items, label) {
-  const W = 300, H = 46;
-  const step = items.length > 1 ? Math.min(20, (W - 20) / (items.length - 1)) : 0;
-  const svg = el('svg', { viewBox: `0 ${-H + 3} ${W} ${H}`, preserveAspectRatio: 'xMinYMax meet', class: 'garden-bed', role: 'img', 'aria-label': label });
-  svg.append(el('path', { d: `M1 0.6H${W - 1}`, class: 'p-soil' }));
-  items.forEach((it, i) => {
-    const sp = SPECIES[it.kind];
-    const k = Math.min(1, 42 / (sp.h * (sp.min >= 90 ? 1.25 : 1)));
-    svg.append(el('g', { transform: `translate(${n2(10 + i * step)} 0) scale(${k})` }, plant(it.kind, it.seed, it.title)));
+export function forestPlot(items, label) {
+  const n = Math.max(5, Math.ceil(Math.sqrt(items.length)));
+  const dx = 14, dy = 7, depth = 5;
+  const pos = (c, r) => [(c - r) * dx, (c + r) * dy];
+  const cells = [];
+  for (let c = 0; c < n; c++) for (let r = 0; r < n; r++) cells.push([c, r]);
+  cells.sort((a, b) => (a[0] + a[1]) - (b[0] + b[1]) || a[0] - b[0]);
+
+  const top = [0, -dy], right = [n * dx, (n - 1) * dy], bottom = [0, (2 * n - 1) * dy], left = [-n * dx, (n - 1) * dy];
+  const down = ([x, y], k = depth) => [x, y + k];
+  const poly = pts => `M${pts.map(([x, y]) => `${n2(x)} ${n2(y)}`).join('L')}z`;
+  const out = [
+    el('path', { d: poly([down(left, depth + 3), down(bottom, depth + 6), down(right, depth + 3), right, bottom, left]), class: 'iso-shadow' }),
+    el('path', { d: poly([left, bottom, down(bottom), down(left)]), class: 'iso-left' }),
+    el('path', { d: poly([bottom, right, down(right), down(bottom)]), class: 'iso-right' }),
+    el('path', { d: poly([top, right, bottom, left]), class: 'iso-top' }),
+  ];
+  // faint row lines, like a planted bed
+  let grid = '';
+  for (let i = 1; i < n; i++) {
+    grid += `M${n2(i * dx)} ${n2((i - 1) * dy)}L${n2((i - n) * dx)} ${n2((i + n - 1) * dy)}`;
+    grid += `M${n2(-i * dx)} ${n2((i - 1) * dy)}L${n2((n - i) * dx)} ${n2((i + n - 1) * dy)}`;
+  }
+  out.push(el('path', { d: grid, class: 'iso-grid' }));
+
+  const tufts = rng(`tufts:${n}`);
+  cells.forEach(([c, r], i) => {
+    const [x, y] = pos(c, r);
+    const it = items[i];
+    if (!it) {
+      if (tufts() < 0.3) out.push(el('path', { d: `M${n2(x - 1.6)} ${n2(y + 0.8)}l0.6 -2.2M${n2(x)} ${n2(y + 0.8)}l0 -2.8M${n2(x + 1.6)} ${n2(y + 0.8)}l-0.6 -2.2`, class: 'iso-tuft' }));
+      return;
+    }
+    out.push(el('ellipse', { cx: x, cy: y + 0.8, rx: 4, ry: 1.4, class: 'iso-plant-shadow' }),
+      el('g', { transform: `translate(${n2(x)} ${n2(y + 0.8)}) scale(0.82)` }, plant(it.kind, it.seed, it.title)));
   });
-  return svg;
+
+  const tallest = items.length ? Math.max(...items.slice(0, n * 2).map(it => SPECIES[it.kind].h * 0.82)) : 4;
+  const vb = [-n * dx - 4, -dy - tallest - 2, 2 * n * dx + 8, 2 * n * dy + depth + tallest + 12];
+  return el('svg', { viewBox: vb.map(n2).join(' '), class: 'forest-plot', role: 'img', 'aria-label': label }, ...out);
 }
