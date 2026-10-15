@@ -17,7 +17,7 @@ import {
 import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
-import { SPECIES, TIERS, tierFor, plantForMinutes, plantForTag, plant, plantIcon, forestPlot } from './plants.js';
+import { SPECIES, TIERS, plantForMinutes, plantForTag, plant, plantIcon, gardenRow } from './plants.js';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -1258,7 +1258,7 @@ function renderFocus() {
             : h('p', { class: 'empty', text: 'No sessions yet today ✿' }),
           h('dl', { class: 'stats' }, h('div', null, h('dt', { text: 'Last 7 days' }), h('dd', { text: `${week} min` })))),
         card('This week’s forest', h('button', { class: 'link', type: 'button', text: 'Open forest', onclick: () => { forestSpan = 'week'; forestOffset = 0; go('forest'); } }),
-          forestPlot(focusItems(weekStart(today), addDays(weekStart(today), 7)), 'Focus forest for this week')),
+          gardenRow(focusItems(weekStart(today), addDays(weekStart(today), 7)), 'Focus plants this week')),
         card('How it works', null, h('ul', { class: 'bullets' },
           h('li', { text: 'Pick a task and a length, then start. Your plant grows as you go and is planted in your forest at the end.' }),
           h('li', { text: `Longer sessions grow bigger plants: ${[...TIERS].reverse().map(t => `${t.min ? `${t.min}+ min` : 'under 10'}: ${t.label}`).join(' · ')}.` }),
@@ -1304,20 +1304,26 @@ function taskItems(from, to) {
 
 function fmtMinutes(m) { return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60 ? `${m % 60}m` : ''}`.trim() : `${m} min`; }
 
-// One bar per day of the range.
-function dayBars(items, from, to, fmt) {
-  const days = [];
-  for (let d = from; d < to; d = addDays(d, 1)) days.push(d);
-  const per = new Map(days.map(d => [d, 0]));
-  for (const it of items) per.set(it.date, (per.get(it.date) || 0) + it.value);
-  const max = Math.max(1, ...per.values());
+// Garden beds: one row per day (week view) or per week (month view).
+function bedRows(items, from, to, fmt) {
   const today = todayStr();
-  return h('div', { class: `fbars${days.length > 7 ? ' fbars-month' : ''}` }, days.map((d, i) => {
-    const v = per.get(d);
-    const lbl = days.length > 7 ? (i === 0 || (i + 1) % 5 === 0 ? String(parse(d).getDate()) : '') : fmtWeekday(d).slice(0, 2);
-    return h('div', { class: `fbar${d === today ? ' is-today' : ''}`, title: `${fmtShort(d)}: ${fmt(v)}` },
-      h('div', { class: 'fbar-track' }, h('div', { class: 'fbar-fill', style: `height:${v ? Math.max(6, Math.round(v / max * 100)) : 0}%` })),
-      h('span', { class: 'fbar-label', text: lbl }));
+  const rows = [];
+  if (forestSpan === 'week') {
+    for (let d = from; d < to; d = addDays(d, 1)) rows.push({ from: d, to: addDays(d, 1), label: `${fmtWeekday(d)} ${parse(d).getDate()}` });
+  } else {
+    for (let d = from; d < to; d = addDays(d, 7)) {
+      const end = addDays(d, 7) < to ? addDays(d, 7) : to;
+      rows.push({ from: d, to: end, label: fmtShort(d) });
+    }
+  }
+  return h('ul', { class: 'beds' }, rows.map(r => {
+    const its = items.filter(it => it.date >= r.from && it.date < r.to);
+    const total = its.reduce((a, it) => a + it.value, 0);
+    const current = today >= r.from && today < r.to;
+    return h('li', { class: current ? 'is-today' : null },
+      h('span', { class: 'bed-label', text: r.label }),
+      gardenRow(its, `${r.label}: ${its.length ? fmt(total) : 'nothing yet'}`),
+      h('span', { class: 'bed-meta', text: its.length ? fmt(total) : '' }));
   }));
 }
 
@@ -1329,7 +1335,8 @@ function bestDay(items) {
   return best;
 }
 
-function speciesRow(items, keyOf, labelOf) {
+function speciesRow(items, keyOf, labelOf, emptyText) {
+  if (!items.length) return h('p', { class: 'species-empty', text: emptyText });
   const groups = new Map();
   for (const it of items) {
     const k = keyOf(it);
@@ -1337,7 +1344,11 @@ function speciesRow(items, keyOf, labelOf) {
     groups.get(k).n++;
   }
   return h('ul', { class: 'species-row' }, [...groups.values()].sort((a, b) => b.n - a.n).map(({ it, n }) =>
-    h('li', { title: labelOf(it) }, plantIcon(it.kind, it.seed), h('span', { text: `${labelOf(it)} ×${n}` }))));
+    h('li', { title: labelOf(it) }, plantIcon(it.kind, it.seed), h('span', { text: `${labelOf(it)} · ${n}` }))));
+}
+
+function statList(rows) {
+  return h('dl', { class: 'stats' }, rows.map(([k, v]) => h('div', null, h('dt', { text: k }), h('dd', { text: v }))));
 }
 
 function renderForest() {
@@ -1347,28 +1358,29 @@ function renderForest() {
   const tItems = taskItems(from, to);
   const fTotal = fItems.reduce((a, f) => a + f.value, 0);
   const fBest = bestDay(fItems), tBest = bestDay(tItems);
+  const courses = new Set(tItems.map(t => t.tag.toLowerCase()).filter(Boolean)).size;
   const seg = (key, text) => h('button', { type: 'button', class: `chip chip-btn${forestSpan === key ? ' on' : ''}`, text,
     onclick: () => { forestSpan = key; forestOffset = 0; render(); } });
 
   const focusCard = card('Focus forest', h('span', { class: 'card-meta', text: fmtMinutes(fTotal) }),
-    forestPlot(fItems, `Focus forest, ${fItems.length} plants`),
-    fItems.length ? speciesRow(fItems, it => it.kind, it => SPECIES[it.kind].label)
-      : h('p', { class: 'empty', text: forestOffset ? `No focus sessions this ${span}.` : `Nothing planted yet this ${span}. Finish a focus session to grow your first plant ✿` }),
-    dayBars(fItems, from, to, v => fmtMinutes(v)),
-    h('dl', { class: 'stats' },
-      h('div', null, h('dt', { text: 'Sessions' }), h('dd', { text: String(fItems.length) })),
-      h('div', null, h('dt', { text: 'Focused' }), h('dd', { text: fmtMinutes(fTotal) })),
-      fBest ? h('div', null, h('dt', { text: 'Best day' }), h('dd', { text: `${fmtShort(fBest[0])} · ${fmtMinutes(fBest[1])}` })) : null));
+    bedRows(fItems, from, to, v => fmtMinutes(v)),
+    speciesRow(fItems, it => it.kind, it => SPECIES[it.kind].label,
+      forestOffset ? `No focus sessions this ${span}.` : 'Finish a focus session to plant your first one ✿'),
+    statList([
+      ['Sessions', String(fItems.length)],
+      ['Focused', fmtMinutes(fTotal)],
+      ['Best day', fBest ? `${fmtShort(fBest[0])} · ${fmtMinutes(fBest[1])}` : '—'],
+    ]));
 
   const taskCard = card('Homework & tasks', h('span', { class: 'card-meta', text: `${tItems.length} done` }),
-    forestPlot(tItems, `Task garden, ${tItems.length} flowers`),
-    tItems.length ? speciesRow(tItems, it => it.tag.toLowerCase(), it => it.tag || 'Other')
-      : h('p', { class: 'empty', text: forestOffset ? `No tasks finished this ${span}.` : `Every task or assignment you finish this ${span} plants a flower here ✿` }),
-    dayBars(tItems, from, to, v => `${v} done`),
-    h('dl', { class: 'stats' },
-      h('div', null, h('dt', { text: 'Finished' }), h('dd', { text: String(tItems.length) })),
-      tBest ? h('div', null, h('dt', { text: 'Best day' }), h('dd', { text: `${fmtShort(tBest[0])} · ${tBest[1]} done` })) : null),
-    h('p', { class: 'muted small', text: 'Each course gets its own flower, so you can see where your work went.' }));
+    bedRows(tItems, from, to, v => `${v} done`),
+    speciesRow(tItems, it => it.tag.toLowerCase(), it => it.tag || 'Other',
+      forestOffset ? `No tasks finished this ${span}.` : 'Each task you finish plants a flower. Every course grows its own kind ✿'),
+    statList([
+      ['Finished', String(tItems.length)],
+      ['Courses', String(courses)],
+      ['Best day', tBest ? `${fmtShort(tBest[0])} · ${tBest[1]} done` : '—'],
+    ]));
 
   return h('div', { class: 'page' },
     h('header', { class: 'page-head forest-head' }, h('h1', { text: 'Forest' }),
