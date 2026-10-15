@@ -432,7 +432,7 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .charm-bubble {
   background:
     radial-gradient(ellipse 15% 10% at 31% 25%, rgba(255,255,255,1) 0, rgba(255,255,255,.85) 40%, rgba(255,255,255,0) 100%),
     radial-gradient(circle at 30% 26%, rgba(255,255,255,.6) 0 7%, rgba(255,255,255,0) 18%),
-    radial-gradient(circle, rgba(255,255,255,0) 66.5%, rgba(255,255,255,.35) 69%, rgba(255,255,255,.9) 70.4%, rgba(255,255,255,0) 71.2%),
+    radial-gradient(circle, rgba(255,255,255,0) 69.2%, rgba(255,255,255,.75) 70.3%, rgba(255,255,255,0) 70.9%),
     conic-gradient(from 210deg, rgba(255,140,220,.28), rgba(140,220,255,.28), rgba(150,255,200,.25), rgba(255,240,150,.25), rgba(255,140,220,.28));
 }
 
@@ -447,7 +447,7 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .charm-bubbles {
   background:
     radial-gradient(ellipse 15% 10% at 31% 25%, rgba(255,255,255,1) 0, rgba(255,255,255,.85) 40%, rgba(255,255,255,0) 100%),
     radial-gradient(circle at 30% 26%, rgba(255,255,255,.6) 0 7%, rgba(255,255,255,0) 18%),
-    radial-gradient(circle, rgba(255,255,255,0) 66.5%, rgba(255,255,255,.35) 69%, rgba(255,255,255,.9) 70.4%, rgba(255,255,255,0) 71.2%),
+    radial-gradient(circle, rgba(255,255,255,0) 69.2%, rgba(255,255,255,.75) 70.3%, rgba(255,255,255,0) 70.9%),
     conic-gradient(from 210deg, rgba(255,140,220,.28), rgba(140,220,255,.28), rgba(150,255,200,.25), rgba(255,240,150,.25), rgba(255,140,220,.28));
   -webkit-mask: radial-gradient(circle, #000 70.6%, transparent 71.4%);
   mask: radial-gradient(circle, #000 70.6%, transparent 71.4%);
@@ -460,7 +460,7 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .charm-bubbles {
   background:
     radial-gradient(ellipse 15% 10% at 69% 25%, rgba(255,255,255,1) 0, rgba(255,255,255,.85) 40%, rgba(255,255,255,0) 100%),
     radial-gradient(circle at 70% 26%, rgba(255,255,255,.6) 0 7%, rgba(255,255,255,0) 18%),
-    radial-gradient(circle, rgba(255,255,255,0) 66.5%, rgba(255,255,255,.35) 69%, rgba(255,255,255,.9) 70.4%, rgba(255,255,255,0) 71.2%),
+    radial-gradient(circle, rgba(255,255,255,0) 69.2%, rgba(255,255,255,.75) 70.3%, rgba(255,255,255,0) 70.9%),
     conic-gradient(from 210deg, rgba(255,140,220,.28), rgba(140,220,255,.28), rgba(150,255,200,.25), rgba(255,240,150,.25), rgba(255,140,220,.28));
 }
 @keyframes charm-drift2 {
@@ -469,3 +469,13 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .charm-bubbles {
   100% { transform: translate(calc(var(--fx, 8px) * -0.5), calc(var(--fy, 14px) * -0.3)); }
 }
 @media (prefers-reduced-motion: reduce) { .charm-pbubble { animation: none; } }
+/* a bit more blue all the way down, with soft sky-blue washes so it isn't flat */
+html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .ambient-bg {
+  background:
+    radial-gradient(60% 40% at 85% 55%, rgba(150, 200, 245, .35), transparent 70%),
+    radial-gradient(55% 35% at 10% 85%, rgba(165, 210, 250, .35), transparent 70%),
+    linear-gradient(180deg, #a9d4f4 0%, #c3e1f7 26%, #d6eaf9 52%, #e1effa 76%, #e8f3fb 100%);
+}
+
+/* thinner rims: softer shadow so the edge doesn't read as a thick line */
+.charm-pbubble { filter: drop-shadow(0 4px 10px rgba(80, 150, 220, .12)); }
