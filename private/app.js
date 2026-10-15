@@ -17,7 +17,7 @@ import {
 import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
-import { SPECIES, plantForTag, plantIcon, forestPlot } from './plants.js';
+import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -1105,6 +1105,7 @@ async function focusNotify(text) {
 function startFocus(kind, minutes) {
   clearInterval(focus.timer);
   Object.assign(focus, { mode: 'running', kind, minutes, endAt: Date.now() + minutes * 60e3, remaining: 0 });
+  if (kind === 'focus') focus.lastFocus = minutes;
   focus.timer = setInterval(focusTick, 500);
   render();
 }
@@ -1148,7 +1149,7 @@ function focusTick() {
     if (focus.kind === 'focus') logFocus(focus.minutes);
     focus.mode = 'done';
     chime();
-    focusNotify(focus.kind === 'focus' ? `${focus.minutes} minutes done. Your flower bloomed ✿` : 'Break’s over. Ready for another round?');
+    focusNotify(focus.kind === 'focus' ? `${focus.minutes} minutes done. Your ${focusBloom(focus.minutes).label} bloomed ✿` : 'Break’s over. Ready for another round?');
     rerenderSafely();
     return;
   }
@@ -1165,23 +1166,27 @@ function focusTick() {
   document.title = `${fmtClock(left)} · ${focus.kind === 'focus' ? 'Focus' : 'Break'}`;
 }
 
+// Longer sessions grow bigger, showier flowers.
+// [minutes, flower, height in the dial, look]
+const FOCUS_FLOWERS = [[60, 'sunflower', 104, 0], [45, 'rose', 92, 12], [25, 'tulip', 78, 10], [0, 'daisy', 64, 2]];
+function focusBloom(minutes) {
+  const [, kind, height, look] = FOCUS_FLOWERS.find(([m]) => minutes >= m);
+  return { kind, height, seed: `focus-${kind}-${look}`, label: SPECIES[kind].label.toLowerCase() };
+}
+
 function focusFlower(p, bloomed) {
-  const svg = s('svg', { viewBox: '0 0 200 200', class: `focus-art${bloomed ? ' bloomed' : ''}`, role: 'img', 'aria-label': bloomed ? 'Flower in bloom' : 'Flower growing' });
+  const bloom = focusBloom(focus.kind === 'break' ? (focus.lastFocus || 25) : focus.minutes);
+  const svg = s('svg', { viewBox: '0 0 200 200', class: `focus-art${bloomed ? ' bloomed' : ''}`, role: 'img', 'aria-label': `${bloom.label} ${bloomed ? 'in bloom' : 'growing'}` });
   svg.append(s('circle', { cx: 100, cy: 100, r: 88, class: 'focus-track', pathLength: 100 }));
   svg.append(s('circle', {
     id: 'focus-ring', cx: 100, cy: 100, r: 88, class: `focus-ring${focus.kind === 'break' ? ' break' : ''}`, pathLength: 100,
     'stroke-dasharray': 100, 'stroke-dashoffset': (100 * (1 - p)).toFixed(2), transform: 'rotate(-90 100 100)',
   }));
-  svg.append(s('path', { d: 'M100 150 C96 130 104 118 100 100', class: 'grow-stem' }));
-  svg.append(s('path', { d: 'M99 132c-10 -9 -22 -9 -28 -3c8 7 19 8 28 3z', class: 'grow-leaf' }));
-  svg.append(s('path', { d: 'M101 120c9 -8 20 -8 26 -2c-7 7 -18 7 -26 2z', class: 'grow-leaf' }));
-  const g = s('g', { id: 'focus-bud', class: 'focus-bud', style: `transform-origin:100px 96px;transform:scale(${bloomed ? 1 : (0.35 + 0.65 * p).toFixed(3)})` });
-  if (bloomed || focus.kind === 'break') {
-    for (let i = 0; i < 6; i++) g.append(s('ellipse', { cx: 100, cy: 82, rx: 9, ry: 14, class: 'grow-petal', transform: `rotate(${i * 60} 100 96)` }));
-    g.append(s('circle', { cx: 100, cy: 96, r: 7, class: 'grow-center' }));
-  } else {
-    g.append(s('ellipse', { cx: 100, cy: 90, rx: 10, ry: 15, class: 'grow-bud' }));
-  }
+  svg.append(s('ellipse', { cx: 100, cy: 152, rx: 34, ry: 5, class: 'grow-soil' }));
+  const full = bloomed || focus.kind === 'break' || focus.mode === 'idle';
+  const k = bloom.height / SPECIES[bloom.kind].h;
+  const g = s('g', { id: 'focus-bud', class: 'focus-bud', style: `transform-origin:100px 152px;transform:scale(${full ? 1 : (0.35 + 0.65 * p).toFixed(3)})` },
+    s('g', { transform: `translate(100 152) scale(${k.toFixed(2)})` }, plant(bloom.kind, bloom.seed)));
   svg.append(g);
   return svg;
 }
@@ -1208,6 +1213,7 @@ function renderFocus() {
   if (focus.mode === 'idle') {
     controls = [
       chips(FOCUS_LENGTHS, 'focus'),
+      h('p', { class: 'focus-preview', text: `${focus.minutes} min grows a ${focusBloom(focus.minutes).label}` }),
       h('button', { class: 'btn btn-primary btn-wide', type: 'button', onclick: () => startFocus('focus', focus.kind === 'focus' ? focus.minutes : 25) }, 'Start focusing'),
     ];
   } else if (focus.mode === 'running' || focus.mode === 'paused') {
@@ -1220,7 +1226,7 @@ function renderFocus() {
   } else {
     const t = live('todos').find(x => x.id === focus.taskId && !x.done);
     controls = [
-      h('p', { class: 'focus-done', text: focus.kind === 'focus' ? `Nice work. ${focus.minutes} minutes ✿` : 'Break’s over.' }),
+      h('p', { class: 'focus-done', text: focus.kind === 'focus' ? `Nice work. Your ${focusBloom(focus.minutes).label} bloomed ✿` : 'Break’s over.' }),
       h('div', { class: 'row center-row' },
         focus.kind === 'focus' ? BREAK_LENGTHS.map(m => h('button', { class: 'btn', type: 'button', text: `${m}-min break`, onclick: () => startFocus('break', m) })) : null,
         h('button', { class: 'btn btn-primary', type: 'button', text: 'Another round', onclick: () => startFocus('focus', focus.kind === 'focus' ? focus.minutes : 25) }),
@@ -1251,7 +1257,8 @@ function renderFocus() {
             : h('p', { class: 'empty', text: 'No sessions yet today ✿' }),
           h('dl', { class: 'stats' }, h('div', null, h('dt', { text: 'Last 7 days' }), h('dd', { text: `${week} min` })))),
         card('How it works', null, h('ul', { class: 'bullets' },
-          h('li', { text: 'Pick a task and a length, then start. The bud grows as you go and blooms at the end.' }),
+          h('li', { text: 'Pick a task and a length, then start. Your flower grows as you go and blooms at the end.' }),
+          h('li', { text: 'Longer sessions grow bigger flowers: a daisy, a tulip at 25 min, a rose at 45, a sunflower at 60.' }),
           h('li', { text: 'The timer keeps running while you use the rest of the dashboard.' }),
           h('li', { text: 'Your dashboard won’t auto-lock during a session.' }))))));
 }
