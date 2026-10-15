@@ -18,7 +18,8 @@ import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
-import { renderOrgo } from './orgo/orgo.js?v=4';
+import { renderOrgo } from './orgo/orgo.js?v=5';
+import { renderProg } from './prog/prog.js?v=1';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -128,6 +129,7 @@ const ICONS = {
   moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
   auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
   orgo: '<path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z"/><circle cx="12" cy="12" r="3.2"/>',
+  code: '<path d="M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5M13.5 4.5l-3 15"/>',
   focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/>',
   briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12.5h18"/>',
   tree: '<path d="M12 3l5 6.5h-2.6L18.5 15h-13l4.1-5.5H7z"/><path d="M12 15v6"/>',
@@ -581,6 +583,7 @@ const VIEWS = {
   forest: { label: 'Forest', icon: 'tree', render: renderForest },
   internships: { label: 'Internships', icon: 'briefcase', render: renderInternships },
   orgo: { label: 'Orgo', icon: 'orgo', render: () => renderOrgo(ORGO_CTX) },
+  prog: { label: 'Prog 1', icon: 'code', render: () => renderProg(ORGO_CTX) },
   notes: { label: 'Quick Notes', icon: 'notes', render: renderNotes },
   settings: { label: 'Settings', icon: 'settings', render: renderSettings },
 };

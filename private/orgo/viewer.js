@@ -17,6 +17,8 @@ const LOBE = { filled: [0x3ddc97, 0xff7eb6], empty: [0xa78bfa, 0xa78bfa] };
 // Curved arrows cycle through these so each electron move has its own colour.
 const ARROWS = { light: [0xd9467f, 0x7b5cff, 0xe9860f, 0x1fa37a], dark: [0xff8fbc, 0xb3a1ff, 0xffbf66, 0x6ee0b0] };
 const ELECTRON = { light: 0xffb020, dark: 0xffd76e };
+// Highlight shells: pink = electrophile / bond changing, blue = electron-rich, amber = proton on the move.
+const HALO = { pink: [0xff5c9a, 0xff8fbc], blue: [0x4a7dff, 0x8fb0ff], amber: [0xffa31a, 0xffc766], violet: [0x8b5cf6, 0xb8a2ff] };
 
 
 const Y_UP = new THREE.Vector3(0, 1, 0);
@@ -33,14 +35,14 @@ export class Viewer {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(32, 1, 0.1, 400);
     this.scene.add(this.camera);
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x5a6670, 0.85));
-    const key = new THREE.DirectionalLight(0xffffff, 2.3);
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x8a9a90, 1.15));
+    const key = new THREE.DirectionalLight(0xffffff, 1.8);
     key.position.set(4, 6, 8);
     this.camera.add(key);
-    const rim = new THREE.DirectionalLight(0xffc0dc, 0.75);
+    const rim = new THREE.DirectionalLight(0xffffff, 0.5);
     rim.position.set(-6, -2, 3);
     this.camera.add(rim);
-    const rim2 = new THREE.DirectionalLight(0xa6f0d2, 0.55);
+    const rim2 = new THREE.DirectionalLight(0xffffff, 0.25);
     rim2.position.set(6, -4, -2);
     this.camera.add(rim2);
 
@@ -61,7 +63,7 @@ export class Viewer {
       cyl: new THREE.CylinderGeometry(1, 1, 1, 18, 1),
       cone: new THREE.ConeGeometry(1, 1, 18),
     };
-    this.pools = { atoms: new Map(), bonds: new Map(), lobes: new Map(), labels: new Map(), arrows: new Map(), planes: new Map() };
+    this.pools = { atoms: new Map(), bonds: new Map(), lobes: new Map(), labels: new Map(), arrows: new Map(), planes: new Map(), halos: new Map() };
     this.textures = new Map();
     this.style = 'ball';
     this.dark = false;
@@ -71,6 +73,8 @@ export class Viewer {
     this.cam = null;                      // { yaw, pitch, zoom } the camera glides toward while a reaction plays
     this.camNow = { yaw: 0, pitch: 0, zoom: 1 };
     this.center = [0, 0, 0];
+    this.autoFrame = false;               // keep every visible atom on screen
+    this.frameZoom = 1;
     this.focusGoal = null;                // molecule point the camera follows (null = whole molecule)
     this.focusNow = [0, 0, 0];
     this.time = 0;
@@ -156,13 +160,44 @@ export class Viewer {
       this.mol.position.set(-fn[0], -fn[1], -fn[2]);
       moving = true;
     }
-    const goal = this.distTarget * this.zoom * c.zoom;
+    if (this.autoFrame) {
+      const k = this.frameNeed();
+      if (k && Math.abs(k - 1) > 0.01) {
+        // back out quickly when something is leaving the frame, ease in slowly
+        const rate = k > 1 ? 5 : 1.6;
+        this.frameZoom = Math.min(3, Math.max(0.45, this.frameZoom * (1 + (k - 1) * Math.min(1, dt * rate))));
+        moving = true;
+      }
+    } else if (this.frameZoom !== 1) { this.frameZoom = 1; moving = true; }
+    const goal = this.distTarget * this.zoom * c.zoom * this.frameZoom;
     if (Math.abs(goal - this.dist) > 1e-3) moving = true;
     this.dist += (goal - this.dist) * Math.min(1, dt * 8);
     this.camera.position.set(0, 0, this.dist);
     this.camera.lookAt(0, 0, 0);
     if (moving) this.placeLabels();
     return moving;
+  }
+
+  /** How much farther (>1) or closer (<1) the camera should be so all visible atoms fit. */
+  frameNeed() {
+    this.root.updateMatrixWorld();
+    const v = new THREE.Vector3(), r = new THREE.Vector3();
+    let ex = 0, ey = 0, n = 0;
+    for (const [, m] of this.pools.atoms) {
+      if (!m.visible || (m.material.opacity ?? 1) < 0.3) continue;
+      m.getWorldPosition(v);
+      const rad = m.scale.x;
+      v.project(this.camera);
+      // pad by the atom's own radius, roughly in screen units
+      r.set(rad, 0, 0);
+      const pad = rad / Math.max(0.5, this.dist) * 2.4;
+      ex = Math.max(ex, Math.abs(v.x) + pad / this.camera.aspect);
+      ey = Math.max(ey, Math.abs(v.y) + pad);
+      n++;
+    }
+    if (!n) return 0;
+    // leave room for the caption at the top and the hint at the bottom
+    return Math.max(ex / 0.8, ey / 0.68);
   }
 
   /** Soft specks drifting behind the molecule, like solvent jostling around it. */
@@ -207,7 +242,7 @@ export class Viewer {
       a[i + 2] = b[i + 2] + 0.5 * Math.sin(T * 0.17 + ph * 0.7);
     }
     m.geometry.attributes.position.needsUpdate = true;
-    m.material.opacity = this.dark ? 0.32 : 0.45;
+    m.material.opacity = this.dark ? 0.2 : 0.28;
   }
 
   // ---------------------------------------------------------- camera
@@ -309,7 +344,7 @@ export class Viewer {
     const T = this.time;
     const pos = new Map(f.atoms.map(a => [a.id, a.p]));
     const elOf = new Map(f.atoms.map(a => [a.id, a.el]));
-    const seen = { atoms: new Set(), bonds: new Set(), lobes: new Set(), labels: new Set(), arrows: new Set(), planes: new Set() };
+    const seen = { atoms: new Set(), bonds: new Set(), lobes: new Set(), labels: new Set(), arrows: new Set(), planes: new Set(), halos: new Set() };
 
     // atoms
     for (const a of f.atoms) {
@@ -317,7 +352,7 @@ export class Viewer {
       if (op <= 0.01) continue;
       let m = this.pools.atoms.get(a.id);
       if (!m) {
-        m = new THREE.Mesh(this.geo.sphere, new THREE.MeshPhysicalMaterial({ roughness: 0.3, metalness: 0.02, clearcoat: 1, clearcoatRoughness: 0.12, iridescence: 0.35, iridescenceIOR: 1.4, sheen: 0.4, sheenRoughness: 0.5, sheenColor: 0xffd6ea }));
+        m = new THREE.Mesh(this.geo.sphere, new THREE.MeshStandardMaterial({ roughness: 0.42, metalness: 0.04 }));
         this.mol.add(m);
         this.pools.atoms.set(a.id, m);
       }
@@ -332,6 +367,28 @@ export class Viewer {
       this.setOpacity(m.material, op);
       m.visible = true;
       seen.atoms.add(a.id);
+    }
+
+    // highlights: a soft glowing shell around the atoms that matter right now
+    for (const hl of f.highlights || []) {
+      const p = pos.get(hl.atom);
+      const op = hl.opacity ?? 1;
+      if (!p || op <= 0.01) continue;
+      const key = `${hl.atom}|${hl.color}`;
+      let m = this.pools.halos.get(key);
+      if (!m) {
+        m = new THREE.Mesh(this.geo.sphere, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, side: THREE.BackSide }));
+        m.renderOrder = 0;
+        this.mol.add(m);
+        this.pools.halos.set(key, m);
+      }
+      const pal = HALO[hl.color] || HALO.pink;
+      m.material.color.setHex(pal[this.dark ? 1 : 0]);
+      m.material.opacity = op * (0.34 + 0.1 * Math.sin(T * 3.2));
+      m.position.set(p[0], p[1], p[2]);
+      m.scale.setScalar(this.atomRadius(elOf.get(hl.atom) || 'C') * 1.45 + 0.07);
+      m.visible = true;
+      seen.halos.add(key);
     }
 
     // bonds (hidden in space-filling mode)
@@ -502,7 +559,7 @@ export class Viewer {
 
   makeBond() {
     const g = new THREE.Group();
-    const mk = () => new THREE.Mesh(this.geo.cyl, new THREE.MeshPhysicalMaterial({ roughness: 0.35, clearcoat: 0.5, transparent: true }));
+    const mk = () => new THREE.Mesh(this.geo.cyl, new THREE.MeshStandardMaterial({ roughness: 0.5, transparent: true }));
     // each stick is two halves, coloured like the atom at that end
     g.userData.sticks = [mk(), mk()];
     g.userData.halves = [mk(), mk()];

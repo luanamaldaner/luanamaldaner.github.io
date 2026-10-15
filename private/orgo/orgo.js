@@ -4,6 +4,7 @@
 import { MECHS, mechById } from './mechanisms.js?v=2';
 import { energyDiagram, skeletal } from './draw.js?v=2';
 import { conceptsPage } from './concepts.js?v=2';
+import { problemsPage } from './problems.js?v=2';
 import {
   SM, REACTIONS, SUBSTRATES, CLASS_LABEL, REAGENT_TYPES, REAGENTS, tableCell, outcomeLabel,
   OUTCOME_LABELS, decide, CONCEPTS, CARDS,
@@ -11,7 +12,7 @@ import {
 
 let C; // helpers handed over by app.js: h, card, commit, touch, S, todayStr, addDays
 
-const TABS = [['mech', 'Mechanisms'], ['concepts', 'Concepts'], ['decide', 'Which one?'], ['alkenes', 'Alkene reactions'], ['mol', 'Molecules'], ['practice', 'Practice']];
+const TABS = [['mech', 'Mechanisms'], ['concepts', 'Concepts'], ['decide', 'Which one?'], ['alkenes', 'Alkene reactions'], ['mol', 'Molecules'], ['practice', 'Quiz'], ['keys', 'Daily practice']];
 const MECH_FOR = { SN2: 'sn2', SN1: 'sn1', E2: 'e2', E1: 'e1' };
 
 function saved(key, fallback) { try { return localStorage.getItem(`orgo.${key}`) || fallback; } catch { return fallback; } }
@@ -44,7 +45,7 @@ let viewer = null, loading = null, parseSdf = null, shownKey = '', drawnT = -1, 
 function ensureViewer() {
   if (viewer) return Promise.resolve(viewer);
   if (!loading) {
-    loading = import('./viewer.js?v=4').then(m => {
+    loading = import('./viewer.js?v=5').then(m => {
       parseSdf = m.parseSdf;
       viewer = new m.Viewer();
       viewer.onTick = tick;
@@ -107,7 +108,9 @@ function tick(dt) {
   if (viewer && viewer.live) {
     // the camera swings around the molecule and moves in close while bonds change
     const u = st.t, arc = Math.sin(Math.PI * u);
-    viewer.cam = { yaw: (u - 0.5) * 0.9, pitch: 0.12 * arc, zoom: (st.focus ? 0.66 : 0.97) - 0.06 * arc };
+    // close up on the action; the viewer backs off as needed to keep every atom in frame
+    viewer.cam = { yaw: (u - 0.5) * 0.9, pitch: 0.12 * arc, zoom: st.focus ? 0.8 : 1 };
+    viewer.autoFrame = true;
     viewer.focusGoal = st.focus;
   }
   if (st.playing) {
@@ -129,6 +132,7 @@ function drawMech(force) {
   const m = mechById(st.mech);
   const f = m.frame(st.t, { face: st.face });
   st.focus = actionFocus(f, st.t, st.focus);
+  f.highlights = st.show.labels ? autoHighlights(f) : [];
   if (!st.show.orbitals) { f.lobes = []; f.planes = f.planes.filter(p => p.color === 'metal'); }
   if (!st.show.arrows) f.arrows = [];
   if (!st.show.labels) f.labels = [];
@@ -144,7 +148,7 @@ function drawMech(force) {
   if (ui.step !== si && ui.stepTitle) {
     ui.step = si;
     ui.stepTitle.textContent = `${si + 1}. ${m.steps[si][2]}`;
-    ui.stepText.textContent = m.steps[si][3];
+    ui.stepText.replaceChildren(...highlightTerms(m.steps[si][3]));
     ui.stepItems.forEach((li, i) => li.classList.toggle('on', i === si));
     if (ui.narr) { ui.narr.classList.remove('fresh'); void ui.narr.offsetWidth; ui.narr.classList.add('fresh'); }
   }
@@ -162,6 +166,58 @@ function actionFocus(f, t, last) {
   for (const b of f.bonds) if (b.partial && P.get(b.a) && P.get(b.b)) pts.push(P.get(b.a), P.get(b.b));
   if (!pts.length) return last || null;
   return [0, 1, 2].map(k => pts.reduce((s, p) => s + p[k], 0) / pts.length);
+}
+
+/**
+ * Glow around the atoms that matter right now: atoms whose bonds are
+ * half-made or half-broken (pink), and charged atoms (+ pink, − blue). Hydrogens
+ * in a changing bond glow amber, since that's a proton on the move.
+ */
+function autoHighlights(f) {
+  const el = new Map(f.atoms.map(a => [a.id, a.el]));
+  const out = new Map();
+  const put = (atom, color, opacity) => {
+    const prev = out.get(atom);
+    if (!prev || prev.opacity < opacity) out.set(atom, { atom, color, opacity });
+  };
+  for (const b of f.bonds) if (b.partial) for (const a of [b.a, b.b]) put(a, el.get(a) === 'H' ? 'amber' : 'pink', b.opacity ?? 1);
+  for (const l of f.labels) {
+    if (l.kind !== 'charge' || !l.atom) continue;
+    const minus = l.text.includes('−');
+    put(l.atom, minus ? 'blue' : 'pink', (l.opacity ?? 1) * (l.text.startsWith('δ') ? 0.6 : 1));
+  }
+  return [...out.values()];
+}
+
+// Words in the narration get the same colour as the thing they name in 3D.
+const TERMS = [
+  [/(?<![\w⁻⁺])(nucleophile|lone pair|hydroxide|water|base|bromide|Br⁻|π electrons|π bond|electron-rich)(?!\w)/gi, 'hl-blue'],
+  [/(?<![\w⁻⁺])(electrophile|carbocation|cation|δ\+|positive charge|oxonium ion|bromonium(?: ion)?|leaving group|leaves)(?!\w)/gi, 'hl-pink'],
+  [/(?<![\w⁻⁺])(β-H|H⁺|proton|deprotonation)(?!\w)/gi, 'hl-amber'],
+  [/(?<![\w⁻⁺])(empty p orbital|empty σ\* orbital|σ\*|empty orbital|back lobe|p orbitals?)(?!\w)/gi, 'hl-violet'],
+  [/(?<![\w⁻⁺])(transition state|anti-periplanar|inversion|Walden inversion|racemic|Markovnikov|anti-Markovnikov|Zaitsev|Hofmann|syn addition|anti addition|rate-determining step|slow step)(?!\w)/gi, 'hl-key'],
+];
+function highlightTerms(text) {
+  const marks = [];
+  for (const [re, cls] of TERMS) {
+    for (const m of text.matchAll(re)) {
+      const a = m.index, b = a + m[0].length;
+      if (!marks.some(x => a < x.b && b > x.a)) marks.push({ a, b, cls });
+    }
+  }
+  marks.sort((x, y) => x.a - y.a);
+  const out = [];
+  let i = 0;
+  for (const mk of marks) {
+    if (mk.a > i) out.push(document.createTextNode(text.slice(i, mk.a)));
+    const span = document.createElement('mark');
+    span.className = `hl ${mk.cls}`;
+    span.textContent = text.slice(mk.a, mk.b);
+    out.push(span);
+    i = mk.b;
+  }
+  if (i < text.length) out.push(document.createTextNode(text.slice(i)));
+  return out;
 }
 
 function syncPlayButton() {
@@ -206,7 +262,7 @@ export function renderOrgo(ctx) {
     type: 'button', role: 'tab', class: `orgo-tab${st.tab === id ? ' on' : ''}`, 'aria-selected': String(st.tab === id),
     onclick: () => { if (st.tab !== id) { st.tab = id; save('tab', id); shownKey = ''; C.render(); } },
   }, label)));
-  const body = { mech: mechPage, concepts: () => conceptsPage(C), decide: decidePage, alkenes: alkenePage, mol: molPage, practice: practicePage }[st.tab] || mechPage;
+  const body = { mech: mechPage, concepts: () => conceptsPage(C), decide: decidePage, keys: () => problemsPage(C), alkenes: alkenePage, mol: molPage, practice: practicePage }[st.tab] || mechPage;
   const page = h('div', { class: 'page orgo' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Orgo' }),
       h('p', { class: 'muted small orgo-sub', text: 'Exam 3 · substitution, elimination and alkene reactions' }))),
@@ -287,7 +343,7 @@ function mechPage() {
   const si = stepIndex(m, st.t);
   ui.step = si;
   ui.stepTitle = h('h3', { class: 'step-title', text: `${si + 1}. ${m.steps[si][2]}` });
-  ui.stepText = h('p', { class: 'step-text', text: m.steps[si][3] });
+  ui.stepText = h('p', { class: 'step-text' }, ...highlightTerms(m.steps[si][3]));
   ui.stepItems = m.steps.map(([t0, , title], i) => h('li', { class: i === si ? 'on' : null },
     h('button', { type: 'button', onclick: () => { st.t = t0; st.playing = false; drawMech(true); } },
       h('span', { class: 'step-n', text: String(i + 1) }), h('span', { text: title }))));
