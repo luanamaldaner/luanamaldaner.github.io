@@ -45,7 +45,7 @@ let viewer = null, loading = null, parseSdf = null, shownKey = '', drawnT = -1, 
 function ensureViewer() {
   if (viewer) return Promise.resolve(viewer);
   if (!loading) {
-    loading = import('./viewer.js?v=5').then(m => {
+    loading = import('./viewer.js?v=6').then(m => {
       parseSdf = m.parseSdf;
       viewer = new m.Viewer();
       viewer.onTick = tick;

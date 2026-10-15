@@ -25,6 +25,24 @@ const Y_UP = new THREE.Vector3(0, 1, 0);
 
 const v3 = p => new THREE.Vector3(p[0], p[1], p[2]);
 
+/**
+ * One lobe of a p orbital: a teardrop of length 1 along +Y with its point at
+ * the nucleus (origin) and a round bulb at the far end.
+ */
+function pLobeGeometry() {
+  const pts = [];
+  const n = 40;
+  for (let i = 0; i <= n; i++) {
+    const t = (i / n) * Math.PI;
+    const y = (1 - Math.cos(t)) / 2;                       // 0 at the nucleus → 1 at the tip
+    const r = 0.5 * Math.sin(t) * Math.pow(y, 0.45);       // thin near the nucleus, fat bulb outward
+    pts.push(new THREE.Vector2(Math.max(r, 1e-4), y));
+  }
+  const geo = new THREE.LatheGeometry(pts, 36);
+  geo.computeVertexNormals();
+  return geo;
+}
+
 export class Viewer {
   constructor() {
     this.canvas = document.createElement('canvas');
@@ -59,7 +77,7 @@ export class Viewer {
     this.geo = {
       sphere: new THREE.SphereGeometry(1, 40, 28),
       dot: new THREE.SphereGeometry(1, 14, 10),
-      lobe: new THREE.SphereGeometry(1, 28, 18),
+      lobe: pLobeGeometry(),
       cyl: new THREE.CylinderGeometry(1, 1, 1, 18, 1),
       cone: new THREE.ConeGeometry(1, 1, 18),
     };
@@ -432,10 +450,11 @@ export class Viewer {
         const single = l.kind === 'lobe';
         mesh.visible = !(single && i === 1);
         const sign = i === 0 ? 1 : -1;
-        mesh.position.copy(v3(l.p)).addScaledVector(dir, sign * s * 0.85);
-        mesh.quaternion.copy(q);
-        const breathe = l.color === 'empty' ? 1 + 0.06 * Math.sin(T * 2.6) : 1 + 0.025 * Math.sin(T * 1.9 + i);
-        mesh.scale.set(s * 0.46 * breathe, s * 0.86 * breathe, s * 0.46 * breathe);
+        // teardrop lobes: pinched at the nucleus, round at the far end
+        mesh.position.copy(v3(l.p));
+        mesh.quaternion.copy(sign > 0 ? q : new THREE.Quaternion().setFromUnitVectors(Y_UP, dir.clone().negate()));
+        const breathe = l.color === 'empty' ? 1 + 0.05 * Math.sin(T * 2.6) : 1;
+        mesh.scale.set(s * 0.95 * breathe, s * 1.8 * breathe, s * 0.95 * breathe);
         mesh.material.color.setHex(cols[i]);
         mesh.material.emissive.setHex(cols[i]);
         mesh.material.emissiveIntensity = this.dark ? 0.45 : 0.22;
