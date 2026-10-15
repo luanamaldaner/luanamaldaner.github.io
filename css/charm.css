@@ -435,3 +435,37 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .charm-bubble {
     radial-gradient(circle, rgba(255,255,255,0) 66.5%, rgba(255,255,255,.35) 69%, rgba(255,255,255,.9) 70.4%, rgba(255,255,255,0) 71.2%),
     conic-gradient(from 210deg, rgba(255,140,220,.28), rgba(140,220,255,.28), rgba(150,255,200,.25), rgba(255,240,150,.25), rgba(255,140,220,.28));
 }
+
+/* bubbles now scroll with the page (js/charm.js addPageBubbles); the fixed ones are retired */
+html[data-look="e"] .charm-bubble { display: none !important; }
+.charm-bubbles { display: none; }
+html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .charm-bubbles {
+  display: block; position: absolute; top: 0; left: 0; right: 0; overflow: hidden; pointer-events: none; z-index: 0;
+}
+.charm-pbubble {
+  position: absolute; border-radius: 50%;
+  background:
+    radial-gradient(ellipse 15% 10% at 31% 25%, rgba(255,255,255,1) 0, rgba(255,255,255,.85) 40%, rgba(255,255,255,0) 100%),
+    radial-gradient(circle at 30% 26%, rgba(255,255,255,.6) 0 7%, rgba(255,255,255,0) 18%),
+    radial-gradient(circle, rgba(255,255,255,0) 66.5%, rgba(255,255,255,.35) 69%, rgba(255,255,255,.9) 70.4%, rgba(255,255,255,0) 71.2%),
+    conic-gradient(from 210deg, rgba(255,140,220,.28), rgba(140,220,255,.28), rgba(150,255,200,.25), rgba(255,240,150,.25), rgba(255,140,220,.28));
+  -webkit-mask: radial-gradient(circle, #000 70.6%, transparent 71.4%);
+  mask: radial-gradient(circle, #000 70.6%, transparent 71.4%);
+  filter: drop-shadow(0 8px 20px rgba(80, 150, 220, .2));
+  animation: charm-drift2 var(--fd, 12s) ease-in-out infinite alternate;
+  animation-delay: var(--fdl, 0s);
+}
+/* left-side bubbles: move the shine onto the visible (right) half */
+.charm-pbubble.L {
+  background:
+    radial-gradient(ellipse 15% 10% at 69% 25%, rgba(255,255,255,1) 0, rgba(255,255,255,.85) 40%, rgba(255,255,255,0) 100%),
+    radial-gradient(circle at 70% 26%, rgba(255,255,255,.6) 0 7%, rgba(255,255,255,0) 18%),
+    radial-gradient(circle, rgba(255,255,255,0) 66.5%, rgba(255,255,255,.35) 69%, rgba(255,255,255,.9) 70.4%, rgba(255,255,255,0) 71.2%),
+    conic-gradient(from 210deg, rgba(255,140,220,.28), rgba(140,220,255,.28), rgba(150,255,200,.25), rgba(255,240,150,.25), rgba(255,140,220,.28));
+}
+@keyframes charm-drift2 {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(var(--fx, 8px), calc(var(--fy, 14px) * -1)); }
+  100% { transform: translate(calc(var(--fx, 8px) * -0.5), calc(var(--fy, 14px) * -0.3)); }
+}
+@media (prefers-reduced-motion: reduce) { .charm-pbubble { animation: none; } }

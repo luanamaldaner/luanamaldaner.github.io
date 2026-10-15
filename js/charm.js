@@ -139,10 +139,51 @@ function addHills() {
   }
 }
 
+// Bubbles that scroll with the page: spread down the whole document, alternating
+// sides and sizes, peeking in from the edges, each gently floating.
+function addPageBubbles() {
+  let layer = document.querySelector('.charm-bubbles');
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.className = 'charm-bubbles';
+    layer.setAttribute('aria-hidden', 'true');
+    document.body.prepend(layer);
+  }
+  const place = () => {
+    const H = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+    const W = document.documentElement.clientWidth;
+    const phone = W < 720;
+    layer.style.height = `${H}px`;
+    layer.replaceChildren();
+    // a fixed pseudo-random sequence so the layout is the same on every visit
+    let seed = 7;
+    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    let y = -80, side = 1, i = 0;
+    while (y < H - 120) {
+      const big = i % 3 !== 2;
+      const d = big ? (phone ? 130 + rnd() * 70 : 220 + rnd() * 140) : (phone ? 34 + rnd() * 20 : 46 + rnd() * 40);
+      const b = document.createElement('span');
+      b.className = `charm-pbubble ${side < 0 ? 'L' : 'R'}`;
+      const peek = big ? d * (0.38 + rnd() * 0.16) : -(W * (0.06 + rnd() * 0.08));
+      b.style.cssText = `width:${d.toFixed(0)}px;height:${d.toFixed(0)}px;top:${y.toFixed(0)}px;${side < 0 ? 'left' : 'right'}:${(-peek).toFixed(0)}px;` +
+        `--fx:${(6 + rnd() * 10).toFixed(0)}px;--fy:${(10 + rnd() * 16).toFixed(0)}px;--fd:${(9 + rnd() * 8).toFixed(1)}s;--fdl:${(-rnd() * 10).toFixed(1)}s`;
+      layer.append(b);
+      y += big ? (phone ? 260 + rnd() * 160 : 380 + rnd() * 260) : 120 + rnd() * 80;
+      if (big) side = -side;
+      i++;
+    }
+  };
+  place();
+  let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(place, 200); });
+  addEventListener('load', place);
+  setTimeout(place, 1500);
+}
+
 export default function initCharm() {
   pickLook();
   addSky();
   addMeadow();
+  addPageBubbles();
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCharm);
