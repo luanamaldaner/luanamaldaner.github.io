@@ -70,6 +70,9 @@ export class Viewer {
     this.live = true;                     // flowing electrons, shimmering bonds
     this.cam = null;                      // { yaw, pitch, zoom } the camera glides toward while a reaction plays
     this.camNow = { yaw: 0, pitch: 0, zoom: 1 };
+    this.center = [0, 0, 0];
+    this.focusGoal = null;                // molecule point the camera follows (null = whole molecule)
+    this.focusNow = [0, 0, 0];
     this.time = 0;
     this.frame = null;
     this.tween = null;
@@ -146,6 +149,13 @@ export class Viewer {
       if (Math.abs(d) > 1e-4) { c[key] += d * kk; camMoving = true; }
     }
     if (camMoving) { this.swayG.rotation.set(c.pitch, c.yaw, 0); moving = true; }
+    // glide toward whatever is reacting, so the camera orbits around the action
+    const fg = this.focusGoal || this.center, fn = this.focusNow, kf = Math.min(1, dt * 1.8);
+    if (Math.hypot(fg[0] - fn[0], fg[1] - fn[1], fg[2] - fn[2]) > 1e-3) {
+      for (let i = 0; i < 3; i++) fn[i] += (fg[i] - fn[i]) * kf;
+      this.mol.position.set(-fn[0], -fn[1], -fn[2]);
+      moving = true;
+    }
     const goal = this.distTarget * this.zoom * c.zoom;
     if (Math.abs(goal - this.dist) > 1e-3) moving = true;
     this.dist += (goal - this.dist) * Math.min(1, dt * 8);
@@ -205,6 +215,9 @@ export class Viewer {
   /** Frame a sphere of `radius` around `center` (molecule coordinates). */
   fit(radius, center = [0, 0, 0]) {
     this.fitRadius = radius;
+    this.center = center.slice();
+    this.focusNow = center.slice();
+    this.focusGoal = null;
     this.mol.position.set(-center[0], -center[1], -center[2]);
     this.zoom = 1;
     this.applyDistance(true);
@@ -304,7 +317,7 @@ export class Viewer {
       if (op <= 0.01) continue;
       let m = this.pools.atoms.get(a.id);
       if (!m) {
-        m = new THREE.Mesh(this.geo.sphere, new THREE.MeshPhysicalMaterial({ roughness: 0.32, metalness: 0.02, clearcoat: 0.7, clearcoatRoughness: 0.25 }));
+        m = new THREE.Mesh(this.geo.sphere, new THREE.MeshPhysicalMaterial({ roughness: 0.3, metalness: 0.02, clearcoat: 1, clearcoatRoughness: 0.12, iridescence: 0.35, iridescenceIOR: 1.4, sheen: 0.4, sheenRoughness: 0.5, sheenColor: 0xffd6ea }));
         this.mol.add(m);
         this.pools.atoms.set(a.id, m);
       }

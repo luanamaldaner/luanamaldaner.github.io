@@ -20,6 +20,7 @@ function save(key, v) { try { localStorage.setItem(`orgo.${key}`, v); } catch {}
 const st = {
   tab: saved('tab', 'mech'),
   mech: saved('mech', 'sn2'),
+  focus: null,
   t: 0, playing: !matchMedia('(prefers-reduced-motion: reduce)').matches, speed: 1, stepPause: false, loop: true, hold: 0, face: 'back',
   show: { orbitals: true, arrows: true, labels: true },
   dec: { cls: '2', reagent: 'NaOEt', solvent: 'protic', heat: false },
@@ -43,7 +44,7 @@ let viewer = null, loading = null, parseSdf = null, shownKey = '', drawnT = -1, 
 function ensureViewer() {
   if (viewer) return Promise.resolve(viewer);
   if (!loading) {
-    loading = import('./viewer.js?v=3').then(m => {
+    loading = import('./viewer.js?v=4').then(m => {
       parseSdf = m.parseSdf;
       viewer = new m.Viewer();
       viewer.onTick = tick;
@@ -104,9 +105,10 @@ function tick(dt) {
     if (st.hold <= 0) { st.t = 0; st.playing = true; }
   }
   if (viewer && viewer.live) {
-    // the camera swings around the molecule and leans in at the transition state
+    // the camera swings around the molecule and moves in close while bonds change
     const u = st.t, arc = Math.sin(Math.PI * u);
-    viewer.cam = { yaw: (u - 0.5) * 0.9, pitch: 0.12 * arc, zoom: 1 - 0.16 * arc };
+    viewer.cam = { yaw: (u - 0.5) * 0.9, pitch: 0.12 * arc, zoom: (st.focus ? 0.66 : 0.97) - 0.06 * arc };
+    viewer.focusGoal = st.focus;
   }
   if (st.playing) {
     let nt = st.t + dt * st.speed / m.duration;
@@ -126,6 +128,7 @@ function drawMech(force) {
   drawnT = st.t;
   const m = mechById(st.mech);
   const f = m.frame(st.t, { face: st.face });
+  st.focus = actionFocus(f, st.t, st.focus);
   if (!st.show.orbitals) { f.lobes = []; f.planes = f.planes.filter(p => p.color === 'metal'); }
   if (!st.show.arrows) f.arrows = [];
   if (!st.show.labels) f.labels = [];
@@ -146,6 +149,19 @@ function drawMech(force) {
     if (ui.narr) { ui.narr.classList.remove('fresh'); void ui.narr.offsetWidth; ui.narr.classList.add('fresh'); }
   }
   syncPlayButton();
+}
+
+// Where the chemistry is happening right now: the middle of the visible curved
+// arrows and half-made bonds. Between bursts the camera stays where it was; at
+// the very start and once the product forms it pulls back to the whole molecule.
+function actionFocus(f, t, last) {
+  if (t < 0.04 || t > 0.86) return null;
+  const P = new Map(f.atoms.map(a => [a.id, a.p]));
+  const pts = [];
+  for (const a of f.arrows) if ((a.opacity ?? 1) > 0.35) pts.push(a.from, a.to);
+  for (const b of f.bonds) if (b.partial && P.get(b.a) && P.get(b.b)) pts.push(P.get(b.a), P.get(b.b));
+  if (!pts.length) return last || null;
+  return [0, 1, 2].map(k => pts.reduce((s, p) => s + p[k], 0) / pts.length);
 }
 
 function syncPlayButton() {
