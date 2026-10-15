@@ -1,16 +1,17 @@
 // The Orgo tab: 3D mechanisms, the SN1/SN2/E1/E2 decider, alkene reactions,
 // a 3D molecule explorer, and practice (quiz + flashcards).
 
-import { MECHS, mechById } from './mechanisms.js';
-import { energyDiagram, skeletal } from './draw.js';
+import { MECHS, mechById } from './mechanisms.js?v=2';
+import { energyDiagram, skeletal } from './draw.js?v=2';
+import { conceptsPage } from './concepts.js?v=2';
 import {
   SM, REACTIONS, SUBSTRATES, CLASS_LABEL, REAGENT_TYPES, REAGENTS, tableCell, outcomeLabel,
   OUTCOME_LABELS, decide, CONCEPTS, CARDS,
-} from './content.js';
+} from './content.js?v=2';
 
 let C; // helpers handed over by app.js: h, card, commit, touch, S, todayStr, addDays
 
-const TABS = [['mech', 'Mechanisms'], ['decide', 'Which one?'], ['alkenes', 'Alkene reactions'], ['mol', 'Molecules'], ['practice', 'Practice']];
+const TABS = [['mech', 'Mechanisms'], ['concepts', 'Concepts'], ['decide', 'Which one?'], ['alkenes', 'Alkene reactions'], ['mol', 'Molecules'], ['practice', 'Practice']];
 const MECH_FOR = { SN2: 'sn2', SN1: 'sn1', E2: 'e2', E1: 'e1' };
 
 function saved(key, fallback) { try { return localStorage.getItem(`orgo.${key}`) || fallback; } catch { return fallback; } }
@@ -42,10 +43,11 @@ let viewer = null, loading = null, parseSdf = null, shownKey = '', drawnT = -1, 
 function ensureViewer() {
   if (viewer) return Promise.resolve(viewer);
   if (!loading) {
-    loading = import('./viewer.js').then(m => {
+    loading = import('./viewer.js?v=2').then(m => {
       parseSdf = m.parseSdf;
       viewer = new m.Viewer();
       viewer.onTick = tick;
+      viewer.live = !matchMedia('(prefers-reduced-motion: reduce)').matches;
       msgEl.textContent = '';
       return viewer;
     }).catch(e => {
@@ -94,6 +96,7 @@ function attachViewer() {
 }
 
 function tick(dt) {
+  if (viewer) viewer.sway = st.tab === 'mech' && st.playing && viewer.live;
   if (st.tab !== 'mech') return;
   const m = mechById(st.mech);
   if (st.playing) {
@@ -131,6 +134,7 @@ function drawMech(force) {
     ui.stepTitle.textContent = `${si + 1}. ${m.steps[si][2]}`;
     ui.stepText.textContent = m.steps[si][3];
     ui.stepItems.forEach((li, i) => li.classList.toggle('on', i === si));
+    if (ui.narr) { ui.narr.classList.remove('fresh'); void ui.narr.offsetWidth; ui.narr.classList.add('fresh'); }
   }
   syncPlayButton();
 }
@@ -177,7 +181,7 @@ export function renderOrgo(ctx) {
     type: 'button', role: 'tab', class: `orgo-tab${st.tab === id ? ' on' : ''}`, 'aria-selected': String(st.tab === id),
     onclick: () => { if (st.tab !== id) { st.tab = id; save('tab', id); shownKey = ''; C.render(); } },
   }, label)));
-  const body = { mech: mechPage, decide: decidePage, alkenes: alkenePage, mol: molPage, practice: practicePage }[st.tab] || mechPage;
+  const body = { mech: mechPage, concepts: () => conceptsPage(C), decide: decidePage, alkenes: alkenePage, mol: molPage, practice: practicePage }[st.tab] || mechPage;
   const page = h('div', { class: 'page orgo' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Orgo' }),
       h('p', { class: 'muted small orgo-sub', text: 'Exam 3 · substitution, elimination and alkene reactions' }))),
@@ -273,8 +277,9 @@ function mechPage() {
         h('div', { class: 'mech-head' }, h('h2', { text: m.title }), h('span', { class: 'muted', text: m.sub })),
         host,
         controls,
-        h('div', { class: 'narration' }, ui.stepTitle, ui.stepText),
-        toggles)),
+        (ui.narr = h('div', { class: 'narration' }, ui.stepTitle, ui.stepText)),
+        toggles,
+        h('p', { class: 'muted small mech-legend', text: 'Gold dots are electron pairs flowing along each curved arrow. Dashed pink bonds are half-made or half-broken. Purple lobes are empty orbitals; green/pink lobes are filled ones (the two colours are the two phases).' }))),
     h('div', { class: 'col col-narrow' },
       card('Energy diagram', null, en.svg, h('p', { class: 'muted small', text: 'The dot follows the animation. ‡ = transition state; dips between peaks are intermediates.' })),
       card('Steps', null, h('ol', { class: 'step-list' }, ui.stepItems)),

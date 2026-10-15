@@ -30,6 +30,7 @@ export function energyAt(points, x) {
 }
 
 const W = 340, H = 200, L = 30, R = 330, T = 16, B = 168;
+let energyIds = 0;
 const px = x => L + 6 + x * (R - L - 12);
 const py = y => B - (y / 100) * (B - T);
 
@@ -59,7 +60,21 @@ export function energyDiagram(points) {
       text(ax - 5, (py(start[1]) + py(top[1])) / 2 + 4, 'Ea', { class: 'en-ea-label', 'text-anchor': 'end' }),
     );
   }
-  svg.append(el('path', { d: d.join(' '), class: 'en-curve' }));
+  // colourful curve: a soft filled area, the whole path faint, and the part
+  // already travelled drawn bright (clipped to the dot's x)
+  const uid = `en${++energyIds}`;
+  const area = `${d.join(' ')} L${px(1).toFixed(1)},${B} L${px(0).toFixed(1)},${B} Z`;
+  const clipRect = el('rect', { x: 0, y: 0, width: px(0), height: H });
+  svg.append(
+    el('defs', {},
+      el('linearGradient', { id: `${uid}-g`, x1: 0, y1: 0, x2: 1, y2: 0 },
+        el('stop', { offset: '0%', class: 'en-stop-a' }), el('stop', { offset: '50%', class: 'en-stop-b' }), el('stop', { offset: '100%', class: 'en-stop-c' })),
+      el('linearGradient', { id: `${uid}-f`, x1: 0, y1: 0, x2: 0, y2: 1 },
+        el('stop', { offset: '0%', class: 'en-fill-top' }), el('stop', { offset: '100%', class: 'en-fill-bottom' })),
+      el('clipPath', { id: `${uid}-c` }, clipRect)),
+    el('path', { d: area, class: 'en-area', fill: `url(#${uid}-f)` }),
+    el('path', { d: d.join(' '), class: 'en-curve en-curve-faint', stroke: `url(#${uid}-g)` }),
+    el('path', { d: d.join(' '), class: 'en-curve', stroke: `url(#${uid}-g)`, 'clip-path': `url(#${uid}-c)` }));
   for (const [x, y, kind, label] of points) {
     if (kind === 'ts') svg.append(text(px(x), py(y) - 7, '‡', { class: 'en-ts', 'text-anchor': 'middle' }));
     else if (label) {
@@ -73,6 +88,7 @@ export function energyDiagram(points) {
   svg.append(halo, dot);
   const setT = t => {
     const x = px(t), y = py(energyAt(points, t));
+    clipRect.setAttribute('width', x + 3);
     dot.setAttribute('cx', x); dot.setAttribute('cy', y);
     halo.setAttribute('cx', x); halo.setAttribute('cy', y);
   };

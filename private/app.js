@@ -18,7 +18,7 @@ import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
-import { renderOrgo } from './orgo/orgo.js';
+import { renderOrgo } from './orgo/orgo.js?v=2';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 

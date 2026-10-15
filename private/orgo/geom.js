@@ -23,18 +23,38 @@ export function ease(t, a, b) {
   return x * x * (3 - 2 * x);
 }
 
-/** Smoothly interpolate through [[t, value], ...] keyframes (numbers or vectors). */
+/**
+ * Smoothly interpolate through [[t, value], ...] keyframes (numbers or vectors).
+ * Monotone cubic (Fritsch–Butland): motion keeps its speed through the middle
+ * keyframes instead of stopping at each one, starts and ends gently, and
+ * never overshoots a keyframe.
+ */
 export function keys(t, list) {
+  const n = list.length;
   if (t <= list[0][0]) return list[0][1];
-  for (let i = 1; i < list.length; i++) {
-    const [t1, v1] = list[i];
-    if (t <= t1) {
-      const [t0, v0] = list[i - 1];
-      const k = ease(t, t0, t1);
-      return Array.isArray(v0) ? lerp(v0, v1, k) : v0 + (v1 - v0) * k;
-    }
-  }
-  return list[list.length - 1][1];
+  if (t >= list[n - 1][0]) return list[n - 1][1];
+  let i = 1;
+  while (t > list[i][0]) i++;
+  const [t0, v0] = list[i - 1], [t1, v1] = list[i];
+  const h = t1 - t0;
+  if (h <= 0) return v1;
+  const x = (t - t0) / h, x2 = x * x, x3 = x2 * x;
+  const h00 = 2 * x3 - 3 * x2 + 1, h10 = x3 - 2 * x2 + x, h01 = -2 * x3 + 3 * x2, h11 = x3 - x2;
+  const slope = (j, c) => {
+    if (j <= 0 || j >= n - 1) return 0;
+    const [ta, va] = list[j - 1], [tb, vb] = list[j], [tc, vc] = list[j + 1];
+    const ha = tb - ta, hb = tc - tb;
+    if (ha <= 0 || hb <= 0) return 0;
+    const pick = v => (c < 0 ? v : v[c]);
+    const d0 = (pick(vb) - pick(va)) / ha, d1 = (pick(vc) - pick(vb)) / hb;
+    if (d0 * d1 <= 0) return 0;
+    return 3 * (ha + hb) / ((2 * hb + ha) / d0 + (hb + 2 * ha) / d1);
+  };
+  const one = c => {
+    const a = c < 0 ? v0 : v0[c], b = c < 0 ? v1 : v1[c];
+    return h00 * a + h10 * h * slope(i - 1, c) + h01 * b + h11 * h * slope(i, c);
+  };
+  return Array.isArray(v0) ? [one(0), one(1), one(2)] : one(-1);
 }
 
 /** Visible between a and b, fading over f at each end. */

@@ -5,7 +5,7 @@
 import {
   TET, DEG, add, sub, mul, norm, lerp, at, mid, cross, rotate, ease, keys, window01,
   perpTo, polar, tetra, Frame, addH, addGroup, cip,
-} from './geom.js';
+} from './geom.js?v=2';
 
 const X = [1, 0, 0], Y = [0, 1, 0], Z = [0, 0, 1], O0 = [0, 0, 0];
 const neg = v => mul(v, -1);

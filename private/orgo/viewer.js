@@ -5,17 +5,35 @@
 import * as THREE from './three.module.min.js';
 
 const ELEMENTS = {
-  H: [0xf4f4ef, 0.24, 1.1], C: [0x56615b, 0.36, 1.7], N: [0x5b7fe0, 0.34, 1.55], O: [0xe0605f, 0.34, 1.52],
-  F: [0x8fd6a0, 0.3, 1.47], Cl: [0x58b866, 0.42, 1.75], Br: [0xa4513b, 0.46, 1.85], I: [0x8a4fb0, 0.5, 1.98],
+  H: [0xf7f5f0, 0.24, 1.1], C: [0x4d5866, 0.36, 1.7], N: [0x4f7cff, 0.34, 1.55], O: [0xff5d68, 0.34, 1.52],
+  F: [0x7fe0a4, 0.3, 1.47], Cl: [0x3fcf72, 0.42, 1.75], Br: [0xc4552f, 0.46, 1.85], I: [0x9a5bd6, 0.5, 1.98],
   S: [0xe1c24a, 0.42, 1.8], P: [0xf0a040, 0.42, 1.8], B: [0xf09a76, 0.36, 1.92], Si: [0xd8c0a0, 0.44, 2.1],
   Na: [0xab7fe0, 0.5, 2.27], K: [0x9b6fd0, 0.55, 2.75], Li: [0xcc80ff, 0.4, 1.82], Mg: [0x7fd08a, 0.46, 1.73],
   Pt: [0xd3d7de, 0.5, 1.75], Pd: [0xc0c8d8, 0.6, 1.63], Hg: [0xb6bac6, 0.5, 1.55], Os: [0x6a8fb0, 0.5, 2.0],
 };
-const DARK_C = 0x9aa79f;
-const LOBE = { filled: [0x7cc99a, 0xf0a0bd], empty: [0xb3a8f0, 0xb3a8f0] };
+const DARK_C = 0x9eabbb;
+// Orbital phases: filled orbitals are mint/pink, empty ones a soft violet glow.
+const LOBE = { filled: [0x3ddc97, 0xff7eb6], empty: [0xa78bfa, 0xa78bfa] };
+// Curved arrows cycle through these so each electron move has its own colour.
+const ARROWS = { light: [0xd9467f, 0x7b5cff, 0xe9860f, 0x1fa37a], dark: [0xff8fbc, 0xb3a1ff, 0xffbf66, 0x6ee0b0] };
+const ELECTRON = { light: 0xffb020, dark: 0xffd76e };
+
+/** Small, steady thermal jiggle for an atom: a few hundredths of an ångström. */
+function jiggle(id, el, time) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973;
+  const a = el === 'H' ? 0.05 : 0.025;
+  const p = h * 0.37;
+  return [
+    a * Math.sin(time * 5.1 + p) + a * 0.5 * Math.sin(time * 8.3 + p * 1.7),
+    a * Math.sin(time * 4.3 + p * 2.1) + a * 0.5 * Math.sin(time * 9.1 + p * 0.6),
+    a * Math.sin(time * 6.2 + p * 0.9),
+  ];
+}
 const Y_UP = new THREE.Vector3(0, 1, 0);
 
 const v3 = p => new THREE.Vector3(p[0], p[1], p[2]);
+const add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 
 export class Viewer {
   constructor() {
@@ -31,19 +49,26 @@ export class Viewer {
     const key = new THREE.DirectionalLight(0xffffff, 1.7);
     key.position.set(4, 6, 8);
     this.camera.add(key);
-    const rim = new THREE.DirectionalLight(0xffffff, 0.5);
+    const rim = new THREE.DirectionalLight(0xffc0dc, 0.75);
     rim.position.set(-6, -2, 3);
     this.camera.add(rim);
+    const rim2 = new THREE.DirectionalLight(0xa6f0d2, 0.55);
+    rim2.position.set(6, -4, -2);
+    this.camera.add(rim2);
 
     this.root = new THREE.Group();        // user rotation
+    this.swayG = new THREE.Group();       // slow drift while an animation plays
     this.mol = new THREE.Group();         // offset so the centre sits at the origin
-    this.root.add(this.mol);
+    this.root.add(this.swayG);
+    this.swayG.add(this.mol);
     this.scene.add(this.root);
     this.labelLayer = new THREE.Group();  // sprites live in world space
     this.scene.add(this.labelLayer);
+    this.makeMotes();
 
     this.geo = {
-      sphere: new THREE.SphereGeometry(1, 32, 22),
+      sphere: new THREE.SphereGeometry(1, 40, 28),
+      dot: new THREE.SphereGeometry(1, 14, 10),
       lobe: new THREE.SphereGeometry(1, 28, 18),
       cyl: new THREE.CylinderGeometry(1, 1, 1, 18, 1),
       cone: new THREE.ConeGeometry(1, 1, 18),
@@ -54,6 +79,10 @@ export class Viewer {
     this.dark = false;
     this.dist = 14; this.distTarget = 14; this.zoom = 1;
     this.spin = false;
+    this.sway = false; this.swayAmt = 0;
+    this.live = true;                     // thermal jiggle + flowing electrons
+    this.time = 0;
+    this.frame = null;
     this.tween = null;
     this.onTick = null;
     this.running = false;
@@ -95,7 +124,10 @@ export class Viewer {
       this.raf = requestAnimationFrame(loop);
       const dt = Math.min(0.1, (now - this.last) / 1000);
       this.last = now;
+      this.time += dt;
       if (this.onTick) this.onTick(dt);
+      // atoms jiggle and electrons flow, so a shown frame is redrawn every tick
+      if (this.live && this.frame && this.setAt !== this.time && !document.hidden) this.setFrame(this.frame);
       // only draw when something changed, to save battery
       if (this.step(dt) || this.dirty) { this.renderer.render(this.scene, this.camera); this.dirty = false; }
     };
@@ -114,6 +146,14 @@ export class Viewer {
       this.root.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(Y_UP, dt * 0.35));
       moving = true;
     }
+    this.driftMotes();
+    if (this.motes.visible) moving = true;
+    const swayGoal = this.sway && !this.dragging ? 1 : 0;
+    if (Math.abs(swayGoal - this.swayAmt) > 1e-3 || this.swayAmt > 1e-3) {
+      this.swayAmt += (swayGoal - this.swayAmt) * Math.min(1, dt * 1.5);
+      this.swayG.rotation.set(0.05 * this.swayAmt * Math.sin(this.time * 0.31), 0.16 * this.swayAmt * Math.sin(this.time * 0.42), 0);
+      moving = true;
+    }
     const goal = this.distTarget * this.zoom;
     if (Math.abs(goal - this.dist) > 1e-3) moving = true;
     this.dist += (goal - this.dist) * Math.min(1, dt * 8);
@@ -121,6 +161,51 @@ export class Viewer {
     this.camera.lookAt(0, 0, 0);
     if (moving) this.placeLabels();
     return moving;
+  }
+
+  /** Soft specks drifting behind the molecule, like solvent jostling around it. */
+  makeMotes() {
+    const n = 64;
+    const base = new Float32Array(n * 3), pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    const palette = [0xff8fbc, 0xa78bfa, 0x6ee0b0, 0xffc76b, 0x7fb4ff].map(c => new THREE.Color(c));
+    let seed = 7;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    for (let i = 0; i < n; i++) {
+      base[i * 3] = (rnd() - 0.5) * 22; base[i * 3 + 1] = (rnd() - 0.5) * 14; base[i * 3 + 2] = -9 + rnd() * 11;
+      const c = palette[i % palette.length];
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+    }
+    pos.set(base);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+    const g = cv.getContext('2d');
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.4, 'rgba(255,255,255,0.55)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(cv);
+    this.motes = new THREE.Points(geo, new THREE.PointsMaterial({
+      size: 0.55, map: tex, vertexColors: true, transparent: true, opacity: 0.45, depthWrite: false, sizeAttenuation: true,
+    }));
+    this.motes.userData.base = base;
+    this.motes.renderOrder = -1;
+    this.scene.add(this.motes);
+  }
+
+  driftMotes() {
+    const m = this.motes;
+    m.visible = this.live && this.showMotes !== false;
+    if (!m.visible) return;
+    const b = m.userData.base, a = m.geometry.attributes.position.array, T = this.time;
+    for (let i = 0; i < a.length; i += 3) {
+      const ph = i * 0.77;
+      a[i] = b[i] + 0.9 * Math.sin(T * 0.23 + ph);
+      a[i + 1] = b[i + 1] + 0.7 * Math.sin(T * 0.19 + ph * 1.3) + 0.25 * Math.sin(T * 0.9 + ph);
+      a[i + 2] = b[i + 2] + 0.5 * Math.sin(T * 0.17 + ph * 0.7);
+    }
+    m.geometry.attributes.position.needsUpdate = true;
+    m.material.opacity = this.dark ? 0.32 : 0.45;
   }
 
   // ---------------------------------------------------------- camera
@@ -215,7 +300,10 @@ export class Viewer {
   // ---------------------------------------------------------- frame
 
   setFrame(f) {
-    const pos = new Map(f.atoms.map(a => [a.id, a.p]));
+    this.frame = f; this.setAt = this.time;
+    const T = this.time;
+    const pos = new Map(f.atoms.map(a => [a.id, this.live ? add3(a.p, jiggle(a.id, a.el, T)) : a.p]));
+    const elOf = new Map(f.atoms.map(a => [a.id, a.el]));
     const seen = { atoms: new Set(), bonds: new Set(), lobes: new Set(), labels: new Set(), arrows: new Set(), planes: new Set() };
 
     // atoms
@@ -224,7 +312,7 @@ export class Viewer {
       if (op <= 0.01) continue;
       let m = this.pools.atoms.get(a.id);
       if (!m) {
-        m = new THREE.Mesh(this.geo.sphere, new THREE.MeshStandardMaterial({ roughness: 0.42, metalness: 0.04 }));
+        m = new THREE.Mesh(this.geo.sphere, new THREE.MeshPhysicalMaterial({ roughness: 0.32, metalness: 0.02, clearcoat: 0.7, clearcoatRoughness: 0.25 }));
         this.mol.add(m);
         this.pools.atoms.set(a.id, m);
       }
@@ -234,7 +322,8 @@ export class Viewer {
         m.userData.el = a.el; m.userData.style = this.style;
       }
       m.scale.setScalar(this.atomRadius(a.el));
-      m.position.set(a.p[0], a.p[1], a.p[2]);
+      const p = pos.get(a.id);
+      m.position.set(p[0], p[1], p[2]);
       this.setOpacity(m.material, op);
       m.visible = true;
       seen.atoms.add(a.id);
@@ -254,7 +343,7 @@ export class Viewer {
         const key = `${b.a}|${b.b}`;
         let g = this.pools.bonds.get(key);
         if (!g) { g = this.makeBond(); this.mol.add(g); this.pools.bonds.set(key, g); }
-        this.updateBond(g, pa, pb, b, nbrs, pos);
+        this.updateBond(g, pa, pb, b, nbrs, pos, elOf);
         g.visible = true;
         seen.bonds.add(key);
       }
@@ -283,9 +372,12 @@ export class Viewer {
         const sign = i === 0 ? 1 : -1;
         mesh.position.copy(v3(l.p)).addScaledVector(dir, sign * s * 0.85);
         mesh.quaternion.copy(q);
-        mesh.scale.set(s * 0.46, s * 0.86, s * 0.46);
+        const breathe = l.color === 'empty' ? 1 + 0.06 * Math.sin(T * 2.6) : 1 + 0.025 * Math.sin(T * 1.9 + i);
+        mesh.scale.set(s * 0.46 * breathe, s * 0.86 * breathe, s * 0.46 * breathe);
         mesh.material.color.setHex(cols[i]);
-        mesh.material.opacity = (l.color === 'empty' ? 0.32 : 0.5) * op;
+        mesh.material.emissive.setHex(cols[i]);
+        mesh.material.emissiveIntensity = this.dark ? 0.45 : 0.22;
+        mesh.material.opacity = (l.color === 'empty' ? 0.36 + 0.06 * Math.sin(T * 2.6) : 0.52) * op;
         mesh.renderOrder = 2;
       });
       g.visible = true;
@@ -317,24 +409,49 @@ export class Viewer {
     }
 
     // curved arrows
-    for (const a of f.arrows) {
+    f.arrows.forEach((a, idx) => {
       const op = a.opacity ?? 1;
-      if (op <= 0.01) continue;
+      if (op <= 0.01) return;
       let g = this.pools.arrows.get(a.id);
       if (!g) {
         const mat = new THREE.MeshBasicMaterial({ transparent: true, depthTest: false });
+        const eMat = new THREE.MeshBasicMaterial({ transparent: true, depthTest: false });
         g = new THREE.Group();
-        g.add(new THREE.Mesh(new THREE.BufferGeometry(), mat), new THREE.Mesh(this.geo.cone, mat));
+        g.add(new THREE.Mesh(new THREE.BufferGeometry(), mat), new THREE.Mesh(this.geo.cone, mat),
+          new THREE.Mesh(this.geo.dot, eMat), new THREE.Mesh(this.geo.dot, eMat));
         g.renderOrder = 5; g.children.forEach(c => { c.renderOrder = 5; });
+        g.visible = false;
         this.mol.add(g);
         this.pools.arrows.set(a.id, g);
       }
-      this.updateArrow(g, a);
-      g.children[0].material.color.setHex(this.dark ? 0xf5b0c9 : 0xc94f7d);
+      // the arrow draws itself in as it appears, then stays whole while it fades
+      if (!g.visible) g.userData.grow = 0;
+      g.userData.grow = Math.max(g.userData.grow || 0, Math.min(1, op * 1.15));
+      this.updateArrow(g, a, g.userData.grow);
+      const pal = ARROWS[this.dark ? 'dark' : 'light'];
+      g.children[0].material.color.setHex(pal[idx % pal.length]);
       g.children[0].material.opacity = op;
+      g.children[1].visible = g.userData.grow > 0.9;
+      // an electron pair flowing along the arrow
+      const curve = g.userData.curve;
+      const showE = this.live && curve && g.userData.grow > 0.95;
+      [2, 3].forEach((ci, k) => {
+        const e = g.children[ci];
+        e.visible = !!showE;
+        if (!showE) return;
+        const u = (T * 0.55 + idx * 0.21) % 1;
+        const pt = curve.getPoint(u * 0.86);
+        const side = new THREE.Vector3().crossVectors(curve.getTangent(Math.min(0.99, u * 0.86)), new THREE.Vector3(0, 0, 1));
+        if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
+        side.normalize();
+        e.position.copy(pt).addScaledVector(side, (k ? 1 : -1) * 0.09);
+        e.scale.setScalar(0.08);
+        e.material.color.setHex(ELECTRON[this.dark ? 'dark' : 'light']);
+        e.material.opacity = op * Math.sin(Math.PI * u);
+      });
       g.visible = true;
       seen.arrows.add(a.id);
-    }
+    });
 
     // charges and other labels (sprites in world space, positioned each frame)
     this.labelData = [];
@@ -380,22 +497,30 @@ export class Viewer {
 
   makeBond() {
     const g = new THREE.Group();
-    const mk = () => new THREE.Mesh(this.geo.cyl, new THREE.MeshStandardMaterial({ roughness: 0.5, transparent: true }));
+    const mk = () => new THREE.Mesh(this.geo.cyl, new THREE.MeshPhysicalMaterial({ roughness: 0.35, clearcoat: 0.5, transparent: true }));
+    // each stick is two halves, coloured like the atom at that end
     g.userData.sticks = [mk(), mk()];
+    g.userData.halves = [mk(), mk()];
     g.userData.dashes = Array.from({ length: 5 }, mk);
-    g.add(...g.userData.sticks, ...g.userData.dashes);
+    g.add(...g.userData.sticks, ...g.userData.halves, ...g.userData.dashes);
     return g;
   }
 
-  updateBond(g, pa, pb, b, nbrs, pos) {
+  bondColor(el) {
+    const base = new THREE.Color(this.atomColor(el));
+    // a touch lighter than the atom so the sticks read as bonds, not atoms
+    return base.lerp(new THREE.Color(this.dark ? 0x1a2520 : 0xffffff), el === 'H' ? 0.1 : 0.28);
+  }
+
+  updateBond(g, pa, pb, b, nbrs, pos, elOf) {
     const A = v3(pa), B = v3(pb);
     const dir = new THREE.Vector3().subVectors(B, A);
     const length = dir.length();
     dir.normalize();
     const q = new THREE.Quaternion().setFromUnitVectors(Y_UP, dir);
     const op = b.opacity ?? 1;
-    const color = this.dark ? 0x7d8a80 : 0xc4ccc0;
-    const { sticks, dashes } = g.userData;
+    const ca = this.bondColor(elOf.get(b.a) || 'C'), cb = this.bondColor(elOf.get(b.b) || 'C');
+    const { sticks, halves, dashes } = g.userData;
     const place = (m, from, to, r) => {
       m.position.addVectors(from, to).multiplyScalar(0.5);
       m.quaternion.copy(q);
@@ -403,11 +528,16 @@ export class Viewer {
     };
     if (b.partial) {
       sticks.forEach(m => { m.visible = false; });
+      halves.forEach(m => { m.visible = false; });
+      // a shimmer runs along the half-made (or half-broken) bond
       dashes.forEach((m, i) => {
         const u0 = (i * 2 + 0.5) / 10, u1 = (i * 2 + 1.5) / 10;
-        place(m, A.clone().lerp(B, u0), A.clone().lerp(B, u1), 0.07);
-        m.material.color.setHex(this.dark ? 0xf5b0c9 : 0xd4668f);
-        this.setOpacity(m.material, 0.9 * op);
+        const wave = Math.sin(this.time * 6 - i * 0.9);
+        place(m, A.clone().lerp(B, u0), A.clone().lerp(B, u1), 0.075);
+        m.material.color.setHex(this.dark ? 0xffa6cc : 0xd94f86);
+        m.material.emissive.setHex(this.dark ? 0xff7eb6 : 0xff9cc6);
+        m.material.emissiveIntensity = 0.35 + 0.35 * wave;
+        this.setOpacity(m.material, (0.7 + 0.3 * wave) * op);
         m.visible = true;
       });
       return;
@@ -429,28 +559,31 @@ export class Viewer {
     }
     const off = 0.12 * extra;
     const r = 0.095 - 0.03 * extra;
-    place(sticks[0], A.clone().addScaledVector(side, -off), B.clone().addScaledVector(side, -off), r);
-    sticks[0].material.color.setHex(color);
-    this.setOpacity(sticks[0].material, op);
-    sticks[0].visible = true;
-    if (extra > 0.01) {
-      place(sticks[1], A.clone().addScaledVector(side, off), B.clone().addScaledVector(side, off), r);
-      sticks[1].material.color.setHex(color);
-      this.setOpacity(sticks[1].material, op * Math.min(1, extra * 1.5));
-      sticks[1].visible = true;
-    } else sticks[1].visible = false;
+    // stick k runs A→midpoint (atom A's colour), half k runs midpoint→B (atom B's colour)
+    const line = (k, s, opac) => {
+      const a0 = A.clone().addScaledVector(side, s), b0 = B.clone().addScaledVector(side, s), m0 = a0.clone().lerp(b0, 0.5);
+      place(sticks[k], a0, m0, r); place(halves[k], m0, b0, r);
+      sticks[k].material.color.copy(ca); halves[k].material.color.copy(cb);
+      this.setOpacity(sticks[k].material, opac); this.setOpacity(halves[k].material, opac);
+      sticks[k].visible = halves[k].visible = true;
+    };
+    line(0, -off, op);
+    if (extra > 0.01) line(1, off, op * Math.min(1, extra * 1.5));
+    else sticks[1].visible = halves[1].visible = false;
   }
 
-  updateArrow(g, a) {
-    const key = [...a.from, ...a.to, ...a.bend].map(v => v.toFixed(2)).join(',');
+  updateArrow(g, a, grow = 1) {
+    const gq = Math.max(0.05, Math.round(grow * 40) / 40);
+    const key = [...a.from, ...a.to, ...a.bend].map(v => v.toFixed(2)).join(',') + '|' + gq;
     if (g.userData.key === key) return;
     g.userData.key = key;
     const from = v3(a.from), to = v3(a.to);
     const ctrl = from.clone().add(to).multiplyScalar(0.5).add(v3(a.bend));
     const curve = new THREE.QuadraticBezierCurve3(from, ctrl, to);
+    g.userData.curve = curve;
     const pts = [];
-    for (let i = 0; i <= 24; i++) pts.push(curve.getPoint(i / 24 * 0.86));
-    const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 32, 0.045, 8, false);
+    for (let i = 0; i <= 24; i++) pts.push(curve.getPoint(i / 24 * 0.86 * gq));
+    const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 32, 0.05, 8, false);
     const [shaft, head] = g.children;
     shaft.geometry.dispose();
     shaft.geometry = tube;
@@ -468,6 +601,7 @@ export class Viewer {
     for (const d of this.labelData) {
       const p = v3(d.anchor);
       this.mol.localToWorld(p);
+      if (d.atom) p.y += 0.04 * Math.sin(this.time * 2 + d.anchor[0]);
       if (d.atom) {
         const r = this.atomRadius(d.el || 'C') + 0.22;
         p.addScaledVector(right, r * 0.75).addScaledVector(up, r * 0.75);
