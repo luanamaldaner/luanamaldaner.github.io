@@ -1380,6 +1380,9 @@ addEventListener('keydown', e => {
 // ---------------------------------------------------------------- countdowns
 
 const EXAM_RE = /\b(exams?|midterms?|finals?|final exam)\b/i;
+// Things that mention an exam but aren't one ("Exam 2 practice lab", "exam conflicts survey").
+const NOT_EXAM_RE = /\b(survey|practice|review|conflicts?|prep|study guide|lab|grades?|scores?|wrapper|corrections?)\b/i;
+const isExam = title => EXAM_RE.test(title) && !NOT_EXAM_RE.test(title);
 
 function upcomingExams() {
   const today = todayStr(), last = addDays(today, 45);
@@ -1391,8 +1394,8 @@ function upcomingExams() {
     seen.add(key);
     out.push({ title, date, tag, days: daysBetween(today, date) });
   };
-  for (const e of live('events')) if (e.date >= today && e.date <= last && EXAM_RE.test(e.title)) add(e.title, e.date, e.tag);
-  for (const t of live('todos')) if (!t.done && t.due && t.due >= today && t.due <= last && EXAM_RE.test(t.title)) add(t.title, t.due, t.tag);
+  for (const e of live('events')) if (e.date >= today && e.date <= last && isExam(e.title)) add(e.title, e.date, e.tag);
+  for (const t of live('todos')) if (!t.done && t.due && t.due >= today && t.due <= last && isExam(t.title)) add(t.title, t.due, t.tag);
   return out.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4);
 }
 
