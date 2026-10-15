@@ -8,7 +8,7 @@ import { createKey, unlock, open, strength, MIN_LENGTH, MIN_BITS } from './crypt
 import {
   REPO, emptyState, normalize, merge, uid, readLocal, readRemote, save, pull,
   checkToken, rekey, forgetLocal,
-} from './store.js';
+} from './store.js?v=2';
 import {
   CANVAS_WEB, FEED_RE, fetchFeed, pushSupported, needsHomeScreen,
   currentSubscription, subscribe, unsubscribe, sendSchedule, testPush, shrinkPhoto, estimateMeal,
@@ -17,7 +17,7 @@ import {
 import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
-import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js';
+import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -127,6 +127,7 @@ const ICONS = {
   moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
   auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
   focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/>',
+  briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12.5h18"/>',
   tree: '<path d="M12 3l5 6.5h-2.6L18.5 15h-13l4.1-5.5H7z"/><path d="M12 15v6"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
 };
@@ -576,6 +577,7 @@ const VIEWS = {
   calories: { label: 'Calories', icon: 'calories', render: renderCalories },
   focus: { label: 'Focus', icon: 'focus', render: renderFocus },
   forest: { label: 'Forest', icon: 'tree', render: renderForest },
+  internships: { label: 'Internships', icon: 'briefcase', render: renderInternships },
   notes: { label: 'Quick Notes', icon: 'notes', render: renderNotes },
   settings: { label: 'Settings', icon: 'settings', render: renderSettings },
 };
@@ -684,7 +686,7 @@ function renderToday() {
       })() })),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, calendarCard(today), h('div', { class: 'todo-split' }, assignmentsCard(), tasksCard())),
-      h('div', { class: 'col col-narrow' }, flowerCard(), countdownCard(), caloriesMini(), notesMini())),
+      h('div', { class: 'col col-narrow' }, internsCard(), flowerCard(), countdownCard(), caloriesMini(), notesMini())),
     tagList());
 }
 
@@ -805,16 +807,18 @@ function groupedTodos(open, kind) {
     const key = `${kind}:${label}`;
     // Assignments: only the coming week is shown; the rest stays tucked away
     // behind one quiet line until you ask for it.
-    if (kind === 'assignments' && label === 'Later' && !openLater) {
+    if (kind === 'assignments' && (label === 'This week' || label === 'Later') && !openLater) {
+      if (label === 'Later' && open.some(t => GROUPS[3][1](t, d))) return null;
+      const week = open.filter(t => GROUPS[3][1](t, d)).length, later = open.filter(t => GROUPS[4][1](t, d)).length;
       return h('button', { type: 'button', class: 'more-later', onclick: () => { openLater = true; render(); } },
-        `+ ${items.length} more after this week`);
+        [week ? `+ ${week} more this week` : null, later ? `${later} later` : null].filter(Boolean).join(' · '));
     }
     const closed = closedGroups.has(key);
     return h('section', { class: `todo-group group-${label.toLowerCase().replace(/\s+/g, '-')}` },
       h('button', {
         type: 'button', class: 'group-label', 'aria-expanded': String(!closed),
         onclick: () => {
-          if (kind === 'assignments' && label === 'Later') { openLater = false; render(); return; }
+          if (kind === 'assignments' && (label === 'This week' || label === 'Later')) { openLater = false; render(); return; }
           closed ? closedGroups.delete(key) : closedGroups.add(key); render();
         },
       }, h('span', { class: 'group-caret', text: closed ? '▸' : '▾' }), h('span', { text: label }), h('span', { class: 'group-count', text: String(items.length) })),
@@ -1335,6 +1339,118 @@ function renderForest() {
         h('dl', { class: 'stats' },
           h('div', null, h('dt', { text: 'Courses' }), h('dd', { text: String(courses) })),
           h('div', null, h('dt', { text: 'Best day' }), h('dd', { text: best ? `${fmtShort(best[0])} · ${best[1]} done` : '—' }))))));
+}
+
+// ---------------------------------------------------------------- internships
+
+// Filled in by Claude each day (paid or stipended roles only). Three are picked
+// for today; the full list lives on its own page.
+let internFilter = 'open';
+
+const safeUrl = u => (typeof u === 'string' && /^https:\/\//i.test(u) ? u : null);
+
+function internDeadline(it) {
+  if (it.deadline) {
+    const days = daysBetween(todayStr(), it.deadline);
+    if (days < 0) return { text: `Closed ${fmtShort(it.deadline)}`, cls: 'past', days };
+    return { text: days === 0 ? 'Due today' : days <= 14 ? `Due in ${days} days · ${fmtShort(it.deadline)}` : `Due ${fmtShort(it.deadline)}`, cls: days <= 14 ? 'soon' : '', days };
+  }
+  return { text: it.deadlineNote || 'Deadline not posted', cls: '', days: 9999 };
+}
+
+function internOpen(it) { return !it.status && internDeadline(it).days >= 0; }
+
+function internsSorted(list) {
+  return list.sort((a, b) => internDeadline(a).days - internDeadline(b).days || (a.org || '').localeCompare(b.org || ''));
+}
+
+// Today's three: the ones Claude picked for today (kept even after you apply),
+// topped up with the soonest open deadlines if fewer than three were picked.
+function todaysInterns() {
+  const today = todayStr();
+  const all = live('internships');
+  const picked = all.filter(it => it.pick === today && it.status !== 'skipped');
+  const rest = internsSorted(all.filter(it => internOpen(it) && !picked.includes(it)));
+  return [...picked, ...rest].slice(0, 3);
+}
+
+function setInternStatus(it, status) {
+  commit(() => { it.status = status; it.statusAt = status ? Date.now() : 0; touch(it); });
+}
+
+function internActions(it, compact) {
+  const url = safeUrl(it.url);
+  if (it.status === 'applied') {
+    return h('div', { class: 'intern-actions' }, h('span', { class: 'intern-badge applied', text: 'Applied ✿' }),
+      h('button', { class: 'link', type: 'button', text: 'Undo', onclick: () => setInternStatus(it, '') }));
+  }
+  if (it.status === 'skipped') {
+    return h('div', { class: 'intern-actions' }, h('span', { class: 'intern-badge', text: 'Skipped' }),
+      h('button', { class: 'link', type: 'button', text: 'Undo', onclick: () => setInternStatus(it, '') }));
+  }
+  return h('div', { class: 'intern-actions' },
+    url ? h('a', { class: 'btn btn-small btn-primary', href: url, target: '_blank', rel: 'noopener noreferrer', text: 'Apply ↗' }) : null,
+    h('button', { class: 'btn btn-small', type: 'button', text: 'Applied', onclick: () => setInternStatus(it, 'applied') }),
+    h('button', { class: 'btn btn-small btn-quiet', type: 'button', text: compact ? 'Skip' : 'Not for me', onclick: () => setInternStatus(it, 'skipped') }));
+}
+
+function internRow(it, compact = false) {
+  const dl = internDeadline(it);
+  const isNew = it.addedAt && daysBetween(it.addedAt, todayStr()) <= 1;
+  return h('li', { class: `intern${it.status ? ` is-${it.status}` : ''}` },
+    h('div', { class: 'intern-top' },
+      h('span', { class: `intern-type ${it.type === 'research' ? 'research' : 'industry'}`, text: it.type === 'research' ? 'Research' : 'Industry' }),
+      isNew && !compact ? h('span', { class: 'intern-new', text: 'New' }) : null,
+      h('span', { class: `intern-due ${dl.cls}`, text: dl.text })),
+    h('div', { class: 'intern-title', text: it.title }),
+    h('div', { class: 'intern-org', text: [it.org, it.location].filter(Boolean).join(' · ') }),
+    it.pay ? h('div', { class: 'intern-pay', text: it.pay }) : null,
+    !compact && it.why ? h('p', { class: 'intern-why', text: it.why }) : null,
+    !compact && it.eligibility ? h('p', { class: 'intern-elig', text: it.eligibility }) : null,
+    !compact && it.fields && it.fields.length ? h('div', { class: 'chips' }, it.fields.slice(0, 5).map(f => h('span', { class: 'chip', text: f }))) : null,
+    internActions(it, compact));
+}
+
+function internsCard() {
+  const all = live('internships');
+  if (!all.length) return null;
+  const picks = todaysInterns();
+  const done = picks.filter(it => it.status === 'applied').length;
+  return card('Apply today', h('span', { class: 'card-meta', text: `${done} / ${picks.length} done` }),
+    picks.length ? h('ul', { class: 'interns compact' }, picks.map(it => internRow(it, true)))
+      : h('p', { class: 'empty', text: 'Nothing open right now. New ones land every day ✿' }),
+    h('button', { class: 'link center-link', type: 'button', text: `See all ${all.filter(internOpen).length} open internships →`, onclick: () => go('internships') }));
+}
+
+function renderInternships() {
+  const all = live('internships');
+  const filters = [
+    ['open', 'Open', it => internOpen(it)],
+    ['industry', 'Industry', it => internOpen(it) && it.type !== 'research'],
+    ['research', 'Research', it => internOpen(it) && it.type === 'research'],
+    ['abroad', 'Abroad', it => internOpen(it) && it.country && it.country !== 'US'],
+    ['new', 'New', it => internOpen(it) && it.addedAt && daysBetween(it.addedAt, todayStr()) <= 1],
+    ['applied', 'Applied', it => it.status === 'applied'],
+    ['skipped', 'Skipped', it => it.status === 'skipped'],
+  ];
+  const [, , test] = filters.find(f => f[0] === internFilter) || filters[0];
+  const shown = internsSorted(all.filter(test));
+  const applied = all.filter(it => it.status === 'applied').length;
+  const picks = todaysInterns();
+
+  return h('div', { class: 'page' },
+    h('header', { class: 'page-head' },
+      h('h1', { text: 'Internships' }),
+      h('p', { class: 'meta', text: `Paid or stipended roles in data science, biology, biotech and nearby fields. Updated daily. ${applied} applied so far.` })),
+    picks.length ? card('Your three for today', null, h('ul', { class: 'interns picks' }, picks.map(it => internRow(it)))) : null,
+    h('section', { class: 'card' },
+      h('header', { class: 'card-head' }, h('h2', { text: 'If you want to do more' }), h('span', { class: 'card-meta', text: `${shown.length} shown` })),
+      h('div', { class: 'chips intern-filters' }, filters.map(([key, label, t]) => h('button', {
+        type: 'button', class: `chip chip-btn${internFilter === key ? ' on' : ''}`,
+        onclick: () => { internFilter = key; render(); },
+      }, `${label} · ${all.filter(t).length}`))),
+      shown.length ? h('ul', { class: 'interns' }, shown.map(it => internRow(it)))
+        : h('p', { class: 'empty', text: all.length ? 'Nothing here.' : 'Your first batch is on its way ✿' })));
 }
 
 // ---------------------------------------------------------------- quick add from anywhere

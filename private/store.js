@@ -13,7 +13,7 @@ export const REPO = {
 
 const LS_VAULT = 'pv.vault';
 const LS_SHA = 'pv.sha';
-const COLLECTIONS = ['todos', 'events', 'notes', 'food', 'weight', 'days', 'focus'];
+const COLLECTIONS = ['todos', 'events', 'notes', 'food', 'weight', 'days', 'focus', 'internships'];
 const OBJECTS = ['settings', 'github', 'canvas', 'push', 'inbox'];
 const TOMBSTONE_DAYS = 45;
 
@@ -21,7 +21,7 @@ export function emptyState() {
   const now = Date.now();
   return {
     v: 1,
-    todos: [], events: [], notes: [], food: [], weight: [], days: [], focus: [],
+    todos: [], events: [], notes: [], food: [], weight: [], days: [], focus: [], internships: [],
     settings: {
       name: '',
       goals: { cal: 2000, protein: 150, carbs: 200, fat: 60, sugar: 50, fiber: 28, water: 8 },
