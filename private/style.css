@@ -796,7 +796,7 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 }
 
 /* ---------- flower gadget (Today header) ---------- */
-.today-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.today-head { display: flex; justify-content: flex-start; align-items: center; gap: 28px; }
 .today-head-text { min-width: 0; }
 .flower-gadget { flex: none; display: grid; justify-items: center; gap: 2px; margin-top: 4px; }
 .flower-gadget .grow { width: 54px; height: 76px; }
