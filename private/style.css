@@ -586,6 +586,16 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .p-canopy-rust { fill: color-mix(in srgb, #d98b7a 55%, var(--card)); stroke: color-mix(in srgb, #b8665a 80%, transparent); }
 .p-canopy-gold { fill: color-mix(in srgb, var(--fl-butter) 60%, var(--card)); stroke: color-mix(in srgb, #c9a548 85%, transparent); }
 .p-snow { fill: var(--fl-white); }
+.p-sapling { fill: none; stroke: var(--fl-trunk); stroke-width: .8; }
+.p-canopy-light { fill: color-mix(in srgb, #a9c97a 45%, var(--card)); stroke: color-mix(in srgb, #8fb35e 80%, transparent); stroke-width: .5; }
+.p-birch { fill: var(--fl-white); stroke: var(--fl-edge); stroke-width: .3; }
+.p-birch-mark { fill: none; stroke: var(--text); stroke-width: .45; opacity: .55; }
+.p-stalk { fill: var(--fl-white); stroke: var(--fl-edge); stroke-width: .3; }
+.p-cap-rust, .p-cap-peach, .p-cap-blush { stroke: var(--fl-edge); stroke-width: .3; }
+.p-cap-rust { fill: #d98b7a; } .p-cap-peach { fill: var(--fl-peach); } .p-cap-blush { fill: var(--fl-pink); }
+.p-dot { fill: var(--fl-white); }
+.p-poppy-eye { fill: #4a3a44; }
+.f-coral { fill: #ec9a86; stroke: var(--fl-edge); stroke-width: .25; }
 .f-pink, .f-blush, .f-lilac, .f-butter, .f-peach, .f-sky, .f-white { stroke: var(--fl-edge); stroke-width: .25; }
 .f-pink { fill: var(--fl-pink); } .f-blush { fill: var(--fl-blush); } .f-lilac { fill: var(--fl-lilac); }
 .f-butter { fill: var(--fl-butter); } .f-peach { fill: var(--fl-peach); } .f-sky { fill: var(--fl-sky); } .f-white { fill: var(--fl-white); }

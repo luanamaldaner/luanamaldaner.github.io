@@ -1372,7 +1372,7 @@ function renderForest() {
       ['Best day', fBest ? `${fmtShort(fBest[0])} · ${fmtMinutes(fBest[1])}` : '—'],
     ]));
 
-  const taskCard = card('Homework & tasks', h('span', { class: 'card-meta', text: `${tItems.length} done` }),
+  const taskCard = card('Homework garden', h('span', { class: 'card-meta', text: `${tItems.length} done` }),
     bedRows(tItems, from, to, v => `${v} done`),
     speciesRow(tItems, it => it.tag.toLowerCase(), it => it.tag || 'Other',
       forestOffset ? `No tasks finished this ${span}.` : 'Each task you finish plants a flower. Every course grows its own kind ✿'),

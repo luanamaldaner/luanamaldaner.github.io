@@ -31,19 +31,19 @@ const pick = (r, list) => list[Math.floor(r() * list.length)];
 
 // ---------------------------------------------------------------- species
 
+// Focus grows a forest (greenery and trees); finished tasks grow a flower garden.
 // min = minutes of focus needed; h = rough height, used to fit plants in a frame.
 export const SPECIES = {
+  // focus forest
   sprout:    { label: 'Sprout', min: 0, h: 9 },
-  daisy:     { label: 'Daisy', min: 10, h: 20 },
-  tulip:     { label: 'Tulip', min: 10, h: 20 },
-  bell:      { label: 'Bluebell', min: 10, h: 19 },
-  rose:      { label: 'Rose', min: 20, h: 23 },
-  sunflower: { label: 'Sunflower', min: 20, h: 28 },
-  lavender:  { label: 'Lavender', min: 20, h: 25 },
-  cosmos:    { label: 'Cosmos', min: 20, h: 24 },
-  hydrangea: { label: 'Hydrangea', min: 35, h: 18 },
-  azalea:    { label: 'Azalea', min: 35, h: 18 },
-  berry:     { label: 'Berry bush', min: 35, h: 18 },
+  sapling:   { label: 'Sapling', min: 10, h: 17 },
+  fern:      { label: 'Fern', min: 10, h: 14 },
+  mushroom:  { label: 'Mushrooms', min: 10, h: 10 },
+  boxwood:   { label: 'Shrub', min: 20, h: 16 },
+  berry:     { label: 'Berry bush', min: 20, h: 18 },
+  hydrangea: { label: 'Hydrangea', min: 20, h: 18 },
+  birch:     { label: 'Birch', min: 35, h: 30 },
+  cypress:   { label: 'Cypress', min: 35, h: 32 },
   oak:       { label: 'Oak', min: 55, h: 36 },
   pine:      { label: 'Pine', min: 55, h: 38 },
   maple:     { label: 'Maple', min: 55, h: 36 },
@@ -51,17 +51,26 @@ export const SPECIES = {
   sakura:    { label: 'Grand sakura', min: 90, h: 46 },
   golden:    { label: 'Golden tree', min: 90, h: 46 },
   ancient:   { label: 'Ancient pine', min: 90, h: 48 },
+  // task garden
+  daisy:     { label: 'Daisy', h: 20 },
+  tulip:     { label: 'Tulip', h: 20 },
+  bell:      { label: 'Bluebell', h: 19 },
+  rose:      { label: 'Rose', h: 23 },
+  sunflower: { label: 'Sunflower', h: 28 },
+  lavender:  { label: 'Lavender', h: 25 },
+  cosmos:    { label: 'Cosmos', h: 24 },
+  poppy:     { label: 'Poppy', h: 21 },
 };
 export const TIERS = [
   { min: 90, label: 'grand trees', kinds: ['sakura', 'golden', 'ancient'] },
   { min: 55, label: 'trees', kinds: ['oak', 'pine', 'maple', 'cherry'] },
-  { min: 35, label: 'flowering shrubs', kinds: ['hydrangea', 'azalea', 'berry'] },
-  { min: 20, label: 'roses, sunflowers, lavender & cosmos', kinds: ['rose', 'sunflower', 'lavender', 'cosmos'] },
-  { min: 10, label: 'daisies, tulips & bluebells', kinds: ['daisy', 'tulip', 'bell'] },
+  { min: 35, label: 'young trees', kinds: ['birch', 'cypress'] },
+  { min: 20, label: 'shrubs', kinds: ['boxwood', 'berry', 'hydrangea'] },
+  { min: 10, label: 'saplings, ferns & mushrooms', kinds: ['sapling', 'fern', 'mushroom'] },
   { min: 0, label: 'a sprout', kinds: ['sprout'] },
 ];
 // Flowers used for finished tasks, one species per course/tag.
-const TASK_KINDS = ['daisy', 'tulip', 'bell', 'rose', 'sunflower', 'lavender', 'cosmos', 'hydrangea', 'azalea', 'berry'];
+const TASK_KINDS = ['daisy', 'tulip', 'bell', 'rose', 'sunflower', 'lavender', 'cosmos', 'poppy'];
 
 export function tierFor(minutes) { return TIERS.find(t => minutes >= t.min); }
 export function plantForMinutes(minutes, seed) { return pick(rng(`kind:${seed}`), tierFor(minutes).kinds); }
@@ -158,9 +167,55 @@ const DRAW = {
     return [stem('M0 0C1.4 -6 -1.4 -12 0 -18.5'), stem('M0 -7L-3 -10'), stem('M0.3 -11L3 -13.5'),
       ...ring(0, -19.5, 8, 4.8, 2.1, c, r() * 40), el('circle', { cx: 0, cy: -19.5, r: 1.4, class: 'p-center' })];
   },
+  poppy(r) {
+    const c = pick(r, ['f-coral', 'f-peach', 'f-pink', 'f-white']);
+    return [stem('M0 0C1.2 -5 -1.2 -11 0 -16'), leaf(0, -3, -48, 5, 1.8), leaf(0, -5, 44, 4.4, 1.7),
+      ...ring(0, -18, 4, 4.4, 3.4, c, 45), ...ring(0, -18, 4, 3.2, 2.6, c, 0),
+      el('circle', { cx: 0, cy: -18, r: 1.25, class: 'p-poppy-eye' })];
+  },
+  sapling(r) {
+    const out = [stem('M0 0C-0.3 -5 0.3 -10 0 -15', 'p-sapling'), stem('M0 -8Q-2.4 -9.6 -3.6 -11.6', 'p-branch'), stem('M0 -10.5Q2.2 -11.8 3.4 -14', 'p-branch')];
+    for (const [x, y, a] of [[-3.6, -11.6, -40], [3.4, -14, 38], [0, -15, -6], [-1.2, -6, -70], [1.4, -12.6, 62]]) out.push(leaf(x, y, a + (r() - 0.5) * 16, 4.4, 2));
+    return out;
+  },
+  fern(r) {
+    const out = [];
+    for (const [a, len] of [[-58, 11], [-28, 14], [4, 15], [32, 13.5], [60, 10.5]]) {
+      const g = el('g', { transform: at(0, 0, a + (r() - 0.5) * 6) });
+      g.append(stem(`M0 0Q${n2(len * 0.12)} ${n2(-len * 0.55)} 0 ${n2(-len)}`));
+      for (let i = 1; i < 6; i++) {
+        const y = -len * i / 6, s = 3.2 * (1 - i / 7);
+        g.append(leaf(0, y, -70, s, 0.9), leaf(0, y, 70, s, 0.9));
+      }
+      out.push(g);
+    }
+    return out;
+  },
+  mushroom(r) {
+    const c = pick(r, ['p-cap-rust', 'p-cap-peach', 'p-cap-blush']);
+    const cap = (x, s) => [
+      el('path', { d: `M${n2(x - 1 * s)} 0L${n2(x - 0.8 * s)} ${n2(-4 * s)}L${n2(x + 0.8 * s)} ${n2(-4 * s)}L${n2(x + 1 * s)} 0z`, class: 'p-stalk' }),
+      el('path', { d: `M${n2(x - 4.2 * s)} ${n2(-3.6 * s)}C${n2(x - 4 * s)} ${n2(-8.6 * s)} ${n2(x + 4 * s)} ${n2(-8.6 * s)} ${n2(x + 4.2 * s)} ${n2(-3.6 * s)}Q${n2(x)} ${n2(-2.6 * s)} ${n2(x - 4.2 * s)} ${n2(-3.6 * s)}z`, class: c }),
+      el('circle', { cx: x - 1.5 * s, cy: -6 * s, r: 0.6 * s, class: 'p-dot' }), el('circle', { cx: x + 1.4 * s, cy: -6.6 * s, r: 0.5 * s, class: 'p-dot' }),
+    ];
+    return [stem('M-6 0Q-5 -2 -6.5 -3.4'), stem('M6 0Q5.2 -1.8 6.6 -3'), ...cap(-1.4, 1.15), ...cap(3.6, 0.75)];
+  },
+  boxwood(r) { return shrub(r, null, false); },
   hydrangea(r) { return shrub(r, ['f-sky', 'f-lilac', 'f-blush']); },
-  azalea(r) { return shrub(r, ['f-pink', 'f-blush', 'f-white']); },
   berry(r) { return shrub(r, null); },
+  birch(r) {
+    const out = [el('path', { d: 'M-1.1 0C-0.8 -8 -0.7 -15 -0.5 -20L0.5 -20C0.7 -15 0.8 -8 1.1 0z', class: 'p-birch' })];
+    for (let i = 0; i < 4; i++) { const y = -3 - i * 4.2 - r() * 1.5; out.push(el('path', { d: `M${n2(-0.9 + r() * 0.4)} ${n2(y)}h${n2(0.7 + r() * 0.5)}`, class: 'p-birch-mark' })); }
+    out.push(stem('M0 -14Q-3 -16 -4 -19', 'p-branch'), stem('M0 -17Q2.5 -18.5 3.4 -21.5', 'p-branch'),
+      el('path', { d: cloud(-2.5, -22.5, 5.5, 5, 8, r), class: 'p-canopy-light' }),
+      el('path', { d: cloud(3, -25.5, 5, 4.6, 8, r), class: 'p-canopy-light' }));
+    return out;
+  },
+  cypress(r) {
+    return [el('path', { d: 'M-0.9 0L-0.6 -5L0.6 -5L0.9 0z', class: 'p-trunk' }),
+      el('path', { d: 'M0 -32C3.4 -26 5 -17 3.6 -9C3 -5.6 1.8 -4 0 -3.6C-1.8 -4 -3 -5.6 -3.6 -9C-5 -17 -3.4 -26 0 -32z', class: 'p-canopy-pine' }),
+      ...[[-1.2, -12], [1.4, -17], [-1, -22], [0.9, -26.5]].map(([x, y]) => el('path', { d: `M${x} ${y}q${n2(1 + r())} -1.2 ${n2(1.8 + r())} 0`, class: 'p-texture' }))];
+  },
   oak(r) { return tree(r, 'p-canopy', null); },
   maple(r) { return tree(r, pick(r, ['p-canopy-amber', 'p-canopy-rust']), null); },
   cherry(r) { return tree(r, 'p-canopy-blossom', ['f-white', 'f-pink']); },
@@ -170,7 +225,7 @@ const DRAW = {
   ancient(r) { return grand(pine(true), r, 'f-white'); },
 };
 
-function shrub(r, colours) {
+function shrub(r, colours, berries = true) {
   const out = [
     stem('M-3 0Q-2.4 -3 -4 -5', 'p-branch'), stem('M2.5 0Q2.2 -3 4 -5.5', 'p-branch'),
     el('path', { d: cloud(0, -9, 9.5, 7, 9, r), class: 'p-canopy' }),
@@ -180,8 +235,10 @@ function shrub(r, colours) {
     if (colours) {
       const c = pick(r, colours);
       out.push(floret(x, y, 1.5, c), floret(x + 1.6, y + 1.1, 1.2, c));
-    } else {
+    } else if (berries) {
       out.push(el('circle', { cx: x, cy: y, r: 0.95, class: 'p-berry' }), el('circle', { cx: x + 1.5, cy: y + 0.8, r: 0.8, class: 'p-berry' }));
+    } else {
+      out.push(el('path', { d: `M${n2(x - 1.2)} ${n2(y)}q1.2 -0.9 2.4 -0.1`, class: 'p-texture' }));
     }
   }
   return out;
