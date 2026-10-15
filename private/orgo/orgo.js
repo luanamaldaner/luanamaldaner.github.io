@@ -20,7 +20,7 @@ function save(key, v) { try { localStorage.setItem(`orgo.${key}`, v); } catch {}
 const st = {
   tab: saved('tab', 'mech'),
   mech: saved('mech', 'sn2'),
-  t: 0, playing: false, speed: 1, stepPause: true, face: 'back',
+  t: 0, playing: !matchMedia('(prefers-reduced-motion: reduce)').matches, speed: 1, stepPause: false, loop: true, hold: 0, face: 'back',
   show: { orbitals: true, arrows: true, labels: true },
   dec: { cls: '2', reagent: 'NaOEt', solvent: 'protic', heat: false },
   hideAnswers: false, revealed: new Set(),
@@ -43,7 +43,7 @@ let viewer = null, loading = null, parseSdf = null, shownKey = '', drawnT = -1, 
 function ensureViewer() {
   if (viewer) return Promise.resolve(viewer);
   if (!loading) {
-    loading = import('./viewer.js?v=2').then(m => {
+    loading = import('./viewer.js?v=3').then(m => {
       parseSdf = m.parseSdf;
       viewer = new m.Viewer();
       viewer.onTick = tick;
@@ -96,16 +96,25 @@ function attachViewer() {
 }
 
 function tick(dt) {
-  if (viewer) viewer.sway = st.tab === 'mech' && st.playing && viewer.live;
-  if (st.tab !== 'mech') return;
+  if (st.tab !== 'mech') { if (viewer) viewer.cam = null; return; }
   const m = mechById(st.mech);
+  // after the product appears, hold for a moment, then replay
+  if (!st.playing && st.loop && st.t >= 1 && st.hold > 0) {
+    st.hold -= dt;
+    if (st.hold <= 0) { st.t = 0; st.playing = true; }
+  }
+  if (viewer && viewer.live) {
+    // the camera swings around the molecule and leans in at the transition state
+    const u = st.t, arc = Math.sin(Math.PI * u);
+    viewer.cam = { yaw: (u - 0.5) * 0.9, pitch: 0.12 * arc, zoom: 1 - 0.16 * arc };
+  }
   if (st.playing) {
     let nt = st.t + dt * st.speed / m.duration;
     if (st.stepPause) {
       const end = m.steps.map(s => s[1]).find(b => b > st.t + 1e-6 && b < 1);
       if (end !== undefined && nt >= end) { nt = end; st.playing = false; }
     }
-    if (nt >= 1) { nt = 1; st.playing = false; }
+    if (nt >= 1) { nt = 1; st.playing = false; st.hold = st.loop ? 2.2 : 0; }
     st.t = nt;
   }
   drawMech(false);
@@ -245,7 +254,8 @@ function mechPage() {
   const toggles = h('div', { class: 'player-opts' },
     h('div', { class: 'chips' },
       [0.5, 1, 2].map(sp => chip(`${sp}×`, st.speed === sp, () => { st.speed = sp; C.render(); })),
-      chip('Stop at each step', st.stepPause, () => { st.stepPause = !st.stepPause; C.render(); })),
+      chip('Stop at each step', st.stepPause, () => { st.stepPause = !st.stepPause; C.render(); }),
+      chip('Loop', st.loop, () => { st.loop = !st.loop; st.hold = 0; C.render(); })),
     h('div', { class: 'chips' },
       chip('Orbitals', st.show.orbitals, () => { st.show.orbitals = !st.show.orbitals; C.render(); }),
       chip('Arrows', st.show.arrows, () => { st.show.arrows = !st.show.arrows; C.render(); }),
@@ -279,7 +289,7 @@ function mechPage() {
         controls,
         (ui.narr = h('div', { class: 'narration' }, ui.stepTitle, ui.stepText)),
         toggles,
-        h('p', { class: 'muted small mech-legend', text: 'Gold dots are electron pairs flowing along each curved arrow. Dashed pink bonds are half-made or half-broken. Purple lobes are empty orbitals; green/pink lobes are filled ones (the two colours are the two phases).' }))),
+        h('p', { class: 'muted small mech-legend', text: 'Gold dots are electron pairs flowing along each curved arrow. Dashed pink bonds are half-made or half-broken. Purple lobes are empty orbitals; green/pink lobes are filled ones (the two colours are the two phases). The camera swings around as the reaction runs; drag any time to look for yourself.' }))),
     h('div', { class: 'col col-narrow' },
       card('Energy diagram', null, en.svg, h('p', { class: 'muted small', text: 'The dot follows the animation. ‡ = transition state; dips between peaks are intermediates.' })),
       card('Steps', null, h('ol', { class: 'step-list' }, ui.stepItems)),

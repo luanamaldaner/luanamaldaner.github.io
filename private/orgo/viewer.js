@@ -18,22 +18,10 @@ const LOBE = { filled: [0x3ddc97, 0xff7eb6], empty: [0xa78bfa, 0xa78bfa] };
 const ARROWS = { light: [0xd9467f, 0x7b5cff, 0xe9860f, 0x1fa37a], dark: [0xff8fbc, 0xb3a1ff, 0xffbf66, 0x6ee0b0] };
 const ELECTRON = { light: 0xffb020, dark: 0xffd76e };
 
-/** Small, steady thermal jiggle for an atom: a few hundredths of an ångström. */
-function jiggle(id, el, time) {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973;
-  const a = el === 'H' ? 0.05 : 0.025;
-  const p = h * 0.37;
-  return [
-    a * Math.sin(time * 5.1 + p) + a * 0.5 * Math.sin(time * 8.3 + p * 1.7),
-    a * Math.sin(time * 4.3 + p * 2.1) + a * 0.5 * Math.sin(time * 9.1 + p * 0.6),
-    a * Math.sin(time * 6.2 + p * 0.9),
-  ];
-}
+
 const Y_UP = new THREE.Vector3(0, 1, 0);
 
 const v3 = p => new THREE.Vector3(p[0], p[1], p[2]);
-const add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 
 export class Viewer {
   constructor() {
@@ -45,8 +33,8 @@ export class Viewer {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(32, 1, 0.1, 400);
     this.scene.add(this.camera);
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x8a9a90, 1.25));
-    const key = new THREE.DirectionalLight(0xffffff, 1.7);
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x5a6670, 0.85));
+    const key = new THREE.DirectionalLight(0xffffff, 2.3);
     key.position.set(4, 6, 8);
     this.camera.add(key);
     const rim = new THREE.DirectionalLight(0xffc0dc, 0.75);
@@ -57,7 +45,7 @@ export class Viewer {
     this.camera.add(rim2);
 
     this.root = new THREE.Group();        // user rotation
-    this.swayG = new THREE.Group();       // slow drift while an animation plays
+    this.swayG = new THREE.Group();       // cinematic camera turn while a reaction plays
     this.mol = new THREE.Group();         // offset so the centre sits at the origin
     this.root.add(this.swayG);
     this.swayG.add(this.mol);
@@ -79,8 +67,9 @@ export class Viewer {
     this.dark = false;
     this.dist = 14; this.distTarget = 14; this.zoom = 1;
     this.spin = false;
-    this.sway = false; this.swayAmt = 0;
-    this.live = true;                     // thermal jiggle + flowing electrons
+    this.live = true;                     // flowing electrons, shimmering bonds
+    this.cam = null;                      // { yaw, pitch, zoom } the camera glides toward while a reaction plays
+    this.camNow = { yaw: 0, pitch: 0, zoom: 1 };
     this.time = 0;
     this.frame = null;
     this.tween = null;
@@ -126,7 +115,7 @@ export class Viewer {
       this.last = now;
       this.time += dt;
       if (this.onTick) this.onTick(dt);
-      // atoms jiggle and electrons flow, so a shown frame is redrawn every tick
+      // electrons flow along the arrows, so a shown frame is redrawn every tick
       if (this.live && this.frame && this.setAt !== this.time && !document.hidden) this.setFrame(this.frame);
       // only draw when something changed, to save battery
       if (this.step(dt) || this.dirty) { this.renderer.render(this.scene, this.camera); this.dirty = false; }
@@ -148,13 +137,16 @@ export class Viewer {
     }
     this.driftMotes();
     if (this.motes.visible) moving = true;
-    const swayGoal = this.sway && !this.dragging ? 1 : 0;
-    if (Math.abs(swayGoal - this.swayAmt) > 1e-3 || this.swayAmt > 1e-3) {
-      this.swayAmt += (swayGoal - this.swayAmt) * Math.min(1, dt * 1.5);
-      this.swayG.rotation.set(0.05 * this.swayAmt * Math.sin(this.time * 0.31), 0.16 * this.swayAmt * Math.sin(this.time * 0.42), 0);
-      moving = true;
+    // cinematic camera: the view turns and leans in as the reaction progresses
+    const goalCam = this.cam || { yaw: 0, pitch: 0, zoom: 1 };
+    const c = this.camNow, kk = Math.min(1, dt * 2.2);
+    let camMoving = false;
+    for (const key of ['yaw', 'pitch', 'zoom']) {
+      const d = goalCam[key] - c[key];
+      if (Math.abs(d) > 1e-4) { c[key] += d * kk; camMoving = true; }
     }
-    const goal = this.distTarget * this.zoom;
+    if (camMoving) { this.swayG.rotation.set(c.pitch, c.yaw, 0); moving = true; }
+    const goal = this.distTarget * this.zoom * c.zoom;
     if (Math.abs(goal - this.dist) > 1e-3) moving = true;
     this.dist += (goal - this.dist) * Math.min(1, dt * 8);
     this.camera.position.set(0, 0, this.dist);
@@ -294,7 +286,7 @@ export class Viewer {
 
   atomRadius(el) {
     const e = ELEMENTS[el] || [0, 0.4, 1.7];
-    return this.style === 'space' ? e[2] * 0.95 : e[1];
+    return this.style === 'space' ? e[2] * 0.95 : e[1] * 1.12;
   }
 
   // ---------------------------------------------------------- frame
@@ -302,7 +294,7 @@ export class Viewer {
   setFrame(f) {
     this.frame = f; this.setAt = this.time;
     const T = this.time;
-    const pos = new Map(f.atoms.map(a => [a.id, this.live ? add3(a.p, jiggle(a.id, a.el, T)) : a.p]));
+    const pos = new Map(f.atoms.map(a => [a.id, a.p]));
     const elOf = new Map(f.atoms.map(a => [a.id, a.el]));
     const seen = { atoms: new Set(), bonds: new Set(), lobes: new Set(), labels: new Set(), arrows: new Set(), planes: new Set() };
 
@@ -601,7 +593,6 @@ export class Viewer {
     for (const d of this.labelData) {
       const p = v3(d.anchor);
       this.mol.localToWorld(p);
-      if (d.atom) p.y += 0.04 * Math.sin(this.time * 2 + d.anchor[0]);
       if (d.atom) {
         const r = this.atomRadius(d.el || 'C') + 0.22;
         p.addScaledVector(right, r * 0.75).addScaledVector(up, r * 0.75);
