@@ -132,7 +132,6 @@ function drawMech(force) {
   const m = mechById(st.mech);
   const f = m.frame(st.t, { face: st.face });
   st.focus = actionFocus(f, st.t, st.focus);
-  f.highlights = st.show.labels ? autoHighlights(f) : [];
   if (!st.show.orbitals) { f.lobes = []; f.planes = f.planes.filter(p => p.color === 'metal'); }
   if (!st.show.arrows) f.arrows = [];
   if (!st.show.labels) f.labels = [];
@@ -166,27 +165,6 @@ function actionFocus(f, t, last) {
   for (const b of f.bonds) if (b.partial && P.get(b.a) && P.get(b.b)) pts.push(P.get(b.a), P.get(b.b));
   if (!pts.length) return last || null;
   return [0, 1, 2].map(k => pts.reduce((s, p) => s + p[k], 0) / pts.length);
-}
-
-/**
- * Glow around the atoms that matter right now: atoms whose bonds are
- * half-made or half-broken (pink), and charged atoms (+ pink, − blue). Hydrogens
- * in a changing bond glow amber, since that's a proton on the move.
- */
-function autoHighlights(f) {
-  const el = new Map(f.atoms.map(a => [a.id, a.el]));
-  const out = new Map();
-  const put = (atom, color, opacity) => {
-    const prev = out.get(atom);
-    if (!prev || prev.opacity < opacity) out.set(atom, { atom, color, opacity });
-  };
-  for (const b of f.bonds) if (b.partial) for (const a of [b.a, b.b]) put(a, el.get(a) === 'H' ? 'amber' : 'pink', b.opacity ?? 1);
-  for (const l of f.labels) {
-    if (l.kind !== 'charge' || !l.atom) continue;
-    const minus = l.text.includes('−');
-    put(l.atom, minus ? 'blue' : 'pink', (l.opacity ?? 1) * (l.text.startsWith('δ') ? 0.6 : 1));
-  }
-  return [...out.values()];
 }
 
 // Words in the narration get the same colour as the thing they name in 3D.
