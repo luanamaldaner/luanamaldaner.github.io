@@ -479,3 +479,54 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .ambient-bg {
 
 /* thinner rims: softer shadow so the edge doesn't read as a thick line */
 .charm-pbubble { filter: drop-shadow(0 4px 10px rgba(80, 150, 220, .12)); }
+
+/* bubble edges like real soap bubbles: no hard line, a soft glow that fades in
+   from the edge, with rainbow film colours pooling along the rim */
+.charm-pbubble, .charm-pbubble.L {
+  background:
+    radial-gradient(ellipse 13% 8% at var(--hx, 31%) 25%, rgba(255,255,255,.95) 0, rgba(255,255,255,.7) 40%, rgba(255,255,255,0) 100%),
+    radial-gradient(ellipse 5% 3% at var(--hx2, 62%) 82%, rgba(255,255,255,.9) 0, rgba(255,255,255,0) 100%),
+    radial-gradient(circle, rgba(255,255,255,0) 52%, rgba(255,255,255,.08) 60%, rgba(255,255,255,.32) 67%, rgba(255,255,255,.55) 70.2%, rgba(255,255,255,0) 70.8%),
+    conic-gradient(from 210deg, rgba(255,140,220,.16), rgba(140,220,255,.16), rgba(150,255,200,.14), rgba(255,240,150,.13), rgba(255,140,220,.16));
+  filter: none;
+}
+.charm-pbubble.L { --hx: 69%; --hx2: 38%; }
+.charm-pbubble::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 160deg, rgba(255,120,200,.75), rgba(120,210,255,.1) 14%, rgba(80,230,220,.7) 26%, rgba(140,160,255,.1) 40%, rgba(255,150,230,.6) 55%, rgba(255,255,255,.05) 68%, rgba(120,200,255,.7) 80%, rgba(255,120,200,.75));
+  -webkit-mask: radial-gradient(circle, transparent 58%, rgba(0,0,0,.35) 64%, #000 69.5%, transparent 70.8%);
+  mask: radial-gradient(circle, transparent 58%, rgba(0,0,0,.35) 64%, #000 69.5%, transparent 70.8%);
+  opacity: .55; mix-blend-mode: screen;
+}
+/* a soft crescent of light hugging the lower edge */
+.charm-pbubble::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 36%, transparent 63%, rgba(255,255,255,.6) 69%, transparent 70.6%);
+  -webkit-mask: linear-gradient(180deg, transparent 55%, #000 85%);
+  mask: linear-gradient(180deg, transparent 55%, #000 85%);
+  opacity: .8;
+}
+.charm-pbubble::after { background: radial-gradient(circle at 50% 45%, transparent 64%, rgba(255,255,255,.55) 68.5%, transparent 70.4%); opacity: .6; }
+.charm-pbubble::before { opacity: .7; }
+/* the little floating dots become tiny soap bubbles */
+html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .deco-float {
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,1) 0 9%, rgba(255,255,255,0) 22%),
+    radial-gradient(circle, rgba(255,255,255,.12) 0, rgba(255,255,255,.08) 50%, rgba(255,255,255,.55) 66%, rgba(255,255,255,.9) 70%, rgba(255,255,255,0) 71%),
+    conic-gradient(from 200deg, rgba(255,140,220,.45), rgba(140,220,255,.45), rgba(150,255,200,.4), rgba(255,240,150,.4), rgba(255,140,220,.45)) !important;
+  -webkit-mask: radial-gradient(circle, #000 70%, transparent 71.5%);
+  mask: radial-gradient(circle, #000 70%, transparent 71.5%);
+  filter: drop-shadow(0 0 1px rgba(60, 110, 170, .35)) drop-shadow(0 3px 6px rgba(50, 110, 180, .2));
+  opacity: .95 !important;
+  transform-origin: center;
+}
+html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .deco-float.deco-dot-sm { width: 14px !important; height: 14px !important; }
+html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .deco-float.deco-dot-md { width: 22px !important; height: 22px !important; }
+
+/* a slightly deeper blue halo in the sky around each bubble so it stands out */
+.charm-phalo {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(70, 135, 205, .22) 0, rgba(70, 135, 205, .14) 38%, rgba(70, 135, 205, 0) 70%);
+  animation: charm-drift2 var(--fd, 12s) ease-in-out infinite alternate;
+  animation-delay: var(--fdl, 0s);
+}

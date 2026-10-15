@@ -167,7 +167,13 @@ function addPageBubbles() {
       const peek = big ? d * (0.38 + rnd() * 0.16) : -(W * (0.06 + rnd() * 0.08));
       b.style.cssText = `width:${d.toFixed(0)}px;height:${d.toFixed(0)}px;top:${y.toFixed(0)}px;${side < 0 ? 'left' : 'right'}:${(-peek).toFixed(0)}px;` +
         `--fx:${(6 + rnd() * 10).toFixed(0)}px;--fy:${(10 + rnd() * 16).toFixed(0)}px;--fd:${(9 + rnd() * 8).toFixed(1)}s;--fdl:${(-rnd() * 10).toFixed(1)}s`;
-      layer.append(b);
+      // halo: a soft deeper-blue patch behind the bubble, 1.7x its size
+      const h = document.createElement('span');
+      h.className = 'charm-phalo';
+      const hd = d * 1.7, off = (hd - d) / 2;
+      const anim = `--fx:${b.style.getPropertyValue('--fx')};--fy:${b.style.getPropertyValue('--fy')};--fd:${b.style.getPropertyValue('--fd')};--fdl:${b.style.getPropertyValue('--fdl')}`;
+      h.style.cssText = `width:${hd.toFixed(0)}px;height:${hd.toFixed(0)}px;top:${(y - off).toFixed(0)}px;${side < 0 ? 'left' : 'right'}:${(-peek - off).toFixed(0)}px;${anim}`;
+      layer.append(h, b);
       y += big ? (phone ? 260 + rnd() * 160 : 380 + rnd() * 260) : 120 + rnd() * 80;
       if (big) side = -side;
       i++;
