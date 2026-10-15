@@ -908,24 +908,6 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .prob-note .bullets { margin: 0; }
 .prob-note .bullets li { line-height: 1.5; }
 
-/* ---------- orgo highlights ---------- */
-mark.hl { background: none; color: inherit; font-weight: 600; padding: 0 2px; border-radius: 4px; }
-mark.hl-blue { color: #3d63d6; background: color-mix(in srgb, #4a7dff 13%, transparent); }
-mark.hl-pink { color: #c63b77; background: color-mix(in srgb, #ff5c9a 13%, transparent); }
-mark.hl-amber { color: #b26a00; background: color-mix(in srgb, #ffa31a 16%, transparent); }
-mark.hl-violet { color: #6d48d8; background: color-mix(in srgb, #8b5cf6 13%, transparent); }
-mark.hl-key { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) mark.hl-blue { color: #9cb6ff; }
-  :root:not([data-theme="light"]) mark.hl-pink { color: #ff9cc4; }
-  :root:not([data-theme="light"]) mark.hl-amber { color: #ffcf7a; }
-  :root:not([data-theme="light"]) mark.hl-violet { color: #c4b2ff; }
-}
-:root[data-theme="dark"] mark.hl-blue { color: #9cb6ff; }
-:root[data-theme="dark"] mark.hl-pink { color: #ff9cc4; }
-:root[data-theme="dark"] mark.hl-amber { color: #ffcf7a; }
-:root[data-theme="dark"] mark.hl-violet { color: #c4b2ff; }
-
 /* ---------- prog 1 (python practice) ---------- */
 .prog {
   max-width: 1180px;

@@ -147,7 +147,7 @@ function drawMech(force) {
   if (ui.step !== si && ui.stepTitle) {
     ui.step = si;
     ui.stepTitle.textContent = `${si + 1}. ${m.steps[si][2]}`;
-    ui.stepText.replaceChildren(...highlightTerms(m.steps[si][3]));
+    ui.stepText.textContent = m.steps[si][3];
     ui.stepItems.forEach((li, i) => li.classList.toggle('on', i === si));
     if (ui.narr) { ui.narr.classList.remove('fresh'); void ui.narr.offsetWidth; ui.narr.classList.add('fresh'); }
   }
@@ -165,37 +165,6 @@ function actionFocus(f, t, last) {
   for (const b of f.bonds) if (b.partial && P.get(b.a) && P.get(b.b)) pts.push(P.get(b.a), P.get(b.b));
   if (!pts.length) return last || null;
   return [0, 1, 2].map(k => pts.reduce((s, p) => s + p[k], 0) / pts.length);
-}
-
-// Words in the narration get the same colour as the thing they name in 3D.
-const TERMS = [
-  [/(?<![\w⁻⁺])(nucleophile|lone pair|hydroxide|water|base|bromide|Br⁻|π electrons|π bond|electron-rich)(?!\w)/gi, 'hl-blue'],
-  [/(?<![\w⁻⁺])(electrophile|carbocation|cation|δ\+|positive charge|oxonium ion|bromonium(?: ion)?|leaving group|leaves)(?!\w)/gi, 'hl-pink'],
-  [/(?<![\w⁻⁺])(β-H|H⁺|proton|deprotonation)(?!\w)/gi, 'hl-amber'],
-  [/(?<![\w⁻⁺])(empty p orbital|empty σ\* orbital|σ\*|empty orbital|back lobe|p orbitals?)(?!\w)/gi, 'hl-violet'],
-  [/(?<![\w⁻⁺])(transition state|anti-periplanar|inversion|Walden inversion|racemic|Markovnikov|anti-Markovnikov|Zaitsev|Hofmann|syn addition|anti addition|rate-determining step|slow step)(?!\w)/gi, 'hl-key'],
-];
-function highlightTerms(text) {
-  const marks = [];
-  for (const [re, cls] of TERMS) {
-    for (const m of text.matchAll(re)) {
-      const a = m.index, b = a + m[0].length;
-      if (!marks.some(x => a < x.b && b > x.a)) marks.push({ a, b, cls });
-    }
-  }
-  marks.sort((x, y) => x.a - y.a);
-  const out = [];
-  let i = 0;
-  for (const mk of marks) {
-    if (mk.a > i) out.push(document.createTextNode(text.slice(i, mk.a)));
-    const span = document.createElement('mark');
-    span.className = `hl ${mk.cls}`;
-    span.textContent = text.slice(mk.a, mk.b);
-    out.push(span);
-    i = mk.b;
-  }
-  if (i < text.length) out.push(document.createTextNode(text.slice(i)));
-  return out;
 }
 
 function syncPlayButton() {
@@ -321,7 +290,7 @@ function mechPage() {
   const si = stepIndex(m, st.t);
   ui.step = si;
   ui.stepTitle = h('h3', { class: 'step-title', text: `${si + 1}. ${m.steps[si][2]}` });
-  ui.stepText = h('p', { class: 'step-text' }, ...highlightTerms(m.steps[si][3]));
+  ui.stepText = h('p', { class: 'step-text', text: m.steps[si][3] });
   ui.stepItems = m.steps.map(([t0, , title], i) => h('li', { class: i === si ? 'on' : null },
     h('button', { type: 'button', onclick: () => { st.t = t0; st.playing = false; drawMech(true); } },
       h('span', { class: 'step-n', text: String(i + 1) }), h('span', { text: title }))));
