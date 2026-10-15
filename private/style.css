@@ -1065,3 +1065,353 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 @media (prefers-reduced-motion: reduce) {
   .prog-status::before { animation: none !important; }
 }
+
+/* ---------- bio ---------- */
+:root {
+  --b-red: #e0566b; --b-blue: #5a7fe0; --b-na: #ef9a32; --b-k: #9a6be0; --b-water: #3fb3d8; --b-glu: #45b072;
+  --b-fat: #e3b22a; --b-hor: #e0609f; --b-acid: #e2553a; --b-gold: #e9a23b; --b-teal: #2fa59a;
+  --b-tissue: #fbece6; --b-tissue2: #f4dcd2; --b-wall: #d79a8b; --b-mem: #f0c58f; --b-cell: #fff5ee; --b-sky: #e5f3fb;
+  --b-stage: #fffdf8; --b-stage2: #f6f1ea; --b-ink: #22302a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --b-red: #ff7b8e; --b-blue: #8aa7ff; --b-na: #ffb45c; --b-k: #c19bff; --b-water: #6fd3f2; --b-glu: #7fdc9d;
+    --b-fat: #ffd866; --b-hor: #ff8cc6; --b-acid: #ff7a5c; --b-gold: #ffc061; --b-teal: #5fd6c9;
+    --b-tissue: #33292a; --b-tissue2: #432f30; --b-wall: #a8675c; --b-mem: #7d6340; --b-cell: #2a2524; --b-sky: #1b2f3b;
+    --b-stage: #171f1b; --b-stage2: #1d2722; --b-ink: #e6eee6;
+  }
+}
+:root[data-theme="dark"] {
+  --b-red: #ff7b8e; --b-blue: #8aa7ff; --b-na: #ffb45c; --b-k: #c19bff; --b-water: #6fd3f2; --b-glu: #7fdc9d;
+  --b-fat: #ffd866; --b-hor: #ff8cc6; --b-acid: #ff7a5c; --b-gold: #ffc061; --b-teal: #5fd6c9;
+  --b-tissue: #33292a; --b-tissue2: #432f30; --b-wall: #a8675c; --b-mem: #7d6340; --b-cell: #2a2524; --b-sky: #1b2f3b;
+  --b-stage: #171f1b; --b-stage2: #1d2722; --b-ink: #e6eee6;
+}
+
+.bio { max-width: 1180px; }
+.bio-head-sub { margin: 4px 0 0; }
+.bio-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: -8px 0 18px; }
+.bio-tab { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--card); color: var(--muted); padding: 7px 14px 7px 7px; border-radius: 999px; cursor: pointer; font-size: 13px; transition: background .2s, color .2s, border-color .2s, transform .2s; }
+.bio-tab:hover { color: var(--text); transform: translateY(-1px); }
+.bio-tab-n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 12px; color: #fff; background: var(--lc); }
+.bio-tab.on { border-color: var(--lc); color: var(--text); font-weight: 500; background: color-mix(in srgb, var(--lc) 12%, var(--card)); }
+.bio-tab-ok { color: var(--accent); font-weight: 600; }
+
+.bio-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+.bio-main { display: grid; gap: 18px; min-width: 0; }
+.bio-side { display: grid; gap: 18px; position: sticky; top: 16px; }
+@media (max-width: 1080px) { .bio-layout { grid-template-columns: minmax(0, 1fr); } .bio-side { position: static; } }
+
+.bio-intro { border-top: 4px solid var(--lc); }
+.bio-intro-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.bio-kicker { margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--lc); font-weight: 600; }
+.bio-intro-title { margin: 2px 0 0; font-size: 24px; }
+.bio-sub-h { margin: 14px 0 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
+.bio-minute { margin: 0; padding-left: 18px; display: grid; gap: 5px; line-height: 1.5; }
+.bio-minute li::marker { color: var(--lc); }
+.bio-prog { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.bio-prog-track { flex: 1; height: 6px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.bio-prog-fill { display: block; height: 100%; width: 0; background: var(--lc); border-radius: inherit; transition: width .6s ease; }
+.bio-jump { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.bio-jump a { font-size: 12px; color: var(--muted); text-decoration: none; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; }
+.bio-jump a:hover { color: var(--text); border-color: var(--lc); }
+
+.bio-scene { display: grid; gap: 10px; scroll-margin-top: 12px; }
+.bio-scene-head { display: flex; align-items: center; gap: 10px; }
+.bio-scene-head h2 { margin: 0; font-size: 19px; flex: 1; }
+.bio-num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent); flex: none; }
+.bio-watched { font-size: 11px; color: var(--accent); font-weight: 500; }
+.bio-stage { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: radial-gradient(120% 100% at 50% 0%, var(--b-stage), var(--b-stage2)); cursor: pointer; }
+.bio-svg { display: block; width: 100%; height: auto; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.bio-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: color-mix(in srgb, var(--line) 60%, transparent); }
+.bio-bar-fill { display: block; height: 100%; background: var(--petal); transform-origin: left; transform: scaleX(0); }
+.bio-cap { min-height: 44px; padding: 10px 14px; border-radius: 12px; background: var(--side); font-size: 15px; line-height: 1.45; border-left: 3px solid var(--petal); }
+.bio-cap.pop { animation: bio-pop .45s ease; }
+@keyframes bio-pop { from { opacity: .2; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .bio-cap.pop { animation: none; } }
+.bio-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bio-ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bio-play { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.bio-seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 10px; background: var(--side); border: 1px solid var(--line); }
+.bio-seg button { border: 0; background: none; padding: 5px 11px; border-radius: 8px; font-size: 12.5px; color: var(--muted); cursor: pointer; }
+.bio-seg button.on { background: var(--card); color: var(--text); font-weight: 500; box-shadow: var(--shadow); }
+.bio-explain p { margin: 0 0 8px; line-height: 1.6; }
+.bio-explain p:last-child { margin-bottom: 0; }
+.bio-terms summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 500; }
+.bio-terms dl { margin: 8px 0 0; display: grid; grid-template-columns: minmax(110px, max-content) 1fr; gap: 6px 14px; font-size: 13.5px; line-height: 1.45; }
+.bio-terms dt { font-weight: 600; }
+.bio-terms dd { margin: 0; color: var(--muted); }
+.bio-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 13.5px; }
+.bio-links .link { text-align: left; }
+.bio-traps li { font-size: 13.5px; }
+.bio-quiz .q-feedback p { margin: 6px 0 10px; }
+.bio-score { font-family: var(--serif); font-size: 26px; margin: 4px 0 12px; }
+@media (max-width: 720px) {
+  .bio-stage { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+  .bio-svg { min-width: 600px; }
+  .bio-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: -16px; padding-right: 16px; }
+  .bio-tab { white-space: nowrap; }
+  .bio-cap { font-size: 14px; }
+  .bio-terms dl { grid-template-columns: 1fr; }
+  .bio-terms dd { margin-bottom: 6px; }
+}
+
+/* svg pieces */
+.bio-svg .bl { font-size: 15px; fill: var(--b-ink); }
+.bio-svg .bs { font-size: 12.5px; fill: var(--muted); }
+.bio-svg .b-strong { fill: var(--b-ink); font-weight: 600; }
+.bio-svg .red-t { fill: var(--b-red); }
+.bio-svg .blue-t { fill: var(--b-blue); }
+.bio-svg .b-hidden { fill: none; stroke: none; }
+.bio-svg .b-axis { fill: none; stroke: var(--muted); stroke-width: 1.4; }
+.bio-svg .b-grid { stroke: var(--line); stroke-width: 1; }
+.bio-svg .b-curve { fill: none; stroke: var(--b-hor); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.bio-svg .b-line { fill: none; stroke-width: 2.5; }
+.bio-svg .b-line.red { stroke: var(--b-red); }
+.bio-svg .b-line.blue { stroke: var(--b-blue); }
+.bio-svg .b-hl { fill: color-mix(in srgb, var(--b-gold) 14%, transparent); stroke: color-mix(in srgb, var(--b-gold) 55%, transparent); stroke-width: 1.5; stroke-dasharray: 5 4; transition: x .5s ease, width .5s ease; }
+.bio-svg .p-oxy { fill: var(--b-red); }
+.bio-svg .p-deoxy { fill: var(--b-blue); }
+.bio-svg .p-water { fill: var(--b-water); }
+.bio-svg .p-protein { fill: var(--b-gold); }
+.bio-svg .b-lung { fill: color-mix(in srgb, var(--b-red) 16%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 45%, transparent); stroke-width: 1.5; }
+.bio-svg .b-body { fill: color-mix(in srgb, var(--b-blue) 12%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-blue) 40%, transparent); stroke-width: 1.5; }
+.bio-svg .b-vessel { fill: none; stroke-width: 16; stroke-linecap: round; stroke-linejoin: round; opacity: .2; transition: opacity .4s; }
+.bio-svg .b-vessel.red { stroke: var(--b-red); }
+.bio-svg .b-vessel.blue { stroke: var(--b-blue); }
+.bio-svg .b-vessel.soft { stroke: var(--b-hor); opacity: .14; }
+.bio-svg .b-vessel.glow { opacity: .5; }
+.bio-svg .b-heart { fill: color-mix(in srgb, var(--b-red) 10%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 55%, transparent); stroke-width: 2.5; }
+.bio-svg .b-septum { stroke: color-mix(in srgb, var(--b-red) 45%, transparent); stroke-width: 5; stroke-linecap: round; }
+.bio-svg .b-chamber { stroke-width: 2; transition: stroke-width .3s; }
+.bio-svg .b-chamber.blue { fill: color-mix(in srgb, var(--b-blue) 28%, var(--b-stage)); stroke: var(--b-blue); }
+.bio-svg .b-chamber.red { fill: color-mix(in srgb, var(--b-red) 28%, var(--b-stage)); stroke: var(--b-red); }
+.bio-svg .b-chamber.glow { stroke: var(--b-gold); stroke-width: 5; }
+.bio-svg .b-ch-label { font-weight: 700; font-size: 14px; }
+.bio-svg .b-phase { font-style: italic; }
+.bio-svg .b-heart-part { fill: color-mix(in srgb, var(--b-red) 12%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 55%, transparent); stroke-width: 2.5; }
+.bio-svg .b-wave { fill: var(--b-gold); opacity: .8; }
+.bio-svg .b-wire { fill: none; stroke: var(--b-gold); stroke-width: 3; stroke-linecap: round; opacity: .7; }
+.bio-svg .b-node { fill: var(--b-stage); stroke: var(--b-gold); stroke-width: 3; transition: fill .15s; }
+.bio-svg .b-node.fire { fill: var(--b-gold); }
+.bio-svg .b-spark { fill: #fff; stroke: var(--b-gold); stroke-width: 3; filter: drop-shadow(0 0 4px var(--b-gold)); }
+.bio-svg .b-monitor { fill: color-mix(in srgb, var(--b-teal) 8%, var(--b-stage)); stroke: var(--line); }
+.bio-svg .b-trace { fill: none; stroke: var(--b-teal); stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
+.bio-svg .b-ecg-label { fill: var(--b-teal); font-weight: 700; }
+.bio-svg .b-mark { stroke-width: 2; stroke-dasharray: 4 4; }
+.bio-svg .b-mark.red { stroke: var(--b-red); }
+.bio-svg .b-mark.blue { stroke: var(--b-blue); }
+.bio-svg .b-drop { stroke: var(--b-red); stroke-width: 3; marker-end: none; }
+.bio-svg .b-dot { fill: var(--b-hor); stroke: var(--b-stage); stroke-width: 3; }
+.bio-svg .b-rbc { stroke-width: 2; }
+.bio-svg .b-rbc.red { fill: var(--b-red); stroke: color-mix(in srgb, var(--b-red) 70%, #000); }
+.bio-svg .b-rbc.blue { fill: var(--b-blue); stroke: color-mix(in srgb, var(--b-blue) 70%, #000); }
+.bio-svg .b-heme { fill: color-mix(in srgb, #000 22%, transparent); }
+.bio-svg .b-o2 { fill: #fff; }
+.bio-svg .b-lumen { fill: color-mix(in srgb, var(--b-red) 12%, var(--b-stage)); }
+.bio-svg .b-wall-art { fill: none; stroke: var(--b-wall); stroke-width: 4; stroke-linejoin: round; }
+.bio-svg .b-valve { stroke: var(--b-wall); stroke-width: 4; stroke-linecap: round; }
+.bio-svg .b-muscle { fill: color-mix(in srgb, var(--b-red) 30%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 60%, transparent); }
+.bio-svg .b-tissue-bg { fill: var(--b-tissue); }
+.bio-svg .b-cell { fill: var(--b-cell); stroke: var(--b-wall); stroke-width: 1.2; }
+.bio-svg .b-lymph { fill: color-mix(in srgb, var(--b-glu) 22%, var(--b-stage)); stroke: var(--b-glu); stroke-width: 2; }
+.bio-svg .b-capillary { fill: color-mix(in srgb, var(--b-red) 16%, var(--b-stage)); stroke: var(--b-wall); stroke-width: 2.5; }
+.bio-svg .b-arrow { stroke-width: 3; stroke-linecap: round; fill: none; }
+.bio-svg .b-arrow.out { stroke: var(--b-red); }
+.bio-svg .b-arrow.in { stroke: var(--b-blue); }
+.bio-svg .b-water-bg { fill: color-mix(in srgb, var(--b-blue) 18%, var(--b-stage)); }
+.bio-svg .b-muscle-bg { fill: color-mix(in srgb, var(--b-red) 22%, var(--b-stage)); }
+.bio-svg .b-pipe { fill: none; stroke-width: 20; stroke-linecap: round; opacity: .25; }
+.bio-svg .b-pipe.red { stroke: var(--b-red); }
+.bio-svg .b-pipe.blue { stroke: var(--b-blue); }
+.bio-svg .b-heat { stroke: var(--b-gold); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 4 5; fill: none; }
+.bio-svg .ion circle { stroke: color-mix(in srgb, #000 15%, transparent); stroke-width: 1; }
+.bio-svg .ion-t { fill: #fff; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+.bio-svg .ion.na circle { fill: var(--b-na); }
+.bio-svg .ion.k circle { fill: var(--b-k); }
+.bio-svg .ion.cl circle { fill: var(--b-teal); }
+.bio-svg .ion.h circle { fill: var(--b-acid); }
+.bio-svg .ion.hco3 circle { fill: var(--b-blue); }
+.bio-svg .ion.glu circle { fill: var(--b-glu); }
+.bio-svg .ion.hor circle { fill: var(--b-hor); }
+.bio-svg .b-leader { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; }
+.bio-svg .b-head { stroke: none; }
+.bio-svg .b-head.red { fill: var(--b-red); }
+.bio-svg .b-head.blue { fill: var(--b-blue); }
+.bio-svg .b-head.ink { fill: var(--muted); }
+.bio-svg .b-head.gold { fill: var(--b-gold); }
+.bio-svg .b-head.hor { fill: var(--b-hor); }
+.bio-svg .b-fresh { fill: color-mix(in srgb, var(--b-water) 14%, var(--b-stage)); }
+.bio-svg .b-sea { fill: color-mix(in srgb, var(--b-blue) 26%, var(--b-stage)); }
+.bio-svg .p-salt { fill: var(--b-na); }
+.bio-svg .p-salt.faint { opacity: .35; }
+.bio-svg .p-glu { fill: var(--b-glu); }
+.bio-svg .p-k { fill: var(--b-k); }
+.bio-svg .b-fish { fill: color-mix(in srgb, var(--b-gold) 30%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-gold) 70%, #000); stroke-width: 2; fill-rule: nonzero; }
+.bio-svg .b-eye { fill: var(--b-ink); }
+.bio-svg .b-gill { fill: none; stroke: var(--b-red); stroke-width: 3; stroke-linecap: round; }
+.bio-svg .b-atp { fill: var(--b-gold); font-weight: 700; }
+.bio-svg .b-hor-t { fill: var(--b-hor); }
+.bio-svg .b-water-t { fill: var(--b-water); }
+.bio-svg .b-salt-t { fill: var(--b-na); }
+.bio-svg .b-glu-t { fill: var(--b-glu); }
+.bio-svg .b-k-t { fill: var(--b-k); }
+.bio-svg .b-good-t { fill: var(--accent); }
+.bio-svg .b-emoji { font-size: 34px; }
+.bio-svg .b-colbox { fill: var(--b-stage); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+.bio-svg .b-colbox.on { stroke: var(--b-gold); stroke-width: 3; fill: color-mix(in srgb, var(--b-gold) 8%, var(--b-stage)); }
+.bio-svg .b-track { fill: var(--track); }
+.bio-svg .b-barfill.r0 { fill: var(--b-acid); }
+.bio-svg .b-barfill.r1 { fill: var(--b-water); }
+.bio-svg .b-barfill.r2 { fill: var(--b-gold); }
+.bio-svg .b-drop-w { fill: var(--b-water); }
+.bio-svg .b-cortex { fill: color-mix(in srgb, var(--b-gold) 8%, var(--b-stage)); }
+.bio-svg .b-med-top { stop-color: color-mix(in srgb, var(--b-na) 10%, var(--b-stage)); }
+.bio-svg .b-med-bot { stop-color: color-mix(in srgb, var(--b-na) 42%, var(--b-stage)); }
+.bio-svg .b-art { fill: none; stroke: var(--b-red); stroke-width: 9; stroke-linecap: round; opacity: .55; }
+.bio-svg .b-art.thin { stroke-width: 7; }
+.bio-svg .b-capsule { fill: none; stroke: var(--b-teal); stroke-width: 6; stroke-linecap: round; }
+.bio-svg .b-glom { fill: none; stroke: var(--b-red); stroke-width: 3; stroke-linecap: round; transition: stroke-width .3s; }
+.bio-svg .b-glom.glow { stroke-width: 5; filter: drop-shadow(0 0 4px var(--b-gold)); }
+.bio-svg .b-tubule { fill: none; stroke: var(--b-teal); stroke-width: 15; stroke-linecap: round; stroke-linejoin: round; opacity: .55; transition: opacity .4s; }
+.bio-svg .b-tubule.glow { opacity: 1; filter: drop-shadow(0 0 5px var(--b-gold)); }
+.bio-svg .b-lumen-t { fill: none; stroke: var(--b-stage); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.bio-svg .b-aqua { fill: var(--b-water); stroke: color-mix(in srgb, var(--b-water) 60%, #000); transition: opacity .4s; }
+.bio-svg .b-link { fill: none; stroke: var(--line-strong); stroke-width: 2.5; transition: stroke .4s; }
+.bio-svg .b-link.lit { stroke: var(--b-gold); }
+.bio-svg .b-node-box { fill: var(--b-stage); stroke: var(--line-strong); stroke-width: 1.5; transition: fill .5s, stroke .5s; }
+.bio-svg .b-node-box.lit { fill: color-mix(in srgb, var(--b-gold) 16%, var(--b-stage)); stroke: var(--b-gold); stroke-width: 2.5; }
+.bio-svg .b-node-box.warn.lit { fill: color-mix(in srgb, var(--b-red) 14%, var(--b-stage)); stroke: var(--b-red); }
+.bio-svg .b-node-box.fx.lit { fill: color-mix(in srgb, var(--b-teal) 16%, var(--b-stage)); stroke: var(--b-teal); }
+.bio-svg .b-bead { fill: var(--b-hor); opacity: .55; }
+.bio-svg .b-bead.active { opacity: 1; }
+.bio-svg .b-gauge { fill: none; stroke: var(--track); stroke-width: 12; stroke-linecap: round; }
+.bio-svg .b-needle { stroke: var(--b-red); stroke-width: 4; stroke-linecap: round; }
+.bio-svg .b-feedback { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 6 5; }
+.bio-svg .p-bile { fill: var(--b-glu); }
+.bio-svg .p-fatdot { fill: var(--b-fat); }
+.bio-svg .p-hor { fill: var(--b-hor); }
+.bio-svg .p-h { fill: var(--b-acid); }
+.bio-svg .p-hco3 { fill: var(--b-blue); }
+.bio-svg .b-acid-t { fill: var(--b-acid); }
+.bio-svg .b-bile-t { fill: var(--b-glu); }
+.bio-svg .b-bloodband { fill: color-mix(in srgb, var(--b-red) 16%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 40%, transparent); }
+.bio-svg .b-gut { fill: color-mix(in srgb, var(--b-hor) 30%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-hor) 70%, #000); stroke-width: 4; stroke-linejoin: round; }
+.bio-svg .b-gut-in { fill: color-mix(in srgb, var(--b-hor) 14%, var(--b-stage)); stroke: none; transform-box: fill-box; transform-origin: center; transform: scale(.985); }
+.bio-svg .b-gland { fill: color-mix(in srgb, var(--b-water) 30%, var(--b-stage)); stroke: var(--b-water); stroke-width: 1.5; }
+.bio-svg .b-liver { fill: color-mix(in srgb, #8b3b2e 45%, var(--b-stage)); stroke: color-mix(in srgb, #8b3b2e 70%, transparent); stroke-width: 1.5; }
+.bio-svg .b-gall { fill: color-mix(in srgb, var(--b-glu) 45%, var(--b-stage)); stroke: var(--b-glu); stroke-width: 1.5; }
+.bio-svg .b-duct { fill: none; stroke: var(--b-glu); stroke-width: 3; stroke-linecap: round; opacity: .7; }
+.bio-svg .b-pancreas { fill: color-mix(in srgb, var(--b-na) 35%, var(--b-stage)); stroke: var(--b-na); stroke-width: 1.5; }
+.bio-svg .b-region { transition: fill .3s; }
+.bio-svg .b-region.on { fill: var(--b-hor); }
+.bio-svg .b-bolus { stroke: color-mix(in srgb, #000 25%, transparent); stroke-width: 1.5; }
+.bio-svg .b-badge { fill: var(--b-stage); stroke: var(--line-strong); stroke-width: 1.2; transition: fill .3s, stroke .3s; }
+.bio-svg g.on > .b-badge { fill: color-mix(in srgb, var(--b-gold) 22%, var(--b-stage)); stroke: var(--b-gold); stroke-width: 2; }
+.bio-svg g:not(.on) > .b-badge + text { fill: var(--muted); font-weight: 400; }
+.bio-svg .b-sugar { fill: var(--b-glu); stroke: color-mix(in srgb, var(--b-glu) 60%, #000); stroke-width: 1.5; }
+.bio-svg .b-aa { stroke: color-mix(in srgb, #000 20%, transparent); stroke-width: 1.5; }
+.bio-svg .b-bondline { stroke: var(--b-ink); stroke-width: 3; stroke-linecap: round; }
+.bio-svg .b-glycerol { fill: var(--b-teal); }
+.bio-svg .b-tail { fill: none; stroke: var(--b-fat); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+.bio-svg .b-enzyme { fill: var(--b-k); stroke: color-mix(in srgb, var(--b-k) 60%, #000); stroke-width: 1.5; }
+.bio-svg .b-lid { fill: var(--b-k); stroke: color-mix(in srgb, var(--b-k) 60%, #000); stroke-width: 1.5; }
+.bio-svg .b-lumen-acid { fill: color-mix(in srgb, var(--b-acid) 10%, var(--b-stage)); }
+.bio-svg .b-mucus { fill: color-mix(in srgb, var(--b-teal) 30%, var(--b-stage)); }
+.bio-svg .b-cellbody { fill: var(--b-cell); stroke: var(--b-wall); stroke-width: 2; }
+.bio-svg .b-pump { fill: var(--b-gold); stroke: color-mix(in srgb, var(--b-gold) 60%, #000); stroke-width: 1.5; transition: fill .2s; }
+.bio-svg .b-pump.busy { fill: color-mix(in srgb, var(--b-gold) 70%, #fff); filter: drop-shadow(0 0 4px var(--b-gold)); }
+.bio-svg .b-receptor { fill: none; stroke: var(--b-hor); stroke-width: 4; stroke-linecap: round; }
+.bio-svg .b-fatdrop { fill: var(--b-fat); }
+.bio-svg .b-coat { fill: none; stroke: var(--b-glu); stroke-width: 3; stroke-dasharray: 3 3; }
+.bio-svg .b-salttail { stroke: var(--b-fat); stroke-width: 3; stroke-linecap: round; }
+.bio-svg .b-salthead { fill: var(--b-glu); }
+.bio-svg .b-epi { fill: color-mix(in srgb, var(--b-hor) 18%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-hor) 55%, transparent); stroke-width: 1.5; }
+.bio-svg .b-villus { fill: color-mix(in srgb, var(--b-hor) 26%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-hor) 65%, #000); stroke-width: 1.5; }
+.bio-svg .b-lacteal-line { fill: none; stroke: var(--b-glu); stroke-width: 2.5; stroke-linecap: round; }
+.bio-svg .b-microvillus { fill: color-mix(in srgb, var(--b-hor) 30%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-hor) 60%, transparent); }
+.bio-svg .b-transporter { fill: var(--b-teal); stroke: color-mix(in srgb, var(--b-teal) 60%, #000); stroke-width: 1.5; transition: fill .2s; }
+.bio-svg .b-transporter.g2 { fill: var(--b-glu); }
+.bio-svg .b-transporter.busy { filter: drop-shadow(0 0 5px var(--b-teal)); }
+.bio-svg .b-er { fill: color-mix(in srgb, var(--b-k) 14%, var(--b-cell)); stroke: color-mix(in srgb, var(--b-k) 50%, transparent); stroke-dasharray: 5 4; }
+.bio-svg .b-lymphv { fill: color-mix(in srgb, var(--b-glu) 22%, var(--b-stage)); stroke: var(--b-glu); stroke-width: 2; }
+.bio-svg .b-chylo { fill: color-mix(in srgb, var(--b-fat) 30%, var(--b-stage)); stroke: var(--b-k); stroke-width: 3; stroke-dasharray: 4 3; }
+.bio-svg .b-gold-t { fill: var(--b-gold); }
+.bio-svg .p-ca { fill: var(--b-gold); }
+.bio-svg .b-dendrite { fill: none; stroke: var(--b-k); stroke-width: 6; stroke-linecap: round; opacity: .7; transition: filter .3s; }
+.bio-svg .b-dendrite.glow { filter: drop-shadow(0 0 4px var(--b-gold)); opacity: 1; }
+.bio-svg .b-soma { fill: color-mix(in srgb, var(--b-k) 30%, var(--b-stage)); stroke: var(--b-k); stroke-width: 2.5; }
+.bio-svg .b-somaglow { fill: var(--b-gold); opacity: .4; }
+.bio-svg .b-nucleus { fill: color-mix(in srgb, var(--b-k) 60%, var(--b-stage)); }
+.bio-svg .b-axon { stroke: var(--b-k); stroke-width: 7; stroke-linecap: round; fill: none; }
+.bio-svg .b-axon.thin { stroke-width: 5; }
+.bio-svg .b-myelin { fill: color-mix(in srgb, var(--b-fat) 45%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-fat) 80%, #000); stroke-width: 1.5; }
+.bio-svg .b-bulb { fill: color-mix(in srgb, var(--b-k) 40%, var(--b-stage)); stroke: var(--b-k); stroke-width: 2; }
+.bio-svg .b-bulb.glow { fill: var(--b-gold); }
+.bio-svg .b-target { fill: color-mix(in srgb, var(--b-red) 26%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 60%, transparent); }
+.bio-svg .b-outside { fill: color-mix(in srgb, var(--b-na) 9%, var(--b-stage)); }
+.bio-svg .b-inside { fill: color-mix(in srgb, var(--b-k) 10%, var(--b-stage)); }
+.bio-svg .b-lipid { fill: color-mix(in srgb, var(--b-mem) 80%, var(--b-stage)); }
+.bio-svg .b-channel { stroke-width: 1.5; }
+.bio-svg .b-channel.k { fill: color-mix(in srgb, var(--b-k) 55%, var(--b-stage)); stroke: var(--b-k); }
+.bio-svg .b-channel.na { fill: color-mix(in srgb, var(--b-na) 55%, var(--b-stage)); stroke: var(--b-na); }
+.bio-svg .b-pore { fill: color-mix(in srgb, var(--b-stage) 70%, transparent); }
+.bio-svg .b-meter { fill: var(--b-ink); }
+.bio-svg .b-meter-t { fill: var(--b-stage); font-variant-numeric: tabular-nums; }
+.bio-svg .b-gate { transition: transform .25s ease; }
+.bio-svg .b-gate.na { fill: var(--b-na); }
+.bio-svg .b-gate.k { fill: var(--b-k); }
+.bio-svg .b-ball { fill: var(--b-acid); }
+.bio-svg .b-zap { fill: var(--b-gold); }
+.bio-svg .b-threshold { stroke: var(--b-gold); stroke-width: 2; stroke-dasharray: 6 4; }
+.bio-svg .b-trace.hot { stroke: var(--b-hor); stroke-width: 3; }
+.bio-svg .b-axonbar { fill: color-mix(in srgb, var(--b-k) 26%, var(--b-stage)); stroke: var(--b-k); stroke-width: 1.5; }
+.bio-svg .b-refr { fill: color-mix(in srgb, var(--muted) 35%, transparent); }
+.bio-svg .b-apglow { fill: var(--b-gold); opacity: .75; filter: drop-shadow(0 0 6px var(--b-gold)); }
+.bio-svg .b-jump { fill: none; stroke: var(--b-gold); stroke-width: 3; stroke-dasharray: 5 4; }
+.bio-svg .b-terminal { fill: color-mix(in srgb, var(--b-k) 22%, var(--b-stage)); stroke: var(--b-k); stroke-width: 2.5; }
+.bio-svg .b-postcell { fill: color-mix(in srgb, var(--b-teal) 14%, var(--b-stage)); stroke: var(--b-teal); stroke-width: 2.5; }
+.bio-svg .b-vesicle { fill: color-mix(in srgb, var(--b-hor) 18%, var(--b-stage)); stroke: var(--b-hor); stroke-width: 2; }
+.bio-svg .b-receptor2 { stroke: var(--b-teal); stroke-width: 5; stroke-linecap: round; }
+.bio-svg .b-site { fill: var(--b-stage); stroke: var(--b-teal); stroke-width: 2; transition: fill .3s; }
+.bio-svg .b-site.on { fill: var(--b-gold); }
+.bio-svg .b-bodyfig { fill: color-mix(in srgb, var(--b-mem) 40%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-mem) 80%, #000); stroke-width: 1.5; }
+.bio-svg .b-limb { stroke: color-mix(in srgb, var(--b-mem) 80%, #000); stroke-width: 14; stroke-linecap: round; opacity: .5; fill: none; }
+.bio-svg .b-cns { fill: var(--b-k); opacity: .8; }
+.bio-svg .b-cord { stroke: var(--b-k); stroke-width: 6; stroke-linecap: round; }
+.bio-svg .b-nerve { fill: none; stroke: var(--b-gold); stroke-width: 3; stroke-linecap: round; }
+.bio-svg .b-panel { fill: var(--b-stage); stroke: var(--line); }
+.bio-svg .b-heartico { fill: var(--b-red); }
+.bio-svg .b-eye-w { fill: #fff; stroke: var(--line-strong); }
+.bio-svg .b-iris { fill: #6b8f6f; }
+.bio-svg .b-pupil { fill: #111; transition: r .6s ease; }
+.bio-svg .b-gutline { fill: none; stroke: var(--b-hor); stroke-width: 8; stroke-linecap: round; }
+.bio-svg .b-bpbar { fill: var(--b-red); transition: width .6s ease; }
+.bio-svg .b-teal-t { fill: var(--b-teal); }
+.bio-svg .b-sigcell { fill: color-mix(in srgb, var(--b-hor) 30%, var(--b-stage)); stroke: var(--b-hor); stroke-width: 2; }
+.bio-svg .b-sigcell.t { fill: color-mix(in srgb, var(--b-teal) 24%, var(--b-stage)); stroke: var(--b-teal); }
+.bio-svg .b-vesselband { fill: color-mix(in srgb, var(--b-red) 22%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 55%, transparent); }
+.bio-svg .b-gprot { fill: var(--b-glu); stroke: color-mix(in srgb, var(--b-glu) 60%, #000); stroke-width: 1.5; }
+.bio-svg .b-nucleusbig { fill: color-mix(in srgb, var(--b-k) 14%, var(--b-cell)); stroke: var(--b-k); stroke-width: 2; }
+.bio-svg .b-dna { fill: none; stroke: var(--b-k); stroke-width: 3; stroke-linecap: round; }
+.bio-svg .b-steroid { fill: none; stroke: var(--b-gold); stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; }
+.bio-svg .b-irec { fill: color-mix(in srgb, var(--b-teal) 40%, var(--b-stage)); stroke: var(--b-teal); stroke-width: 2; }
+.bio-svg .b-mrna { fill: none; stroke: var(--b-hor); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.bio-svg .b-protbead { fill: var(--b-glu); stroke: color-mix(in srgb, var(--b-glu) 60%, #000); }
+.bio-svg .b-brain { fill: color-mix(in srgb, var(--b-k) 14%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-k) 50%, transparent); stroke-width: 1.5; }
+.bio-svg .b-stalk { fill: color-mix(in srgb, var(--b-k) 20%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-k) 50%, transparent); }
+.bio-svg .b-ant { fill: color-mix(in srgb, var(--b-hor) 16%, var(--b-stage)); stroke: var(--b-hor); stroke-width: 2; transition: fill .5s; }
+.bio-svg .b-ant.on { fill: color-mix(in srgb, var(--b-hor) 30%, var(--b-stage)); }
+.bio-svg .b-post { fill: color-mix(in srgb, var(--b-k) 16%, var(--b-stage)); stroke: var(--b-k); stroke-width: 2; transition: fill .5s; }
+.bio-svg .b-post.on { fill: color-mix(in srgb, var(--b-k) 32%, var(--b-stage)); }
+.bio-svg .b-cap { fill: none; stroke: var(--b-red); stroke-width: 6; stroke-linecap: round; opacity: .45; }
+.bio-svg .b-endocell { fill: color-mix(in srgb, var(--b-hor) 40%, var(--b-stage)); stroke: var(--b-hor); stroke-width: 1.5; transition: fill .3s; }
+.bio-svg .b-endocell.on { fill: var(--b-gold); }
+.bio-svg .p-rh { fill: var(--b-teal); }
+.bio-svg .p-trop.c0 { fill: var(--b-hor); } .bio-svg .p-trop.c1 { fill: var(--b-gold); } .bio-svg .p-trop.c2 { fill: var(--b-k); } .bio-svg .p-trop.c3 { fill: var(--b-glu); }
+.bio-svg .b-inhib { fill: none; stroke: var(--b-red); stroke-width: 2.5; stroke-dasharray: 6 5; }
+.bio-svg .b-hline { fill: none; stroke-width: 3; stroke-linejoin: round; }
+.bio-svg .b-hline.c0 { stroke: var(--b-teal); } .bio-svg .b-hline.c1 { stroke: var(--b-gold); } .bio-svg .b-hline.c2 { stroke: var(--b-hor); }
+.bio-svg .b-hl-t.c0 { fill: var(--b-teal); } .bio-svg .b-hl-t.c1 { fill: var(--b-gold); } .bio-svg .b-hl-t.c2 { fill: var(--b-hor); }
+.bio-phone-hint { display: none; }
+@media (max-width: 720px) { .bio-phone-hint { display: inline; } }
