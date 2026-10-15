@@ -18,6 +18,7 @@ import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
+import { renderOrgo } from './orgo/orgo.js';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -126,6 +127,7 @@ const ICONS = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
   auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
+  orgo: '<path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z"/><circle cx="12" cy="12" r="3.2"/>',
   focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/>',
   briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12.5h18"/>',
   tree: '<path d="M12 3l5 6.5h-2.6L18.5 15h-13l4.1-5.5H7z"/><path d="M12 15v6"/>',
@@ -578,9 +580,13 @@ const VIEWS = {
   focus: { label: 'Focus', icon: 'focus', render: renderFocus },
   forest: { label: 'Forest', icon: 'tree', render: renderForest },
   internships: { label: 'Internships', icon: 'briefcase', render: renderInternships },
+  orgo: { label: 'Orgo', icon: 'orgo', render: () => renderOrgo(ORGO_CTX) },
   notes: { label: 'Quick Notes', icon: 'notes', render: renderNotes },
   settings: { label: 'Settings', icon: 'settings', render: renderSettings },
 };
+
+// What the Orgo tab needs from the app (it lives in its own module).
+const ORGO_CTX = { h, card, commit, touch, render: () => render(), S: () => S, todayStr, addDays };
 
 function go(v) { view = v; history.replaceState(null, '', `#${v}`); render(); window.scrollTo(0, 0); }
 
@@ -672,7 +678,7 @@ function renderToday() {
   const todos = openTodos();
   const evToday = eventsOn(today);
   return h('div', { class: 'page' },
-    h('header', { class: 'page-head' },
+    h('header', { class: 'page-head today-head' }, h('div', { class: 'today-head-text' },
       h('p', { class: 'greeting', text: greeting() }),
       h('h1', { text: fmtLong(today) }),
       h('blockquote', { class: 'brief', text: brief() }),
@@ -683,20 +689,18 @@ function renderToday() {
         const n = (k, w) => `${k} ${w}${k === 1 ? '' : 's'}`;
         const fm = focusMinutes(today);
         return [n(evToday.length, 'event'), asg ? `${n(asg, 'assignment')} this week` : null, n(tasks, 'task'), fm ? `${fm} min focused` : null].filter(Boolean).join(' · ');
-      })() })),
+      })() })), flowerGadget()),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, calendarCard(today), h('div', { class: 'todo-split' }, assignmentsCard(), tasksCard())),
-      h('div', { class: 'col col-narrow' }, internsCard(), flowerCard(), countdownCard(), caloriesMini(), notesMini())),
+      h('div', { class: 'col col-narrow' }, internsCard(), countdownCard(), caloriesMini())),
     tagList());
 }
 
 function calendarCard(today) {
   const evs = eventsOn(today);
-  const upcoming = live('events').filter(e => e.date > today && e.date <= addDays(today, 7))
-    .sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
 
-  const row = (e, showDate) => h('div', { class: 'event' },
-    h('div', { class: 'event-time', text: showDate ? `${fmtWeekday(e.date)} ${e.time ? fmtTime(e.time) : ''}`.trim() : (e.time ? fmtTime(e.time) : 'All day') }),
+  const row = e => h('div', { class: 'event' },
+    h('div', { class: 'event-time', text: e.time ? fmtTime(e.time) : 'All day' }),
     h('div', { class: `event-body ${tagColor(e.tag)}` },
       h('div', { class: 'event-title', text: e.title }),
       e.location ? h('div', { class: 'event-sub', text: e.location }) : null),
@@ -730,9 +734,7 @@ function calendarCard(today) {
   return card('On your calendar',
     addingEvent ? null : h('button', { class: 'btn btn-small', type: 'button', onclick: () => { addingEvent = true; render(); } }, icon('plus'), 'Add'),
     form,
-    evs.length ? h('div', { class: 'events' }, evs.map(e => row(e, false))) : h('p', { class: 'empty', text: 'Nothing planned. A free day ✿' }),
-    upcoming.length ? h('div', { class: 'subhead', text: 'Coming up this week' }) : null,
-    upcoming.length ? h('div', { class: 'events events-upcoming' }, upcoming.map(e => row(e, true))) : null);
+    evs.length ? h('div', { class: 'events' }, evs.map(row)) : h('p', { class: 'empty', text: 'Nothing planned. A free day ✿' }));
 }
 
 function assignmentRow(t) {
@@ -936,68 +938,8 @@ function stemAt(t) {
   return [0, 1].map(k => STEM.reduce((acc, p, i) => acc + p[k] * c[i], 0));
 }
 
-// Remember how each day went, so the garden can show it later.
-function recordDay(total, done) {
-  const date = todayStr();
-  const id = `day-${date}`;
-  let rec = S.days.find(d => d.id === id);
-  if (rec && !rec.deleted && rec.total === total && rec.done === done) return;
-  if (!rec) { rec = { id, date }; S.days.push(rec); }
-  Object.assign(rec, { total, done, deleted: false });
-  touch(rec);
-  scheduleSave(2000);
-}
-
-function bloomStreak() {
-  const byDate = new Map(live('days').map(d => [d.date, d]));
-  const bloomed = d => d && d.total > 0 && d.done >= d.total;
-  let day = todayStr();
-  if (!bloomed(byDate.get(day))) day = addDays(day, -1); // today still counts as "in progress"
-  let n = 0;
-  while (bloomed(byDate.get(day))) { n++; day = addDays(day, -1); }
-  return n;
-}
-
-function gardenGlyph(rec) {
-  const svg = s('svg', { viewBox: '0 0 20 26', class: 'glyph', 'aria-hidden': 'true' });
-  if (!rec || !rec.total) { svg.append(s('circle', { cx: 10, cy: 21, r: 1.6, class: 'g-dot' })); return svg; }
-  const p = Math.min(1, rec.done / rec.total);
-  if (p >= 1) {
-    svg.append(s('path', { d: 'M10 24 L10 12', class: 'g-stem' }));
-    for (let i = 0; i < 5; i++) {
-      const a = (i * 72 - 90) * Math.PI / 180;
-      svg.append(s('circle', { cx: (10 + Math.cos(a) * 3.6).toFixed(1), cy: (9 + Math.sin(a) * 3.6).toFixed(1), r: 2.9, class: 'g-petal' }));
-    }
-    svg.append(s('circle', { cx: 10, cy: 9, r: 1.9, class: 'g-center' }));
-    return svg;
-  }
-  const top = 24 - (4 + 12 * p);
-  svg.append(s('path', { d: `M10 24 L10 ${top.toFixed(1)}`, class: 'g-stem' }));
-  if (p > 0) svg.append(s('path', { d: `M10 ${(top + 4).toFixed(1)} c3 -3 6 -3 7 -1 c-2 2 -4 3 -7 1z`, class: 'g-leaf' }));
-  return svg;
-}
-
-function gardenStrip() {
-  const today = todayStr();
-  const byDate = new Map(live('days').map(d => [d.date, d]));
-  const cells = [];
-  for (let i = 13; i >= 0; i--) {
-    const date = addDays(today, -i);
-    const rec = byDate.get(date);
-    const label = `${fmtShort(date)}: ${rec && rec.total ? `${rec.done} of ${rec.total} done` : 'nothing due'}`;
-    cells.push(h('li', { class: date === today ? 'is-today' : null, title: label, 'aria-label': label }, gardenGlyph(rec)));
-  }
-  const streak = bloomStreak();
-  return h('div', { class: 'garden' },
-    h('div', { class: 'garden-head' },
-      h('span', { text: 'Your garden · last 2 weeks' }),
-      streak >= 2 ? h('span', { class: 'garden-streak', text: `✿ ${streak}-day streak` }) : null),
-    h('ul', { class: 'garden-row' }, cells));
-}
-
-function flowerCard() {
+function flowerGadget() {
   const { total, done } = dayProgress();
-  recordDay(total, done);
   const p = total ? done / total : 0;
   const bloomed = total > 0 && done === total;
   const from = lastGrowth === null ? p : lastGrowth;
@@ -1049,11 +991,9 @@ function flowerCard() {
   const caption = !total ? 'Nothing due today. Your seedling is resting ✿'
     : bloomed ? 'In full bloom. Everything’s done ✿'
     : `${done} of ${total} done today`;
-  return card('Today’s flower', null,
-    h('div', { class: 'grow-wrap' }, svg),
-    total && !bloomed ? h('div', { class: 'grow-bar' }, h('div', { class: 'grow-bar-fill', style: `width:${Math.round(p * 100)}%` })) : null,
-    h('p', { class: `grow-caption${bloomed ? ' bloomed' : ''}`, text: caption }),
-    gardenStrip());
+  return h('div', { class: `flower-gadget${bloomed ? ' bloomed' : ''}`, title: caption },
+    svg,
+    h('span', { class: 'fg-cap', text: !total ? 'resting' : bloomed ? 'bloomed ✿' : `${done} / ${total}` }));
 }
 
 // ---------------------------------------------------------------- focus timer
@@ -1534,15 +1474,6 @@ function countdownCard() {
       h('div', { class: 'cd-date' }, x.tag ? h('span', { class: 'asg-course', text: x.tag }) : null, fmtLong(x.date)))))));
 }
 
-function notesMini() {
-  const notes = live('notes').sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 4);
-  return card('Quick Notes', h('a', { href: '#notes', class: 'link', text: 'Open →', onclick: e => { e.preventDefault(); go('notes'); } }),
-    notes.length ? h('ul', { class: 'mini-list' }, notes.map(n => h('li', null,
-      h('a', { href: '#notes', text: noteTitle(n), onclick: e => { e.preventDefault(); activeNoteId = n.id; go('notes'); } }),
-      h('span', { class: 'muted small', text: ago(n.updatedAt) }))))
-      : h('p', { class: 'empty', text: 'No notes yet. Plant an idea ✿' }));
-}
-
 // ---------------------------------------------------------------- calories
 
 const MACROS = [
@@ -1580,14 +1511,14 @@ function rings(totals, size = 132) {
   return svg;
 }
 
-function legend(totals) {
+function legend(totals, compact = false) {
   const g = S.settings.goals;
   return h('ul', { class: 'legend' }, MACROS.map(m => h('li', null,
     h('span', { class: `dot dot-${m.key}` }),
     h('span', { class: 'legend-label', text: m.label }),
     h('span', { class: 'legend-val' }, h('strong', { text: Math.round(totals[m.key]).toLocaleString() }),
       ` / ${Number(g[m.key]).toLocaleString()}${m.unit === 'g' ? ' g' : ''}`))),
-    EXTRAS.map(m => {
+    compact ? null : EXTRAS.map(m => {
       const goal = Number(g[m.key]) || 0;
       const v = totals[m.key] || 0;
       const over = m.limit && goal && v > goal;
@@ -1631,15 +1562,9 @@ function weightStats() {
 }
 
 function caloriesMini() {
-  const today = todayStr();
-  const t = totalsFor(today);
-  const avg = avgCalories(today);
-  const ws = weightStats();
+  const t = totalsFor(todayStr());
   return card('Calories', h('a', { href: '#calories', class: 'link', text: 'Log →', onclick: e => { e.preventDefault(); calDay = todayStr(); go('calories'); } }),
-    h('div', { class: 'rings-row' }, rings(t, 112), legend(t)),
-    h('dl', { class: 'stats' },
-      h('div', null, h('dt', { text: 'Daily average, last 7 days' }), h('dd', { text: avg === null ? '—' : `${avg.toLocaleString()} cal` })),
-      ws ? h('div', null, h('dt', { text: 'Weight' }), h('dd', { text: weightText(ws) })) : null));
+    h('div', { class: 'rings-row' }, rings(t, 84), legend(t, true)));
 }
 
 function weightText(ws) {
