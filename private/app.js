@@ -17,6 +17,7 @@ import {
 import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
+import { SPECIES, TIERS, tierFor, plantForMinutes, plantForTag, plant, plantIcon, forestPlot } from './plants.js';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -39,7 +40,8 @@ let saveTimer = null, saving = false, dirty = false;
 let lastActive = Date.now(), hiddenAt = 0;
 const inboxState = { keySent: false, busy: false, added: 0, addedFood: 0 };
 // Focus timer: lives outside render so it keeps going while you move around the app.
-const focus = { mode: 'idle', kind: 'focus', minutes: 25, endAt: 0, remaining: 0, taskId: '', timer: null };
+const focus = { mode: 'idle', kind: 'focus', minutes: 25, endAt: 0, remaining: 0, taskId: '', timer: null, seed: Math.random().toString(36).slice(2) };
+let forestSpan = 'week', forestOffset = 0;
 const canvasSync = { status: 'idle', at: 0, msg: '' };
 const pushState = { sub: null, lastSent: '', timer: null };
 // Meal photo flow (memory only; the photo is never saved).
@@ -125,6 +127,7 @@ const ICONS = {
   moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
   auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
   focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/>',
+  tree: '<path d="M12 3l5 6.5h-2.6L18.5 15h-13l4.1-5.5H7z"/><path d="M12 15v6"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
 };
 function icon(name, cls = 'icon') {
@@ -572,6 +575,7 @@ const VIEWS = {
   today: { label: 'Today', icon: 'today', render: renderToday },
   calories: { label: 'Calories', icon: 'calories', render: renderCalories },
   focus: { label: 'Focus', icon: 'focus', render: renderFocus },
+  forest: { label: 'Forest', icon: 'tree', render: renderForest },
   notes: { label: 'Quick Notes', icon: 'notes', render: renderNotes },
   settings: { label: 'Settings', icon: 'settings', render: renderSettings },
 };
@@ -1124,7 +1128,7 @@ function resumeFocus() {
 function stopFocus(save) {
   clearInterval(focus.timer);
   const spent = Math.round((focus.minutes * 60e3 - focusLeft()) / 60e3);
-  if (save && focus.kind === 'focus' && spent >= 1) logFocus(spent);
+  if (save && focus.kind === 'focus' && spent >= 1) { focus.lastSeed = focus.seed; logFocus(spent); }
   Object.assign(focus, { mode: 'idle', kind: 'focus', endAt: 0, remaining: 0 });
   document.title = 'Dashboard';
   render();
@@ -1132,7 +1136,10 @@ function stopFocus(save) {
 
 function logFocus(minutes) {
   const t = live('todos').find(x => x.id === focus.taskId);
-  S.focus.push(touch({ id: uid(), date: todayStr(), minutes, taskId: t ? t.id : '', title: t ? t.title : '', endedAt: Date.now() }));
+  const seed = focus.seed;
+  S.focus.push(touch({ id: uid(), date: todayStr(), minutes, taskId: t ? t.id : '', title: t ? t.title : '', endedAt: Date.now(), seed, plant: plantForMinutes(minutes, seed) }));
+  focus.lastPlant = plantForMinutes(minutes, seed);
+  focus.seed = uid();
   scheduleSave(500);
 }
 
@@ -1141,10 +1148,10 @@ function focusTick() {
   const left = focusLeft();
   if (left <= 0) {
     clearInterval(focus.timer);
-    if (focus.kind === 'focus') logFocus(focus.minutes);
+    if (focus.kind === 'focus') { focus.lastSeed = focus.seed; logFocus(focus.minutes); }
     focus.mode = 'done';
     chime();
-    focusNotify(focus.kind === 'focus' ? `${focus.minutes} minutes done. Your flower bloomed ✿` : 'Break’s over. Ready for another round?');
+    focusNotify(focus.kind === 'focus' ? `${focus.minutes} minutes done. You grew a ${SPECIES[focus.lastPlant].label.toLowerCase()} ✿` : 'Break’s over. Ready for another round?');
     rerenderSafely();
     return;
   }
@@ -1155,29 +1162,32 @@ function focusTick() {
   const ring = document.getElementById('focus-ring');
   if (ring) ring.setAttribute('stroke-dashoffset', (100 * (1 - p)).toFixed(2));
   const bud = document.getElementById('focus-bud');
-  if (bud) bud.style.transform = `scale(${(0.35 + 0.65 * p).toFixed(3)})`;
+  if (bud) bud.style.transform = `scale(${(0.45 + 0.55 * p).toFixed(3)})`;
   const badge = document.getElementById('focus-nav-badge');
   if (badge) badge.textContent = fmtClock(left);
   document.title = `${fmtClock(left)} · ${focus.kind === 'focus' ? 'Focus' : 'Break'}`;
 }
 
+// The plant this session will grow (shown growing as the timer runs).
+function focusPlantKind() {
+  if (focus.mode === 'done' && focus.kind === 'focus' && focus.lastPlant) return focus.lastPlant;
+  if (focus.kind === 'break') return focus.lastPlant || 'sprout';
+  return plantForMinutes(focus.minutes, focus.seed);
+}
+
 function focusFlower(p, bloomed) {
-  const svg = s('svg', { viewBox: '0 0 200 200', class: `focus-art${bloomed ? ' bloomed' : ''}`, role: 'img', 'aria-label': bloomed ? 'Flower in bloom' : 'Flower growing' });
+  const kind = focusPlantKind();
+  const svg = s('svg', { viewBox: '0 0 200 200', class: `focus-art${bloomed ? ' bloomed' : ''}`, role: 'img', 'aria-label': `${SPECIES[kind].label} ${bloomed ? 'fully grown' : 'growing'}` });
   svg.append(s('circle', { cx: 100, cy: 100, r: 88, class: 'focus-track', pathLength: 100 }));
   svg.append(s('circle', {
     id: 'focus-ring', cx: 100, cy: 100, r: 88, class: `focus-ring${focus.kind === 'break' ? ' break' : ''}`, pathLength: 100,
     'stroke-dasharray': 100, 'stroke-dashoffset': (100 * (1 - p)).toFixed(2), transform: 'rotate(-90 100 100)',
   }));
-  svg.append(s('path', { d: 'M100 150 C96 130 104 118 100 100', class: 'grow-stem' }));
-  svg.append(s('path', { d: 'M99 132c-10 -9 -22 -9 -28 -3c8 7 19 8 28 3z', class: 'grow-leaf' }));
-  svg.append(s('path', { d: 'M101 120c9 -8 20 -8 26 -2c-7 7 -18 7 -26 2z', class: 'grow-leaf' }));
-  const g = s('g', { id: 'focus-bud', class: 'focus-bud', style: `transform-origin:100px 96px;transform:scale(${bloomed ? 1 : (0.35 + 0.65 * p).toFixed(3)})` });
-  if (bloomed || focus.kind === 'break') {
-    for (let i = 0; i < 6; i++) g.append(s('ellipse', { cx: 100, cy: 82, rx: 9, ry: 14, class: 'grow-petal', transform: `rotate(${i * 60} 100 96)` }));
-    g.append(s('circle', { cx: 100, cy: 96, r: 7, class: 'grow-center' }));
-  } else {
-    g.append(s('ellipse', { cx: 100, cy: 90, rx: 10, ry: 15, class: 'grow-bud' }));
-  }
+  svg.append(s('ellipse', { cx: 100, cy: 146, rx: 40, ry: 7, class: 'grow-soil' }));
+  const k = Math.min(3.4, 92 / SPECIES[kind].h);
+  const full = bloomed || focus.kind === 'break';
+  const g = s('g', { id: 'focus-bud', class: 'focus-bud', style: `transform-origin:100px 146px;transform:scale(${full ? 1 : (0.45 + 0.55 * p).toFixed(3)})` },
+    s('g', { transform: `translate(100 146) scale(${k.toFixed(2)})` }, plant(kind, focus.mode === 'done' || focus.kind === 'break' ? focus.lastSeed || focus.seed : focus.seed)));
   svg.append(g);
   return svg;
 }
@@ -1204,6 +1214,7 @@ function renderFocus() {
   if (focus.mode === 'idle') {
     controls = [
       chips(FOCUS_LENGTHS, 'focus'),
+      h('p', { class: 'focus-preview', text: `${focus.minutes} min grows a ${SPECIES[focusPlantKind()].label.toLowerCase()}` }),
       h('button', { class: 'btn btn-primary btn-wide', type: 'button', onclick: () => startFocus('focus', focus.kind === 'focus' ? focus.minutes : 25) }, 'Start focusing'),
     ];
   } else if (focus.mode === 'running' || focus.mode === 'paused') {
@@ -1216,7 +1227,7 @@ function renderFocus() {
   } else {
     const t = live('todos').find(x => x.id === focus.taskId && !x.done);
     controls = [
-      h('p', { class: 'focus-done', text: focus.kind === 'focus' ? `Nice work. ${focus.minutes} minutes ✿` : 'Break’s over.' }),
+      h('p', { class: 'focus-done', text: focus.kind === 'focus' ? `Nice work. You grew a ${SPECIES[focusPlantKind()].label.toLowerCase()} ✿` : 'Break’s over.' }),
       h('div', { class: 'row center-row' },
         focus.kind === 'focus' ? BREAK_LENGTHS.map(m => h('button', { class: 'btn', type: 'button', text: `${m}-min break`, onclick: () => startFocus('break', m) })) : null,
         h('button', { class: 'btn btn-primary', type: 'button', text: 'Another round', onclick: () => startFocus('focus', focus.kind === 'focus' ? focus.minutes : 25) }),
@@ -1246,10 +1257,128 @@ function renderFocus() {
             h('span', { class: 'muted small', text: `${f.minutes} min` }))))
             : h('p', { class: 'empty', text: 'No sessions yet today ✿' }),
           h('dl', { class: 'stats' }, h('div', null, h('dt', { text: 'Last 7 days' }), h('dd', { text: `${week} min` })))),
+        card('This week’s forest', h('button', { class: 'link', type: 'button', text: 'Open forest', onclick: () => { forestSpan = 'week'; forestOffset = 0; go('forest'); } }),
+          forestPlot(focusItems(weekStart(today), addDays(weekStart(today), 7)), 'Focus forest for this week')),
         card('How it works', null, h('ul', { class: 'bullets' },
-          h('li', { text: 'Pick a task and a length, then start. The bud grows as you go and blooms at the end.' }),
+          h('li', { text: 'Pick a task and a length, then start. Your plant grows as you go and is planted in your forest at the end.' }),
+          h('li', { text: `Longer sessions grow bigger plants: ${[...TIERS].reverse().map(t => `${t.min ? `${t.min}+ min` : 'under 10'}: ${t.label}`).join(' · ')}.` }),
           h('li', { text: 'The timer keeps running while you use the rest of the dashboard.' }),
           h('li', { text: 'Your dashboard won’t auto-lock during a session.' }))))));
+}
+
+// ---------------------------------------------------------------- forest
+
+function weekStart(day) { return addDays(day, -parse(day).getDay()); }
+
+function forestRange() {
+  const today = todayStr();
+  if (forestSpan === 'week') {
+    const from = addDays(weekStart(today), 7 * forestOffset);
+    const to = addDays(from, 7);
+    return { from, to, label: `${fmtShort(from)} – ${fmtShort(addDays(to, -1))}` };
+  }
+  const d = parse(today);
+  const first = new Date(d.getFullYear(), d.getMonth() + forestOffset, 1);
+  const next = new Date(d.getFullYear(), d.getMonth() + forestOffset + 1, 1);
+  return { from: toStr(first), to: toStr(next), label: first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) };
+}
+
+function focusKind(f) { return f.plant && SPECIES[f.plant] ? f.plant : plantForMinutes(f.minutes || 0, f.seed || f.id); }
+
+function focusItems(from, to) {
+  return live('focus').filter(f => f.date >= from && f.date < to).sort((a, b) => (a.endedAt || 0) - (b.endedAt || 0)).map(f => {
+    const kind = focusKind(f);
+    return { kind, seed: f.seed || f.id, date: f.date, value: f.minutes || 0,
+      title: `${SPECIES[kind].label} · ${f.minutes} min · ${fmtShort(f.date)}${f.title ? ` · ${f.title}` : ''}` };
+  });
+}
+
+function taskItems(from, to) {
+  return live('todos').filter(t => t.done && t.doneAt).map(t => ({ t, date: toStr(new Date(t.doneAt)) }))
+    .filter(x => x.date >= from && x.date < to).sort((a, b) => a.t.doneAt - b.t.doneAt).map(({ t, date }) => {
+      const kind = plantForTag(t.tag);
+      return { kind, seed: `tag:${(t.tag || '').toLowerCase()}`, date, value: 1, tag: t.tag || '',
+        title: `${t.title}${t.tag ? ` · ${t.tag}` : ''} · done ${fmtShort(date)}` };
+    });
+}
+
+function fmtMinutes(m) { return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60 ? `${m % 60}m` : ''}`.trim() : `${m} min`; }
+
+// One bar per day of the range.
+function dayBars(items, from, to, fmt) {
+  const days = [];
+  for (let d = from; d < to; d = addDays(d, 1)) days.push(d);
+  const per = new Map(days.map(d => [d, 0]));
+  for (const it of items) per.set(it.date, (per.get(it.date) || 0) + it.value);
+  const max = Math.max(1, ...per.values());
+  const today = todayStr();
+  return h('div', { class: `fbars${days.length > 7 ? ' fbars-month' : ''}` }, days.map((d, i) => {
+    const v = per.get(d);
+    const lbl = days.length > 7 ? (i === 0 || (i + 1) % 5 === 0 ? String(parse(d).getDate()) : '') : fmtWeekday(d).slice(0, 2);
+    return h('div', { class: `fbar${d === today ? ' is-today' : ''}`, title: `${fmtShort(d)}: ${fmt(v)}` },
+      h('div', { class: 'fbar-track' }, h('div', { class: 'fbar-fill', style: `height:${v ? Math.max(6, Math.round(v / max * 100)) : 0}%` })),
+      h('span', { class: 'fbar-label', text: lbl }));
+  }));
+}
+
+function bestDay(items) {
+  const per = new Map();
+  for (const it of items) per.set(it.date, (per.get(it.date) || 0) + it.value);
+  let best = null;
+  for (const [d, v] of per) if (!best || v > best[1]) best = [d, v];
+  return best;
+}
+
+function speciesRow(items, keyOf, labelOf) {
+  const groups = new Map();
+  for (const it of items) {
+    const k = keyOf(it);
+    if (!groups.has(k)) groups.set(k, { it, n: 0 });
+    groups.get(k).n++;
+  }
+  return h('ul', { class: 'species-row' }, [...groups.values()].sort((a, b) => b.n - a.n).map(({ it, n }) =>
+    h('li', { title: labelOf(it) }, plantIcon(it.kind, it.seed), h('span', { text: `${labelOf(it)} ×${n}` }))));
+}
+
+function renderForest() {
+  const { from, to, label } = forestRange();
+  const span = forestSpan === 'week' ? 'week' : 'month';
+  const fItems = focusItems(from, to);
+  const tItems = taskItems(from, to);
+  const fTotal = fItems.reduce((a, f) => a + f.value, 0);
+  const fBest = bestDay(fItems), tBest = bestDay(tItems);
+  const seg = (key, text) => h('button', { type: 'button', class: `chip chip-btn${forestSpan === key ? ' on' : ''}`, text,
+    onclick: () => { forestSpan = key; forestOffset = 0; render(); } });
+
+  const focusCard = card('Focus forest', h('span', { class: 'card-meta', text: fmtMinutes(fTotal) }),
+    forestPlot(fItems, `Focus forest, ${fItems.length} plants`),
+    fItems.length ? speciesRow(fItems, it => it.kind, it => SPECIES[it.kind].label)
+      : h('p', { class: 'empty', text: forestOffset ? `No focus sessions this ${span}.` : `Nothing planted yet this ${span}. Finish a focus session to grow your first plant ✿` }),
+    dayBars(fItems, from, to, v => fmtMinutes(v)),
+    h('dl', { class: 'stats' },
+      h('div', null, h('dt', { text: 'Sessions' }), h('dd', { text: String(fItems.length) })),
+      h('div', null, h('dt', { text: 'Focused' }), h('dd', { text: fmtMinutes(fTotal) })),
+      fBest ? h('div', null, h('dt', { text: 'Best day' }), h('dd', { text: `${fmtShort(fBest[0])} · ${fmtMinutes(fBest[1])}` })) : null));
+
+  const taskCard = card('Homework & tasks', h('span', { class: 'card-meta', text: `${tItems.length} done` }),
+    forestPlot(tItems, `Task garden, ${tItems.length} flowers`),
+    tItems.length ? speciesRow(tItems, it => it.tag.toLowerCase(), it => it.tag || 'Other')
+      : h('p', { class: 'empty', text: forestOffset ? `No tasks finished this ${span}.` : `Every task or assignment you finish this ${span} plants a flower here ✿` }),
+    dayBars(tItems, from, to, v => `${v} done`),
+    h('dl', { class: 'stats' },
+      h('div', null, h('dt', { text: 'Finished' }), h('dd', { text: String(tItems.length) })),
+      tBest ? h('div', null, h('dt', { text: 'Best day' }), h('dd', { text: `${fmtShort(tBest[0])} · ${tBest[1]} done` })) : null),
+    h('p', { class: 'muted small', text: 'Each course gets its own flower, so you can see where your work went.' }));
+
+  return h('div', { class: 'page' },
+    h('header', { class: 'page-head forest-head' }, h('h1', { text: 'Forest' }),
+      h('div', { class: 'forest-nav' },
+        h('div', { class: 'chips' }, seg('week', 'Week'), seg('month', 'Month')),
+        h('div', { class: 'row' },
+          iconBtn('left', `Previous ${span}`, () => { forestOffset--; render(); }),
+          h('span', { class: 'forest-label', text: label }),
+          iconBtn('right', `Next ${span}`, () => { if (forestOffset < 0) { forestOffset++; render(); } }, forestOffset < 0 ? '' : 'is-off')))),
+    h('div', { class: 'forest-grid' }, focusCard, taskCard));
 }
 
 // ---------------------------------------------------------------- quick add from anywhere
