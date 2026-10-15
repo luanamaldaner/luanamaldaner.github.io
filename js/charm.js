@@ -2,7 +2,9 @@
  * Charm
  *
  * Adds the decorative bits for the classic (professional) skin: soft sunrays
- * and drifting clouds (daytime only) and a small meadow in the footer.
+ * and fluffy pastel clouds on the sides where the background circles used to
+ * be (daytime only), flowers in the empty corners and margins, and a small
+ * meadow in the footer.
  * They're plain inline SVG/CSS, hidden from screen readers and click-through,
  * and css/charm.css only shows them when html[data-skin="min"] is set, so the
  * Minecraft skin never sees them.
@@ -29,20 +31,31 @@ function flower(x, y, r, alt = false) {
   return `${s}<circle class="center" r="${r * 0.28}"/></g>`;
 }
 
-const CLOUD = 'M26 58c-12 0-20-8-20-18s8-18 19-18c3-12 14-20 27-20 14 0 25 9 28 22 2-1 5-1 7-1 12 0 21 8 21 18s-9 17-21 17z';
+// ---------------------------------------------------------------- flowers
 
-const CLOUDS = [
-  // left%, top px, width, opacity, drift px, duration s, delay s (kept to the edges, away from text)
-  [1, 64, 190, 0.85, 50, 110, 0],
-  [73, 34, 230, 0.8, 70, 140, -30],
-  [88, 190, 130, 0.65, 40, 125, -70],
-  [-2, 250, 110, 0.5, 35, 135, -50],
-  [0, 450, 140, 0.55, 40, 100, -20],
-  [86, 520, 150, 0.6, 40, 120, -60],
-  [4, 860, 120, 0.45, 40, 130, -45],
-  [80, 980, 170, 0.45, 50, 150, -15],
-  [12, 1240, 130, 0.4, 40, 120, -80],
-  [70, 1380, 110, 0.35, 40, 140, -35],
+const IMG = name => new URL(`../images/charm/${name}`, import.meta.url).href;
+
+function img(name, cls, style) {
+  const el = document.createElement('img');
+  el.src = IMG(name);
+  el.alt = '';
+  el.setAttribute('aria-hidden', 'true');
+  el.decoding = 'async';
+  el.loading = 'lazy';
+  el.className = cls;
+  if (style) el.style.cssText = style;
+  return el;
+}
+
+// Soft white puffy clouds (generated from her reference, cut out into
+// images/charm/cloud-N.png) peeking in from the sides where the circles were.
+const SIDE_CLOUDS = [
+  { cls: 'c1', img: 'mcloud-3.png' },  // top right
+  { cls: 'c2', img: 'mcloud-1.png' },  // lower left
+  { cls: 'c3', img: 'mcloud-6.png' },  // middle right
+  { cls: 'c4', img: 'mcloud-2.png' },  // bottom left
+  { cls: 'c5', img: 'mcloud-4.png' },  // upper left
+  { cls: 'c6', img: 'mcloud-5.png' },  // lower right
 ];
 
 function addSky() {
@@ -50,17 +63,17 @@ function addSky() {
   const sky = document.createElement('div');
   sky.className = 'charm-sky';
   sky.setAttribute('aria-hidden', 'true');
-  const sun = document.createElement('div');
-  sun.className = 'charm-sun';
   const rays = document.createElement('div');
   rays.className = 'charm-rays';
-  sky.append(sun, rays);
-  for (const [left, top, w, o, x, d, delay] of CLOUDS) {
-    const c = svg('0 0 130 62', 'charm-cloud', `<path d="${CLOUD}"/>`);
-    c.style.cssText = `left:${left}%;top:${top}px;--w:${w}px;--o:${o};--x:${x}px;--d:${d}s;--delay:${delay}s`;
-    sky.append(c);
+  sky.append(rays);
+  // Frutiger Aero look: glossy bubbles
+  for (let i = 0; i < 7; i++) {
+    const b = document.createElement('span');
+    b.className = `charm-bubble b${i}`;
+    sky.append(b);
   }
-  document.body.prepend(sky);
+  const layer = document.querySelector('.deco-shapes');
+  if (layer) layer.append(sky); else document.body.prepend(sky);
 }
 
 function addMeadow() {
@@ -77,7 +90,57 @@ function addMeadow() {
   footer.prepend(svg('0 0 560 44', 'charm-meadow', inner));
 }
 
+// A few open five-petal blossoms in tidy spots: beside the name and the footer.
+const SPOTS = [
+  ['.site-header', 'left:calc(50% - 300px);top:40%', 30, 1, -10],
+  ['.site-header', 'left:calc(50% - 268px);top:52%', 20, 4, 18],
+  ['.site-header', 'right:calc(50% - 300px);top:38%', 30, 6, 12],
+  ['.site-header', 'right:calc(50% - 270px);top:50%', 20, 8, -16],
+  ['.site-footer', 'left:calc(50% - 330px);top:34%', 24, 2, -8],
+  ['.site-footer', 'right:calc(50% - 330px);top:34%', 24, 7, 14],
+];
+
+function addBlossoms() {
+  SPOTS.forEach(([sel, pos, size, n, rot], i) => {
+    const box = document.querySelector(sel);
+    if (!box || box.querySelector(`.charm-spot[data-i="${i}"]`)) return;
+    const el = img(`blossom-${n}.png`, 'charm-blossom charm-spot', `${pos};--s:${size}px;--r:${rot}deg;--bob:${5 + (i % 3)}s;--delay:${(-i * 0.9).toFixed(1)}s`);
+    el.dataset.i = i;
+    box.append(el);
+  });
+}
+
+// Which look to show. A = soft minimal (default), B = nature, C = Frutiger Aero.
+// Preview the others with ?look=b or ?look=c; the choice is remembered.
+function pickLook() {
+  let look = 'e';
+  try {
+    const q = new URLSearchParams(location.search).get('look');
+    if (q && /^[a-e]$/.test(q)) localStorage.setItem('charm-look', q);
+    look = localStorage.getItem('charm-look') || 'e';
+  } catch {}
+  document.documentElement.dataset.look = look;
+}
+
+// Lily pads tucked beside the footer and the education section.
+function addLilies() {
+  const spots = [['.site-footer', 'charm-lily foot'], ['#education', 'charm-lily edu']];
+  for (const [sel, cls] of spots) {
+    const box = document.querySelector(sel);
+    if (box && !box.querySelector('.charm-lily')) box.append(img('lilypads.png', cls));
+  }
+}
+
+// Nature look: rolling hills along the bottom of the header and the footer.
+function addHills() {
+  for (const sel of ['.site-header', '.site-footer']) {
+    const box = document.querySelector(sel);
+    if (box && !box.querySelector('.charm-hills')) box.append(img('hills-min.png', 'charm-hills'));
+  }
+}
+
 export default function initCharm() {
+  pickLook();
   addSky();
   addMeadow();
 }
