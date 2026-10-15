@@ -911,11 +911,12 @@ function assignmentsCard() {
 // ---------------------------------------------------------------- today's flower
 
 // Tasks for today: anything due today or earlier that's still open, plus
-// whatever you finished today. The flower grows with each one you tick off.
+// whatever you finished today, whenever it was due (or with no due date).
+// The flower grows with each one you tick off.
 function dayProgress() {
   const today = todayStr();
   const doneToday = t => t.doneAt && toStr(new Date(t.doneAt)) === today;
-  const tasks = live('todos').filter(t => t.due && t.due <= today && (!t.done || doneToday(t)));
+  const tasks = live('todos').filter(t => doneToday(t) || (!t.done && t.due && t.due <= today));
   return { total: tasks.length, done: tasks.filter(t => t.done).length };
 }
 
