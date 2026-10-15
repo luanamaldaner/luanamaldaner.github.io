@@ -1,0 +1,129 @@
+/* ========================================
+   Charm layer (classic / professional skin only)
+   Soft clouds and sunrays (daytime only), a footer meadow and squarer buttons on top of the existing
+   design. Everything here is scoped to html[data-skin="min"], so the
+   Minecraft skin is untouched. Decorations are added by js/charm.js and
+   are all aria-hidden and click-through.
+   ======================================== */
+
+html[data-skin="min"] {
+  /* no more pill-shaped buttons, tags or nav: soft rounded rectangles instead */
+  --radius-pill: 10px;
+  --charm-petal: #f2a38a;
+  --charm-petal-2: #f6c2d0;
+  --charm-leaf: #8fcfae;
+  --charm-center: #f4c95d;
+  --charm-cloud: #ffffff;
+  --charm-cloud-edge: rgba(137, 194, 217, 0.28);
+  --charm-flower: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg%3E%3Cellipse cx='12' cy='6' rx='3.6' ry='5'/%3E%3Cellipse cx='12' cy='6' rx='3.6' ry='5' transform='rotate(72 12 12)'/%3E%3Cellipse cx='12' cy='6' rx='3.6' ry='5' transform='rotate(144 12 12)'/%3E%3Cellipse cx='12' cy='6' rx='3.6' ry='5' transform='rotate(216 12 12)'/%3E%3Cellipse cx='12' cy='6' rx='3.6' ry='5' transform='rotate(288 12 12)'/%3E%3C/g%3E%3C/svg%3E");
+}
+html[data-skin="min"][data-theme="dark"] {
+  --charm-petal: #f2a38a;
+  --charm-petal-2: #e9a3b8;
+  --charm-leaf: #5fae8a;
+  --charm-center: #e9bf55;
+  --charm-cloud: #9cc9c4;
+  --charm-cloud-edge: rgba(156, 201, 196, 0.12);
+}
+
+/* ---------- squarer controls ---------- */
+html[data-skin="min"] .social-icon,
+html[data-skin="min"] .theme-toggle { border-radius: 12px; }
+html[data-skin="min"] .glass-tag,
+html[data-skin="min"] .skill-item,
+html[data-skin="min"] .project-tag,
+html[data-skin="min"] .nav-link { border-radius: 9px; }
+
+/* ---------- sky: drifting clouds behind the top of the page ---------- */
+.charm-sky { display: none; }
+html[data-skin="min"] .charm-sky {
+  display: block;
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1500px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.charm-cloud {
+  position: absolute;
+  width: var(--w, 180px);
+  height: auto;
+  opacity: var(--o, 0.85);
+  animation: charm-drift var(--d, 120s) ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+.charm-cloud { filter: drop-shadow(0 8px 14px var(--charm-cloud-edge)); }
+.charm-cloud path { fill: var(--charm-cloud); }
+/* clouds and sunrays are a daytime thing: night mode keeps its stars and fireflies */
+html[data-theme="dark"] .charm-sky { display: none !important; }
+@keyframes charm-drift {
+  from { transform: translateX(calc(var(--x, 60px) * -1)); }
+  to { transform: translateX(var(--x, 60px)); }
+}
+
+/* keep page content above the sky */
+html[data-skin="min"] main,
+html[data-skin="min"] .site-footer { position: relative; z-index: 1; }
+
+/* ---------- footer: a small meadow ---------- */
+.charm-meadow { display: none; }
+html[data-skin="min"] .charm-meadow { display: block; width: min(560px, 90%); height: auto; margin: 0 auto 10px; }
+.charm-meadow .grass { fill: none; stroke: var(--charm-leaf); stroke-width: 1.6; stroke-linecap: round; opacity: 0.7; }
+.charm-meadow .petal { fill: var(--charm-petal); }
+.charm-meadow .petal.b { fill: var(--charm-petal-2); }
+.charm-meadow .center { fill: var(--charm-center); }
+.charm-meadow .stem { fill: none; stroke: var(--charm-leaf); stroke-width: 1.6; stroke-linecap: round; }
+
+/* ---------- sunrays: soft light falling from the top-left corner ---------- */
+.charm-rays {
+  position: absolute;
+  top: -120px;
+  left: -160px;
+  width: 760px;
+  height: 760px;
+  pointer-events: none;
+  background: repeating-conic-gradient(from 100deg at 0% 0%,
+    rgba(255, 236, 190, 0.22) 0deg 4deg, rgba(255, 236, 190, 0) 4deg 11deg);
+  -webkit-mask: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.6) 35%, transparent 70%);
+  mask: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.6) 35%, transparent 70%);
+  animation: charm-rays 14s ease-in-out infinite alternate;
+}
+.charm-sun {
+  position: absolute;
+  top: -150px;
+  left: -150px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 228, 160, 0.55) 0%, rgba(255, 236, 190, 0.25) 40%, transparent 70%);
+}
+@keyframes charm-rays { from { opacity: 0.7; transform: rotate(-1.5deg); } to { opacity: 1; transform: rotate(1.5deg); } }
+@media (max-width: 720px) { .charm-rays { width: 460px; height: 460px; } .charm-sun { width: 220px; height: 220px; } }
+
+/* ---------- project pages: keep the award ribbon on the image's corner ---------- */
+html[data-skin="min"] .project-hero-image .winner-banner-wrap {
+  display: block !important;
+  width: 400px;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+}
+html[data-skin="min"] .project-hero-image .winner-banner-wrap img { display: block; width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .charm-cloud, .charm-rays { animation: none; }
+}
+
+/* The dark-mode icon rule in index.html fills every social icon, which turned
+   the outline mail icon into a solid block. Keep outline icons outlined. */
+html[data-skin="min"][data-theme="dark"] .social-icon svg[fill="none"] { fill: none; }
+
+/* Daytime: the big background circles used to show hard edges where they ran
+   off the screen ("cut-out" circles). Blur them into soft glows instead. Night
+   mode is left exactly as it was. */
+html[data-skin="min"]:not([data-theme="dark"]) .deco-shape {
+  filter: blur(42px);
+  opacity: 0.5;
+}
