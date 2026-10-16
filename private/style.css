@@ -1948,3 +1948,52 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .focus-strict input { margin-top: 3px; }
 .focus-art.wilted .plant { filter: grayscale(1) sepia(.35) brightness(.85); transform: rotate(16deg) translateY(4px); transform-origin: 0 0; transition: transform .8s ease, filter .8s ease; }
 .focus-done.wilted { color: var(--danger); }
+
+/* ---------- achievements */
+.ach { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 420px; overflow: auto; }
+.ach-item { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); }
+.ach-item:not(.done) .ach-ic { filter: grayscale(1); opacity: .45; }
+.ach-item.done { background: color-mix(in srgb, var(--accent) 7%, var(--card)); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
+.ach-ic { font-size: 20px; text-align: center; }
+.ach-text { display: grid; min-width: 0; }
+.ach-name { font-weight: 600; font-size: 13px; }
+.ach-desc { font-size: 11.5px; color: var(--muted); }
+.ach-ok { color: var(--accent); font-weight: 700; }
+.ach-prog { display: grid; justify-items: end; gap: 2px; }
+.ach-bar { width: 56px; height: 5px; border-radius: 3px; background: var(--track, var(--line)); overflow: hidden; }
+.ach-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--petal), #8b7cf6); }
+.ach-num { font: 500 10.5px/1 var(--mono); color: var(--muted); }
+
+/* ---------- weak-spot radar */
+.ws { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; }
+.ws-row { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) 70px 3em; gap: 8px; align-items: center; font-size: 13px; }
+.ws-area { font: 600 10.5px/1 var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.ws-name { text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-bar { height: 7px; border-radius: 4px; background: var(--track, var(--line)); overflow: hidden; }
+.ws-bar > span { display: block; height: 100%; background: #3aa57a; }
+.ws-row.mid .ws-bar > span { background: #e0a03a; }
+.ws-row.weak .ws-bar > span { background: var(--danger); }
+.ws-pct { text-align: right; font: 600 12px/1 var(--mono); }
+
+/* ---------- sleep vs scores */
+.ss-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+.ss-cmp > div { display: grid; gap: 2px; padding: 10px; border-radius: 12px; background: var(--card-2, color-mix(in srgb, var(--accent) 5%, var(--card))); text-align: center; }
+.ss-cmp strong { font: 600 24px/1.1 var(--serif); }
+
+/* ---------- wrapped */
+.wrapped { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; color: #fff; background: linear-gradient(150deg, #2a6f5a, #8b7cf6); animation: wr-in .35s ease; }
+.wrapped.wr-1 { background: linear-gradient(150deg, #e0607a, #f2a65a); }
+.wrapped.wr-2 { background: linear-gradient(150deg, #3a8fd8, #2a9d8f); }
+.wrapped.wr-3 { background: linear-gradient(150deg, #7b4bd8, #e0607a); }
+@keyframes wr-in { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
+.wr-bars { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; gap: 4px; }
+.wr-bars span { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.35); }
+.wr-bars span.on { background: #fff; }
+.wr-close { position: absolute; top: 26px; right: 16px; background: none; border: 0; color: #fff; font-size: 22px; cursor: pointer; z-index: 2; }
+.wr-prev { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,.15); border: 0; color: #fff; font-size: 28px; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; z-index: 2; }
+.wr-tap { all: unset; cursor: pointer; display: grid; justify-items: center; gap: 12px; text-align: center; padding: 40px; width: 100%; height: 100%; place-content: center; box-sizing: border-box; }
+.wr-big { font: 600 clamp(56px, 14vw, 120px)/1 var(--serif); animation: wr-pop .5s ease; }
+.wr-line { font-size: clamp(18px, 4vw, 26px); font-weight: 600; }
+.wr-sub { font-size: 15px; opacity: .85; }
+@keyframes wr-pop { from { transform: translateY(14px) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .wrapped, .wr-big { animation: none; } }

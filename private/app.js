@@ -18,10 +18,10 @@ import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
-import { renderOrgo } from './orgo/orgo.js?v=11';
+import { renderOrgo } from './orgo/orgo.js?v=12';
 import { renderProg } from './prog/prog.js?v=3';
-import { renderBio } from './bio/bio.js?v=6';
-import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard } from './extras/extras.js?v=4';
+import { renderBio } from './bio/bio.js?v=7';
+import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard } from './extras/extras.js?v=5';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 

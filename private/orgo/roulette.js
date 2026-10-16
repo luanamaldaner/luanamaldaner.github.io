@@ -87,6 +87,12 @@ function answer(C, D, o) {
   if (R.picked[R.i] !== undefined) return;
   R.picked[R.i] = o;
   const ok = o === q.answer;
+  { // daily accuracy log, read by the Week page (weak spots, sleep vs scores)
+    const day = new Date().toLocaleDateString('en-CA'), log = load('daily', {});
+    const d = log[day] || (log[day] = { right: 0, total: 0, sn: [0, 0], alkene: [0, 0] });
+    d.total++; d[R.kind][1]++; if (ok) { d.right++; d[R.kind][0]++; }
+    store('daily', log);
+  }
   if (!ok) {
     const right = R.kind === 'alkene' ? q.draw[q.answer].name : q.answer;
     const front = R.kind === 'alkene' ? `${R.reels[0]} + ${R.reels[1]} → which product?` : `${R.sub.name} + ${R.reels[1]}, ${R.reels[2]}: ${q.prompt.toLowerCase()}`;

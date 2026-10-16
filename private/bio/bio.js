@@ -14,7 +14,7 @@ import L9 from './l9.js?v=2';
 import L10 from './l10.js?v=2';
 import WALKS from './walks.js?v=3';
 import GLOSSARY from './glossary.js?v=1';
-import { examPage } from './exam.js?v=1';
+import { examPage } from './exam.js?v=2';
 import { mapPage } from './map.js?v=2';
 
 const LECTURES = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];

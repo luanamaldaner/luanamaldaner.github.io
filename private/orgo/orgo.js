@@ -6,7 +6,7 @@ import { energyDiagram, skeletal } from './draw.js?v=2';
 import { conceptsPage } from './concepts.js?v=2';
 import { problemsPage } from './problems.js?v=2';
 import { cheatSheetPage, mockExamPage } from './exam.js?v=1';
-import { roulettePage } from './roulette.js?v=2';
+import { roulettePage } from './roulette.js?v=3';
 import { addMistake } from './mistakes.js?v=1';
 import {
   SM, REACTIONS, SUBSTRATES, CLASS_LABEL, REAGENT_TYPES, REAGENTS, tableCell, outcomeLabel,

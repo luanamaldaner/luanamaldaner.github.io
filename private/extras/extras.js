@@ -248,6 +248,7 @@ export function renderWeek() {
   const label = `${C.fmtShort(w.from)} – ${C.fmtShort(C.addDays(w.to, -1))}`;
   const head = h('header', { class: 'page-head forest-head' }, h('div', null, h('h1', { text: 'Week in review' }), h('p', { class: 'meta', text: label })),
     h('div', { class: 'row' },
+      h('button', { type: 'button', class: 'btn btn-small btn-primary wr-open', text: '✨ Wrapped', onclick: () => openWrapped(weekOffset) }),
       C.iconBtn('left', 'Previous week', () => { weekOffset--; C.render(); }),
       h('span', { class: 'forest-label', text: weekOffset === 0 ? 'This week' : weekOffset === -1 ? 'Last week' : label }),
       C.iconBtn('right', 'Next week', () => { if (weekOffset < 0) { weekOffset++; C.render(); } }, weekOffset < 0 ? '' : 'is-off')));
@@ -280,7 +281,7 @@ export function renderWeek() {
     h('blockquote', { class: 'brief wk-summary', text: weekSummary(w) }),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, tasks, food, focus),
-      h('div', { class: 'col col-narrow' }, sleep, patternsCard(30))));
+      h('div', { class: 'col col-narrow' }, weakSpotsCard(), achievementsCard(), sleep, sleepScoresCard(), patternsCard(30))));
 }
 
 /** Small card for Today on Sundays and Mondays (Monday shows last week). */
@@ -290,7 +291,8 @@ export function weekCard() {
   const off = dow === 1 ? -1 : 0;
   const w = weekData(off);
   return C.card(off ? 'Last week' : 'Your week', C.h('a', { href: '#week', class: 'link', text: 'Review →', onclick: e => { e.preventDefault(); weekOffset = off; C.go('week'); } }),
-    C.h('p', { class: 'wk-mini', text: weekSummary(w) }));
+    C.h('p', { class: 'wk-mini', text: weekSummary(w) }),
+    C.h('button', { type: 'button', class: 'btn btn-small btn-primary', text: '✨ Watch your week, wrapped', onclick: () => openWrapped(off) }));
 }
 
 // ---------------------------------------------------------------- patterns
@@ -436,4 +438,182 @@ export function palavrasCard() {
       h('p', { class: 'pt-ex', text: `“${p.ex}”` }),
       p.s && p.s.length ? h('p', { class: 'muted small', text: `Sinônimos: ${p.s.join(', ')}` }) : null)))),
     h('p', { class: 'muted small pt-foot' }, 'Toque numa palavra para ver o significado. Elas também entram no baralho ', h('button', { type: 'button', class: 'link small', text: 'Português', onclick: () => C.go('cards') }), ' para revisar.'));
+}
+
+// ---------------------------------------------------------------- wins: achievements, weak spots, sleep vs scores, wrapped
+// Study data lives in each tab's localStorage keys (this device); tasks, focus, sleep and cards come from the vault.
+
+const ls = (k, fb) => { try { const v = localStorage.getItem(k); return v === null ? fb : JSON.parse(v); } catch { return fb; } };
+const BIO_NAMES = { L1: 'Animal diversity', L2: 'Nutrition', L3: 'Temperature', L4: 'Breathing', L5: 'Circulation', L6: 'Kidney & salt', L7: 'Digestion', L8: 'Nervous system', L9: 'Endocrine', L10: 'Immunology' };
+
+function studyStats() {
+  const S = C.S();
+  const todos = C.live('todos');
+  const focus = C.live('focus');
+  const sleep = sleepLog();
+  const cards = (S.orgo || []).filter(r => r.id && r.id.startsWith('fc:') && !r.deleted);
+  const bioHist = ls('bio.examHistory', []), progHist = ls('prog.mockHistory', []);
+  const daily = ls('orgo.rl.daily', {});
+  const rlTotal = Object.values(daily).reduce((a, d) => a + d.total, 0), rlRight = Object.values(daily).reduce((a, d) => a + d.right, 0);
+  let progSolved = 0, bugsSolved = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k.startsWith('prog.')) continue;
+      const v = ls(k, null);
+      if (v && v.solved) { if (k.startsWith('prog.b-')) bugsSolved++; else progSolved++; }
+    }
+  } catch {}
+  let goodRun = 0, run = 0;
+  for (const r of sleep) { if (sleepHours(r) >= 8) { run++; goodRun = Math.max(goodRun, run); } else run = 0; }
+  return {
+    tasksDone: todos.filter(t => t.done).length,
+    streak: streak(C.todayStr()),
+    focusMin: focus.reduce((a, f) => a + (f.minutes || 0), 0),
+    longest: focus.filter(f => !f.wilted).reduce((a, f) => Math.max(a, f.minutes || 0), 0),
+    nights: sleep.length, goodRun,
+    cardsLearned: cards.filter(r => r.box >= 3).length,
+    ptLearned: cards.filter(r => r.id.startsWith('fc:pt:') && r.box >= 3).length,
+    bioBest: bioHist.reduce((a, x) => Math.max(a, x.pct), 0),
+    progBest: progHist.reduce((a, x) => Math.max(a, x.pct), 0),
+    guided: ls('bio.done', []).length,
+    progSolved, bugsSolved,
+    rlBest: Number(ls('orgo.rl.best', 0)),
+    rlSpeed: Math.max(Number(ls('orgo.rl.speedBest_sn', 0)), Number(ls('orgo.rl.speedBest_alkene', 0))),
+    rlTotal, rlRight,
+  };
+}
+
+const ACH = [
+  ['🌱', 'First bloom', 'Finish your first task', s => [s.tasksDone, 1]],
+  ['💐', 'Bouquet', 'Finish 50 tasks', s => [s.tasksDone, 50]],
+  ['🔥', 'On a roll', 'A 7-day task streak', s => [s.streak, 7]],
+  ['⏱️', 'Deep work', 'Focus for 10 hours in total', s => [Math.floor(s.focusMin / 60), 10]],
+  ['🌻', 'Sunflower', 'One 60-minute focus session', s => [s.longest, 60]],
+  ['😴', 'Well rested', 'Sleep 8 h+ three nights in a row', s => [s.goodRun, 3]],
+  ['🌙', 'Sleep diary', 'Log 14 nights of sleep', s => [s.nights, 14]],
+  ['🃏', 'Card shark', 'Learn 100 flashcards', s => [s.cardsLearned, 100]],
+  ['🇧🇷', 'Vocabulário afiado', 'Learn 25 Portuguese words', s => [s.ptLearned, 25]],
+  ['🧬', 'Guided through', 'Finish 5 guided Bio lectures', s => [s.guided, 5]],
+  ['🎓', 'Bio ace', 'Score 90%+ on a Bio mock exam', s => [s.bioBest, 90]],
+  ['💯', 'Perfect', 'Score 100% on a Bio mock exam', s => [s.bioBest, 100]],
+  ['🐍', 'Pythonista', 'Solve 25 Prog practice problems', s => [s.progSolved, 25]],
+  ['🐞', 'Exterminator', 'Fix 10 debug-the-bug drills', s => [s.bugsSolved, 10]],
+  ['📝', 'Prog ready', 'Score 85%+ on the Prog mock exam', s => [s.progBest, 85]],
+  ['🎰', 'Hot streak', '10 roulette rounds in a row', s => [s.rlBest, 10]],
+  ['⚡', 'Speed demon', '15 right in one speed round', s => [s.rlSpeed, 15]],
+  ['⚗️', 'Reaction regular', 'Answer 100 roulette questions', s => [s.rlTotal, 100]],
+];
+const unlocked = s => ACH.filter(a => { const [v, g] = a[3](s); return v >= g; }).length;
+
+export function achievementsCard() {
+  const { h, card } = C;
+  const s = studyStats();
+  const rows = ACH.map(([icon, name, desc, f]) => { const [v, goal] = f(s); return { icon, name, desc, v: Math.min(v, goal), goal, done: v >= goal }; });
+  return card('Achievements', h('span', { class: 'card-meta', text: `${rows.filter(r => r.done).length} / ${rows.length}` }),
+    h('ul', { class: 'ach' }, rows.sort((a, b) => b.done - a.done || b.v / b.goal - a.v / a.goal).map(r => h('li', { class: `ach-item${r.done ? ' done' : ''}`, title: r.desc },
+      h('span', { class: 'ach-ic', text: r.icon }),
+      h('span', { class: 'ach-text' }, h('span', { class: 'ach-name', text: r.name }), h('span', { class: 'ach-desc', text: r.desc })),
+      r.done ? h('span', { class: 'ach-ok', text: '✓' })
+        : h('span', { class: 'ach-prog' }, h('span', { class: 'ach-bar' }, h('span', { style: `width:${(100 * r.v / r.goal).toFixed(0)}%` })), h('span', { class: 'ach-num', text: `${r.v}/${r.goal}` }))))));
+}
+
+/** The weakest topics across tabs, lowest first. */
+function weakSpots() {
+  const out = [];
+  const per = {};
+  for (const a of ls('bio.examHistory', []).filter(x => x.per).slice(-3)) {
+    for (const [l, x] of Object.entries(a.per)) { const p = per[l] || (per[l] = { got: 0, max: 0 }); p.got += x.got; p.max += x.max; }
+  }
+  for (const [l, p] of Object.entries(per)) if (p.max >= 2) out.push({ area: 'Bio', name: `${l} ${BIO_NAMES[l] || ''}`.trim(), pct: Math.round(100 * p.got / p.max), go: 'bio' });
+  const days = Object.entries(ls('orgo.rl.daily', {})).sort().slice(-14).map(e => e[1]);
+  for (const [k, name] of [['sn', 'SN1 / SN2 / E1 / E2'], ['alkene', 'Alkene reactions']]) {
+    const r = days.reduce((a, d) => a + (d[k] ? d[k][0] : 0), 0), t = days.reduce((a, d) => a + (d[k] ? d[k][1] : 0), 0);
+    if (t >= 5) out.push({ area: 'Orgo', name, pct: Math.round(100 * r / t), go: 'orgo' });
+  }
+  const ph = ls('prog.mockHistory', []);
+  if (ph.length) out.push({ area: 'Prog', name: 'Mock Exam 2', pct: ph[ph.length - 1].pct, go: 'prog' });
+  return out.sort((a, b) => a.pct - b.pct);
+}
+
+export function weakSpotsCard() {
+  const { h, card } = C;
+  const ws = weakSpots();
+  return card('Weak-spot radar', h('span', { class: 'card-meta', text: 'study these first' }),
+    ws.length ? h('ul', { class: 'ws' }, ws.slice(0, 6).map(w => h('li', { class: `ws-row${w.pct < 60 ? ' weak' : w.pct < 80 ? ' mid' : ''}` },
+      h('span', { class: 'ws-area', text: w.area }),
+      h('button', { type: 'button', class: 'link ws-name', text: w.name, onclick: () => C.go(w.go) }),
+      h('span', { class: 'ws-bar' }, h('span', { style: `width:${w.pct}%` })),
+      h('strong', { class: 'ws-pct', text: `${w.pct}%` }))))
+      : h('p', { class: 'empty', text: 'Take a Bio mock exam, spin some Orgo roulette or try the Prog mock exam. Your weakest topics show up here.' }),
+    ws.length ? h('p', { class: 'muted small', text: 'From your last 3 Bio mock exams, 2 weeks of roulette and your latest Prog mock exam.' }) : null);
+}
+
+/** Do nights with more sleep come before better practice scores? */
+export function sleepScoresCard() {
+  const { h, card } = C;
+  const sleepBy = Object.fromEntries(sleepLog().map(r => [r.date, sleepHours(r)])); // keyed by the morning you woke up
+  const day = at => C.toStr(new Date(at));
+  const pts = [];
+  for (const x of ls('bio.examHistory', [])) pts.push({ d: day(x.at), pct: x.pct });
+  for (const x of ls('prog.mockHistory', [])) pts.push({ d: day(x.at), pct: x.pct });
+  for (const [d, x] of Object.entries(ls('orgo.rl.daily', {}))) if (x.total >= 5) pts.push({ d, pct: Math.round(100 * x.right / x.total) });
+  const withSleep = pts.filter(p => sleepBy[p.d] !== undefined).map(p => ({ ...p, hrs: sleepBy[p.d] }));
+  const good = withSleep.filter(p => p.hrs >= 7), short = withSleep.filter(p => p.hrs < 7);
+  if (good.length < 2 || short.length < 2) {
+    return card('Sleep vs scores', null, h('p', { class: 'empty', text: `Not enough data yet (${withSleep.length} scored day${withSleep.length === 1 ? '' : 's'} with sleep logged). Log your sleep, then take mock exams or do 5+ roulette answers a day, and this shows whether sleep moves your scores.` }));
+  }
+  const g = Math.round(mean(good.map(p => p.pct))), sh = Math.round(mean(short.map(p => p.pct)));
+  const diff = g - sh;
+  return card('Sleep vs scores', null,
+    h('div', { class: 'ss-cmp' },
+      h('div', null, h('strong', { text: `${g}%` }), h('span', { class: 'muted small', text: `after 7 h+ · ${good.length} days` })),
+      h('div', null, h('strong', { text: `${sh}%` }), h('span', { class: 'muted small', text: `after < 7 h · ${short.length} days` }))),
+    h('p', { class: 'small', text: Math.abs(diff) < 4 ? 'About the same so far. Keep logging to see a real pattern.' : diff > 0 ? `You score about ${diff} points higher after a full night. Sleep is studying too ✿` : `So far you've scored ${-diff} points higher after short nights. That may change with more data.` }));
+}
+
+// Wrapped: a story-style recap of a week, one big number per slide.
+let wrap = null;
+export function openWrapped(offset = 0) {
+  const w = weekData(offset);
+  const s = studyStats();
+  const inWeek = d => d >= w.from && d < w.to;
+  const rl = Object.entries(ls('orgo.rl.daily', {})).filter(([d]) => inWeek(d)).reduce((a, [, x]) => [a[0] + x.right, a[1] + x.total], [0, 0]);
+  const cardsWk = (C.S().orgo || []).filter(r => r.id && r.id.startsWith('fc:') && r.updatedAt && inWeek(C.toStr(new Date(r.updatedAt)))).length;
+  const exams = [...ls('bio.examHistory', []), ...ls('prog.mockHistory', [])].filter(x => inWeek(C.toStr(new Date(x.at))));
+  const bestDay = w.doneByDay.indexOf(Math.max(...w.doneByDay));
+  wrap = { i: 0, slides: [
+    { big: `${C.fmtShort(w.from)} – ${C.fmtShort(C.addDays(w.to, -1))}`, line: 'Your week, wrapped ✨', sub: 'Tap to continue' },
+    { big: String(w.items.length), line: w.items.length === 1 ? 'task finished' : 'tasks finished', sub: w.items.length > 2 ? `Best day: ${C.fmtWeekday(w.days[bestDay])} (${w.doneByDay[bestDay]})` : 'Every one planted a flower 🌸' },
+    { big: fmtH(w.focusTotal / 60), line: 'of deep focus', sub: s.longest ? `Longest session ever: ${s.longest} min` : 'Try one focus session next week' },
+    { big: w.sleepAvg === null ? '—' : fmtH(w.sleepAvg), line: 'average sleep', sub: w.sleep.length ? `${plural(w.sleep.length, 'night')} logged` : 'Log your sleep to see this' },
+    { big: String(cardsWk), line: 'flashcards reviewed', sub: `${s.cardsLearned} learned all-time` },
+    { big: rl[1] ? `${Math.round(100 * rl[0] / rl[1])}%` : '—', line: 'Orgo roulette accuracy', sub: rl[1] ? `${rl[0]} of ${rl[1]} right` : 'Spin a few next week 🎰' },
+    { big: String(exams.length), line: exams.length === 1 ? 'mock exam taken' : 'mock exams taken', sub: exams.length ? `Best: ${Math.max(...exams.map(x => x.pct))}%` : 'Bio and Prog both have one' },
+    { big: `${unlocked(s)} / ${ACH.length}`, line: 'achievements unlocked', sub: 'Proud of you. See you next week ✿' },
+  ] };
+  showWrap();
+}
+
+let wrapKey = null;
+function closeWrap() { wrap = null; document.querySelector('.wrapped')?.remove(); if (wrapKey) document.removeEventListener('keydown', wrapKey); wrapKey = null; }
+function showWrap() {
+  const { h } = C;
+  document.querySelector('.wrapped')?.remove();
+  if (!wrap) return;
+  const sl = wrap.slides[wrap.i];
+  const next = () => { if (wrap.i + 1 < wrap.slides.length) { wrap.i++; showWrap(); } else closeWrap(); };
+  const prev = () => { if (wrap.i > 0) { wrap.i--; showWrap(); } };
+  if (!wrapKey) {
+    wrapKey = e => { if (!wrap) return; if (e.key === 'Escape') closeWrap(); else if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); } else if (e.key === 'ArrowLeft') prev(); };
+    document.addEventListener('keydown', wrapKey);
+  }
+  const el = h('div', { class: `wrapped wr-${wrap.i % 4}`, role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Your week, wrapped' },
+    h('div', { class: 'wr-bars' }, wrap.slides.map((_, k) => h('span', { class: k <= wrap.i ? 'on' : '' }))),
+    h('button', { type: 'button', class: 'wr-close', 'aria-label': 'Close', text: '✕', onclick: closeWrap }),
+    h('button', { type: 'button', class: 'wr-tap', 'aria-label': 'Next', onclick: next },
+      h('span', { class: 'wr-big', text: sl.big }), h('span', { class: 'wr-line', text: sl.line }), h('span', { class: 'wr-sub', text: sl.sub })),
+    wrap.i > 0 ? h('button', { type: 'button', class: 'wr-prev', 'aria-label': 'Previous', text: '‹', onclick: prev }) : null);
+  document.body.append(el);
+  el.querySelector('.wr-tap').focus();
 }

@@ -61,7 +61,7 @@ function finish(ex, P) {
   if (ex.since) { ex.elapsed += Date.now() - ex.since; ex.since = null; }
   ex.submitted = true; ex.finishedAt = Date.now();
   const sc = score(ex, P);
-  store('examHistory', [...load('examHistory', []), { at: ex.finishedAt, pct: sc.pct, got: sc.got, max: sc.max, lecs: ex.lecs }].slice(-10));
+  store('examHistory', [...load('examHistory', []), { at: ex.finishedAt, pct: sc.pct, got: sc.got, max: sc.max, lecs: ex.lecs, per: sc.per }].slice(-10));
   store('examSeen', [...load('examSeen', []), ...ex.ids].slice(-120));
   store('exam', ex);
 }
