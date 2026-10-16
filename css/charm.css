@@ -602,3 +602,6 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .site-footer, html
 }
 
 
+
+/* look e: the page bubbles replace the fixed sky bubbles, so fixed and scrolling ones never cross */
+html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .charm-bubble { display: none !important; }

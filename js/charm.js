@@ -163,6 +163,9 @@ function addPageBubbles() {
     const box = document.querySelector('main .container, .section .container, .container');
     const cw = box ? box.getBoundingClientRect().width : Math.min(W, 1100);
     const margin = Math.max(0, (W - cw) / 2) - 12;
+    // everything placed so far, as {side, e0, e1 (distance from that edge), y0, y1}, so nothing overlaps
+    const taken = [];
+    const hits = (sd, e0, e1, y0, y1, pad = 36) => taken.some(r => r.side === sd && e0 < r.e1 + pad && e1 > r.e0 - pad && y0 < r.y1 + pad && y1 > r.y0 - pad);
     let y = -80, side = 1, i = 0;
     while (y < H - 120) {
       const big = i % 3 !== 2;
@@ -181,6 +184,7 @@ function addPageBubbles() {
       const hd = d * 1.7, off = (hd - d) / 2;
       const anim = `--fx:${b.style.getPropertyValue('--fx')};--fy:${b.style.getPropertyValue('--fy')};--fd:${b.style.getPropertyValue('--fd')};--fdl:${b.style.getPropertyValue('--fdl')}`;
       h.style.cssText = `width:${hd.toFixed(0)}px;height:${hd.toFixed(0)}px;top:${(y - off).toFixed(0)}px;${side < 0 ? 'left' : 'right'}:${(-peek - off).toFixed(0)}px;${anim}`;
+      taken.push({ side, e0: Math.max(0, -peek), e1: Math.max(0, d - peek), y0: y, y1: y + d });
       layer.append(h, b);
       y += big ? (phone ? 260 + rnd() * 160 : 380 + rnd() * 260) : 120 + rnd() * 80;
       if (big) side = -side;
@@ -191,11 +195,17 @@ function addPageBubbles() {
     while (cy < H - 200) {
       const cw = phone ? 150 + rnd() * 60 : 300 + rnd() * 140;
       const vis = Math.max(phone ? 70 : 140, Math.min(cw * 0.75, margin + 40));
+      // slide the cloud down (or to the other side) until it doesn't touch a bubble
+      for (let tries = 0; tries < 12 && hits(cside, 0, vis, cy, cy + cw * 0.6, 24); tries++) {
+        if (tries === 6) cside = -cside; else cy += 60;
+      }
+      if (cy > H - 200) break;
       const img = document.createElement('img');
       img.className = 'charm-pcloud';
       img.src = IMG(`acloud-${(ci % 3) + 1}.png`); img.alt = '';
       img.style.cssText = `width:${cw.toFixed(0)}px;top:${cy.toFixed(0)}px;${cside < 0 ? 'left' : 'right'}:${(vis - cw).toFixed(0)}px;` +
         `--fx:${(18 + rnd() * 22).toFixed(0)}px;--fy:${(6 + rnd() * 8).toFixed(0)}px;--fd:${(16 + rnd() * 10).toFixed(1)}s;--fdl:${(-rnd() * 12).toFixed(1)}s`;
+      taken.push({ side: cside, e0: 0, e1: vis, y0: cy, y1: cy + cw * 0.6 });
       layer.append(img);
       cy += phone ? 520 + rnd() * 260 : 700 + rnd() * 400; cside = -cside; ci++;
     }
@@ -204,11 +214,19 @@ function addPageBubbles() {
     for (let k = 0; k < n; k++) {
       const d = phone ? 26 + rnd() * 18 : 34 + rnd() * 30;
       const left = rnd() < 0.5;
-      let x = (phone ? 2 + rnd() * 8 : 3 + rnd() * 13);
-      const maxX = (margin - d) / W * 100;
-      if (x > maxX) x = Math.max(0.5, maxX);
       if (margin < d + 4) continue;
-      const top = (k + 0.15 + rnd() * 0.7) * (H / n);
+      // try a few spots in this band; skip the bubble if every spot touches something
+      let x = 0, top = 0, ok = false;
+      for (let tries = 0; tries < 8 && !ok; tries++) {
+        x = (phone ? 2 + rnd() * 8 : 3 + rnd() * 13);
+        const maxX = (margin - d) / W * 100;
+        if (x > maxX) x = Math.max(0.5, maxX);
+        top = (k + 0.15 + rnd() * 0.7) * (H / n);
+        const e0 = x / 100 * W;
+        ok = !hits(left ? -1 : 1, e0, e0 + d, top, top + d);
+      }
+      if (!ok) continue;
+      taken.push({ side: left ? -1 : 1, e0: x / 100 * W, e1: x / 100 * W + d, y0: top, y1: top + d });
       const b = document.createElement('span');
       b.className = `charm-pbubble small ${left ? 'L' : 'R'}`;
       b.style.cssText = `width:${d.toFixed(0)}px;height:${d.toFixed(0)}px;top:${top.toFixed(0)}px;${left ? 'left' : 'right'}:${x.toFixed(1)}%;` +
