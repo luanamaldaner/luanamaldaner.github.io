@@ -736,7 +736,7 @@ function renderToday() {
       })() })), flowerGadget()),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, calendarCard(today), h('div', { class: 'todo-split' }, assignmentsCard(), tasksCard())),
-      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), internsCard(), countdownCard(), planCard(), bossCard(ORGO_CTX), palavrasCard(), caloriesMini(), tilCard())),
+      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), internsCard(), countdownCard(), studyCorner(), caloriesMini(), tilCard())),
     tagList());
 }
 
@@ -1553,7 +1553,10 @@ function upcomingExams() {
   const seen = new Set();
   const out = [];
   const add = (title, date, tag) => {
-    const key = `${title.toLowerCase()}|${date}`;
+    // same course + same day = the same exam (an event and a Canvas item often both exist)
+    const key = tag ? `${tag.toLowerCase()}|${date}` : `${title.toLowerCase()}|${date}`;
+    const prev = out.find(x => (x.tag ? `${x.tag.toLowerCase()}|${x.date}` : `${x.title.toLowerCase()}|${x.date}`) === key);
+    if (prev) { if (title.length > prev.title.length) prev.title = title; return; }
     if (seen.has(key)) return;
     seen.add(key);
     out.push({ title, date, tag, days: daysBetween(today, date) });
@@ -1623,6 +1626,26 @@ function planCard() {
           h('div', { class: 'small', text: b.what })),
         v ? h('button', { type: 'button', class: 'link small plan-go', text: `${v[1]} →`, onclick: () => go(v[0]) }) : null);
     }) : h('span', { class: 'muted small', text: 'Free day ✿' }))))));
+}
+
+// Study corner: the daily study cards share one tabbed card so Today stays calm.
+const CORNER = [['plan', '📅 Plan', () => planCard()], ['boss', '👾 Boss', () => bossCard(ORGO_CTX)], ['pt', '✍️ Palavras', () => palavrasCard()]];
+function studyCorner() {
+  let tab = 'plan';
+  try { tab = localStorage.getItem('corner.tab') || 'plan'; } catch {}
+  const items = CORNER.map(([id, label, make]) => ({ id, label, el: make() })).filter(x => x.el);
+  if (!items.length) return null;
+  const cur = items.find(x => x.id === tab) || items[0];
+  const head = cur.el.querySelector(':scope > .card-head');
+  const meta = head ? head.querySelector('.card-meta') : null;
+  if (head) head.remove();
+  const body = h('div', { class: `corner-body ${cur.el.className.replace(/\bcard\b/, '')}`, lang: cur.el.getAttribute('lang') || null }, ...cur.el.childNodes);
+  return h('section', { class: 'card corner' },
+    h('div', { class: 'corner-tabs', role: 'tablist' }, items.map(x => h('button', {
+      type: 'button', role: 'tab', class: `corner-tab${x === cur ? ' on' : ''}`, 'aria-selected': String(x === cur),
+      onclick: () => { try { localStorage.setItem('corner.tab', x.id); } catch {} render(); },
+    }, x.label)), meta),
+    body);
 }
 
 // ---------------------------------------------------------------- calories
