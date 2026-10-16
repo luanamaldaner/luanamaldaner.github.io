@@ -1,6 +1,7 @@
 // Lecture 7 · Ch 28.1, 28.4 + supplement · Digestion
 
 import { E, T, Track, at, move, show, setText, smooth, keys, frac, lerp, clamp, gauss, TAU, win, arrowDefs } from './kit.js';
+import { fx, pill, pillText, pillAt, ease, eased, env, flow, scaleAt } from './fx-b.js';
 
 // ---------------------------------------------------------------- 1. a trip down the gut
 
@@ -27,17 +28,21 @@ const gutR = x => {
 const gut = {
   id: 'l7-gut', title: 'A trip down the gut', dur: 26,
   build(svg) {
+    fx(svg);
+    // painted artwork underneath; drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l7-gut');
+    E('image', { href: new URL('./art/l7-gut.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     E('rect', { x: 0, y: 300, width: 640, height: 60, class: 'b-bloodband' }, g);
     T(g, 628, 350, 'blood (absorbed nutrients go here)', 'bs', { 'text-anchor': 'end' });
     const wall = E('path', { class: 'b-gut' }, g);
     const inner = E('path', { class: 'b-gut-in' }, g);
     // accessory organs
-    E('ellipse', { cx: 34, cy: 124, rx: 20, ry: 12, class: 'b-gland' }, g); T(g, 12, 102, 'salivary glands', 'bs');
-    E('path', { d: 'M232,62 C262,40 330,44 344,70 C352,90 318,98 286,96 C260,94 236,84 232,62z', class: 'b-liver' }, g); T(g, 290, 36, 'liver', 'bs b-strong', { 'text-anchor': 'middle' });
-    E('ellipse', { cx: 318, cy: 106, rx: 12, ry: 9, class: 'b-gall' }, g); T(g, 356, 110, 'gallbladder (bile)', 'bs');
+    E('ellipse', { cx: 34, cy: 124, rx: 20, ry: 12, class: 'b-gland fxb-breathe' }, g); T(g, 12, 102, 'salivary glands', 'bs');
+    E('path', { d: 'M232,62 C262,40 330,44 344,70 C352,90 318,98 286,96 C260,94 236,84 232,62z', class: 'b-liver fxb-breathe d1' }, g); T(g, 290, 36, 'liver', 'bs b-strong', { 'text-anchor': 'middle' });
+    E('ellipse', { cx: 318, cy: 106, rx: 12, ry: 9, class: 'b-gall fxb-breathe d2' }, g); T(g, 356, 110, 'gallbladder (bile)', 'bs');
     E('path', { d: 'M318,115 C312,130 300,140 296,150', class: 'b-duct' }, g);
-    E('path', { d: 'M318,262 C350,270 380,262 392,254 C400,248 392,240 380,242 C360,246 336,250 318,262z', class: 'b-pancreas' }, g); T(g, 400, 270, 'pancreas (enzymes + HCO₃⁻)', 'bs');
+    E('path', { d: 'M318,262 C350,270 380,262 392,254 C400,248 392,240 380,242 C360,246 336,250 318,262z', class: 'b-pancreas fxb-breathe d3' }, g); T(g, 400, 270, 'pancreas (enzymes + HCO₃⁻)', 'bs');
     E('path', { d: 'M320,262 C304,246 300,230 298,214', class: 'b-duct' }, g);
     const drops = { saliva: [], bile: [], panc: [] };
     for (let i = 0; i < 4; i++) {
@@ -89,20 +94,20 @@ const gut = {
       labels.forEach((l, i) => l.classList.toggle('on', GUT_REGIONS[i] === reg));
       badges.forEach((b, i) => b.classList.toggle('on', reg.procs.includes(PROCS[i])));
       // secretions drip when the bolus passes
-      const drip = (arr, a, b, on) => arr.forEach((d, i) => { const u = frac(t * 0.9 + i / arr.length); at(d, lerp(a[0], b[0], u), lerp(a[1], b[1], u)); show(d, on ? Math.sin(Math.PI * u) : 0); });
+      const drip = (arr, a, b, on) => arr.forEach((d, i) => { const u = frac(t * 0.9 + i / arr.length); const [x, y] = flow(a, b, ease(u), i, 0, 1.5, t); at(d, x, y); show(d, on ? env(u, 0.25) : 0); });
       drip(drops.saliva, [44, 132], [60, gutY(60) - 4], reg.name === 'Mouth');
       drip(drops.bile, [312, 118], [296, 152], reg.name === 'Small intestine' && xb < 380);
       drip(drops.panc, [318, 258], [298, 214], reg.name === 'Small intestine' && xb < 380);
       nutr.forEach((d, i) => {
         const u = frac(t * 0.6 + i / nutr.length);
         const x0 = xb + (i % 5 - 2) * 6;
-        at(d, x0, lerp(gutY(x0), 320, u));
-        show(d, reg.name === 'Small intestine' ? Math.sin(Math.PI * u) : 0);
+        at(d, x0 + 3 * Math.sin(u * 6 + i), lerp(gutY(x0), 320, ease(u)));
+        show(d, reg.name === 'Small intestine' ? env(u, 0.25) : 0);
       });
       waterOut.forEach((d, i) => {
         const u = frac(t * 0.6 + i / waterOut.length);
-        at(d, xb + (i - 2) * 7, lerp(gutY(xb), 320, u));
-        show(d, reg.name === 'Large intestine' ? Math.sin(Math.PI * u) : 0);
+        at(d, xb + (i - 2) * 7 + 3 * Math.sin(u * 6 + i), lerp(gutY(xb), 320, ease(u)));
+        show(d, reg.name === 'Large intestine' ? env(u, 0.25) : 0);
       });
       return reg.cap;
     };
@@ -126,13 +131,14 @@ const gut = {
 const hydrolysis = {
   id: 'l7-hydro', title: 'Enzymes split food into building blocks', dur: 12,
   build(svg) {
+    fx(svg);
     const g = E('g', {}, svg);
     const rows = [
       { y: 70, label: 'Carbohydrates', sub: 'amylase → monosaccharides (glucose)', kind: 'hex', enz: 'amylase' },
       { y: 175, label: 'Proteins', sub: 'pepsin, trypsin → amino acids', kind: 'bead', enz: 'pepsin' },
       { y: 285, label: 'Fats', sub: 'lipase → monoglyceride + fatty acids', kind: 'fat', enz: 'lipase' },
     ];
-    const COLORS = ['#e0566b', '#e9a23b', '#45b072', '#5a7fe0', '#9a6be0', '#2fa59a'];
+    const COLORS = ['red', 'gold', 'glu', 'blue', 'k', 'teal'];
     for (const r of rows) {
       T(g, 16, r.y - 6, r.label, 'bl b-strong');
       T(g, 16, r.y + 12, r.sub, 'bs');
@@ -141,7 +147,7 @@ const hydrolysis = {
         for (let i = 0; i < 6; i++) {
           const u = r.kind === 'hex'
             ? E('path', { d: 'M-13,0 L-6.5,-11 L6.5,-11 L13,0 L6.5,11 L-6.5,11z', class: 'b-sugar' }, g)
-            : E('circle', { r: 11, class: 'b-aa', style: `fill:${COLORS[i]}` }, g);
+            : E('circle', { r: 11, class: `b-aa fxb-c-${COLORS[i]}` }, g);
           r.units.push(u);
         }
         r.bonds = Array.from({ length: 5 }, () => E('line', { class: 'b-bondline' }, g));
@@ -150,17 +156,17 @@ const hydrolysis = {
         r.tails = [-22, 0, 22].map(() => E('polyline', { class: 'b-tail' }, g));
       }
       r.enzyme = E('path', { d: 'M0,0 L16,-9 A18,18 0 1 0 16,9 Z', class: 'b-enzyme' }, g);
-      r.enzT = T(g, 0, 0, r.enz, 'bs b-strong', { 'text-anchor': 'middle' });
+      r.enzT = pill(g, 0, 0, r.enz, 'bs b-strong b-k-t', { 'text-anchor': 'middle' });
       r.waters = Array.from({ length: 5 }, () => T(g, 0, 0, 'H₂O', 'bs b-water-t b-strong', { 'text-anchor': 'middle' }));
     }
     const X0 = 270, GAP = 30;
     return lt => {
       const fade = 1 - smooth(11.2, 12, lt);
       for (const r of rows) {
-        const ex = keys(lt, [[1, 230], [7.5, X0 + 5 * GAP + 30], [9, 680]]);
+        const ex = keys(lt, [[1, 230], [7.5, X0 + 5 * GAP + 30], [9, 680]]) + 1.5 * Math.sin(lt * 5);
         move(r.enzyme, ex, r.y + 2, 1, 180 + 18 * Math.sin(lt * 9));
-        r.enzT.setAttribute('x', ex); r.enzT.setAttribute('y', r.y - 22);
-        show(r.enzyme, fade * smooth(0.6, 1, lt)); show(r.enzT, fade * smooth(0.6, 1, lt) * (1 - smooth(8, 8.6, lt)));
+        pillAt(r.enzT, ex - 4, r.y - 30);
+        show(r.enzyme, fade * smooth(0.6, 1, lt)); show(r.enzT.parentNode, fade * smooth(0.6, 1, lt) * (1 - smooth(8, 8.6, lt)));
         if (r.kind !== 'fat') {
           const cutT = i => 1.6 + i * 1.2; // bond i breaks at this time
           r.units.forEach((u, i) => {
@@ -177,7 +183,7 @@ const hydrolysis = {
             b.setAttribute('x1', x1 + 12); b.setAttribute('y1', y1); b.setAttribute('x2', x2 - 12); b.setAttribute('y2', y2);
             show(b, fade * (1 - smooth(cutT(i), cutT(i) + 0.25, lt)));
             const w = r.waters[i];
-            w.setAttribute('x', (x1 + x2) / 2); w.setAttribute('y', y1 - 14 - 10 * smooth(cutT(i), cutT(i) + 1, lt));
+            w.setAttribute('x', (x1 + x2) / 2); w.setAttribute('y', y1 + 34 - 8 * eased(cutT(i) - 0.2, cutT(i) + 0.4, lt));
             show(w, fade * win(lt, cutT(i) - 0.2, cutT(i) + 0.9, 0.2));
           });
         } else {
@@ -225,6 +231,10 @@ const stomach = {
   vars: { meal: 'meal' },
   build(svg, s, ui) {
     ui.seg('meal', [['fast', 'Empty stomach'], ['meal', 'Meal arrives']], 'Meal');
+    fx(svg);
+    // painted artwork underneath; drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l7-acid');
+    E('image', { href: new URL('./art/l7-acid.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     E('rect', { x: 0, y: 0, width: 196, height: 360, class: 'b-lumen-acid' }, g);
     T(g, 14, 24, 'inside the stomach', 'bs b-strong');
@@ -232,14 +242,15 @@ const stomach = {
     T(g, 626, 24, 'blood', 'bs b-strong', { 'text-anchor': 'end' });
     E('rect', { x: 196, y: 0, width: 10, height: 360, class: 'b-mucus' }, g);
     T(g, 201, 350, 'mucus', 'bs', { 'text-anchor': 'middle' });
-    E('rect', { x: 212, y: 40, width: 248, height: 280, rx: 30, class: 'b-cellbody' }, g);
+    E('rect', { x: 212, y: 40, width: 248, height: 280, rx: 30, class: 'b-cellbody fxb-breathe' }, g);
     T(g, 336, 66, 'parietal cell', 'bl b-strong', { 'text-anchor': 'middle' });
     // pump on the lumen side
     const pump = E('g', {}, g);
     E('rect', { x: -12, y: -26, width: 24, height: 52, rx: 10, class: 'b-pump' }, pump);
     move(pump, 212, 150);
     T(g, 230, 112, 'H⁺/K⁺ pump', 'bs b-strong');
-    const atp = T(g, 236, 186, 'ATP', 'bs b-atp');
+    const atp = pill(g, 240, 192, 'ATP', 'bs b-atp').parentNode;
+    atp.firstChild.classList.add('warm');
     // receptors on the blood side
     const recs = [['ACh', 110, 'nerve'], ['gastrin', 180, 'blood'], ['histamine', 250, 'ECL cell']];
     const sig = recs.map(([name, y, from]) => {
@@ -257,7 +268,7 @@ const stomach = {
     T(g, 336, 300, 'CO₂ + H₂O → H⁺ + HCO₃⁻', 'bs b-strong', { 'text-anchor': 'middle' });
     // pepsinogen → pepsin
     const pg = Array.from({ length: 3 }, () => { const grp = E('g', {}, g); E('path', { d: 'M0,0 L14,-8 A16,16 0 1 0 14,8 Z', class: 'b-enzyme' }, grp); const lid = E('path', { d: 'M2,-1 L16,-8 L16,8z', class: 'b-lid' }, grp); return { grp, lid }; });
-    const prot = Array.from({ length: 6 }, (_, i) => E('circle', { r: 6, class: 'b-aa', style: `fill:${['#e0566b', '#e9a23b', '#45b072', '#5a7fe0', '#9a6be0', '#2fa59a'][i]}` }, g));
+    const prot = Array.from({ length: 6 }, (_, i) => E('circle', { r: 6, class: `b-aa fxb-c-${['red', 'gold', 'glu', 'blue', 'k', 'teal'][i]}` }, g));
     const ph = T(g, 14, 48, '', 'bl b-strong b-acid-t');
     T(g, 16, 330, '● H⁺', 'bs b-acid-t'); T(g, 60, 330, '● K⁺', 'bs b-k-t'); T(g, 100, 330, '● HCO₃⁻', 'bs blue-t');
     let pH = 4;
@@ -268,8 +279,8 @@ const stomach = {
       setText(ph, `pH ≈ ${pH.toFixed(1)}`);
       sig.forEach((sg, j) => sg.dots.forEach((d, i) => {
         const u = frac(t * 0.5 + i / 3 + j * 0.2);
-        at(d, lerp(560, 466, u), sg.y + Math.sin(u * 6 + i) * 4);
-        show(d, meal ? Math.sin(Math.PI * u) : 0);
+        at(d, lerp(560, 466, ease(u)), sg.y + Math.sin(u * 6 + i) * 4);
+        show(d, meal ? env(u, 0.25) : 0);
       }));
       co2.forEach((c, i) => {
         const u = frac(t * 0.3 * rate + i / 3);
@@ -281,7 +292,7 @@ const stomach = {
         const p = keys(u, [[0, [360, 250 - (i % 3) * 18]], [0.5, [226, 150]], [0.7, [205, 150]], [1, [120 - (i % 3) * 30, 110 + (i * 37) % 120]]]);
         at(h, p[0], p[1]); show(h, Math.min(1, Math.sin(Math.PI * u) * 2));
       });
-      Hl.forEach((h, i) => show(h, clamp((4.2 - pH) / 2.2 - i / 20)));
+      Hl.forEach((h, i) => { at(h, 20 + (i * 37) % 160 + 3 * Math.sin(t * 0.7 + i), 60 + (i * 61) % 260 + 3 * Math.cos(t * 0.6 + i * 1.7)); show(h, clamp((4.2 - pH) / 2.2 - i / 20)); });
       K.forEach((k, i) => {
         const u = frac(t * 0.45 * rate + i / K.length + 0.5);
         const p = keys(u, [[0, [150, 200 + i * 20]], [0.4, [200, 156]], [0.6, [226, 156]], [1, [300, 200 + i * 15]]]);
@@ -289,8 +300,8 @@ const stomach = {
       });
       HCO.forEach((c, i) => {
         const u = frac(t * 0.4 * rate + i / HCO.length);
-        at(c, lerp(380, 560, u), 262 + (i % 2) * 18 + Math.sin(u * 7) * 4);
-        show(c, Math.sin(Math.PI * u));
+        at(c, lerp(380, 560, ease(u)), 262 + (i % 2) * 18 + Math.sin(u * 7) * 4);
+        show(c, env(u, 0.25));
       });
       show(atp, 0.3 + 0.7 * Math.max(0, Math.sin(TAU * t * rate * 1.2)));
       // pepsinogen gets its lid knocked off by acid, then chops a protein
@@ -330,6 +341,10 @@ const stomach = {
 const bile = {
   id: 'l7-bile', title: 'Bile breaks fat into tiny droplets', dur: 16,
   build(svg) {
+    fx(svg);
+    // painted artwork underneath; drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l7-bile');
+    E('image', { href: new URL('./art/l7-bile.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     const R = 62, C0 = [250, 180];
     const MAXL = 4;
@@ -348,7 +363,7 @@ const bile = {
     const mic = Array.from({ length: 8 }, () => { const grp = E('g', {}, g); E('circle', { r: 9, class: 'b-coat' }, grp); E('circle', { r: 5, class: 'b-fatdrop' }, grp); return grp; });
     E('rect', { x: 560, y: 30, width: 70, height: 300, rx: 16, class: 'b-epi' }, g);
     T(g, 595, 350, 'gut wall', 'bs', { 'text-anchor': 'middle' });
-    T(g, 18, 30, '● bile salt: one end likes water, the other likes fat', 'bs b-bile-t');
+    T(g, 40, 30, '● bile salt: one end likes water, the other likes fat', 'bs b-bile-t');
     return lt => {
       const L = keys(lt, [[4.5, 0], [10, MAXL]]);
       const k0 = Math.floor(Math.min(L, MAXL - 1e-6)), f = L - k0;
@@ -363,7 +378,7 @@ const bile = {
         const p = L >= MAXL ? lv[MAXL][i] : { p: [lerp(parent.p[0], child.p[0], smooth(0, 1, f)), lerp(parent.p[1], child.p[1], smooth(0, 1, f))], r: lerp(parent.r, child.r, f) };
         void from;
         const r = p.r * (1 - 0.55 * shrink);
-        move(d.grp, p.p[0], p.p[1]);
+        move(d.grp, p.p[0] + 1.5 * Math.sin(lt * 1.3 + i), p.p[1] + 1.5 * Math.cos(lt * 1.1 + i * 2));
         d.fat.setAttribute('r', r.toFixed(1)); d.coat.setAttribute('r', (r + 3).toFixed(1));
         show(d.grp, 1);
         show(d.coat, smooth(1.5, 4.5, lt));
@@ -376,14 +391,14 @@ const bile = {
         show(sl, 1 - smooth(4.5, 5.5, lt));
       });
       lip.forEach((e, i) => {
-        const k = smooth(10.5, 12, lt);
-        move(e, lerp(-30, 160 + i * 60, k), 70 + i * 70, 1, 0);
+        const k = eased(10.5, 12, lt);
+        move(e, lerp(-30, 160 + i * 60, k), 70 + i * 70 + 3 * Math.sin(lt * 3 + i), 1, 12 * Math.sin(lt * 7 + i));
         show(e, k * (1 - smooth(15, 16, lt)));
       });
       mic.forEach((m, i) => {
         const u = frac(lt * 0.25 + i / mic.length);
-        move(m, lerp(330, 556, u), 80 + (i * 37) % 200);
-        show(m, smooth(12.5, 13.5, lt) * Math.sin(Math.PI * u));
+        move(m, lerp(330, 556, u), 80 + (i * 37) % 200 + 5 * Math.sin(u * 5 + i));
+        show(m, smooth(12.5, 13.5, lt) * env(u, 0.25));
       });
       if (lt < 4.5) return 'Fat clumps into big droplets in watery chyme. Bile salts arrive: one end sticks to water, the other to fat, so they coat the droplet.';
       if (lt < 10.5) return 'Mixing breaks it into smaller and smaller coated droplets. Same amount of fat, much more surface (emulsification).';
@@ -407,6 +422,10 @@ const bile = {
 const villi = {
   id: 'l7-villi', title: 'Villi, and how glucose gets absorbed', dur: 10,
   build(svg) {
+    fx(svg);
+    // painted artwork underneath; drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l7-villi');
+    E('image', { href: new URL('./art/l7-villi.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     // left: swaying villi
     E('rect', { x: 10, y: 250, width: 270, height: 60, rx: 10, class: 'b-epi' }, g);
@@ -428,14 +447,15 @@ const villi = {
     T(g, 397, CY1 + 26, 'GLUT-2', 'bs b-strong', { 'text-anchor': 'middle' });
     const pump = E('rect', { x: 520, y: CY1 - 14, width: 26, height: 22, rx: 8, class: 'b-pump' }, g);
     T(g, 533, CY1 + 26, 'Na⁺/K⁺ pump', 'bs b-strong', { 'text-anchor': 'middle' });
-    const atp = T(g, 556, CY1 - 20, 'ATP', 'bs b-atp');
+    const atp = pill(g, 560, CY1 - 22, 'ATP', 'bs b-atp').parentNode;
+    atp.firstChild.classList.add('warm');
     const na = Array.from({ length: 3 }, () => E('circle', { r: 7, class: 'p-salt' }, g));
     const glu = Array.from({ length: 3 }, () => E('path', { d: 'M-8,0 L-4,-7 L4,-7 L8,0 L4,7 L-4,7z', class: 'b-sugar' }, g));
     const k = Array.from({ length: 2 }, () => E('circle', { r: 6, class: 'p-k' }, g));
     const lumNa = Array.from({ length: 8 }, (_, i) => E('circle', { r: 6, cx: 340 + i * 34, cy: 46 + (i % 2) * 18, class: 'p-salt faint' }, g));
     void lumNa;
     T(g, 330, 300 - 6, '', 'bs');
-    T(g, 18, 26, '● Na⁺  ', 'bs b-salt-t'); T(g, 66, 26, '⬢ glucose  ', 'bs b-glu-t'); T(g, 150, 26, '● K⁺', 'bs b-k-t');
+    T(g, 40, 26, '● Na⁺  ', 'bs b-salt-t'); T(g, 88, 26, '⬢ glucose  ', 'bs b-glu-t'); T(g, 172, 26, '● K⁺', 'bs b-k-t');
     return (lt, _dt, t) => {
       fingers.forEach((f, i) => {
         const x = 30 + i * 44, sway = Math.sin(t * 1.4 + i * 0.8) * 8;
@@ -483,18 +503,22 @@ const villi = {
 const fat = {
   id: 'l7-fat', title: 'Fats take a different exit: the lacteal', dur: 12,
   build(svg) {
+    fx(svg);
+    // painted artwork underneath; drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l7-fat');
+    E('image', { href: new URL('./art/l7-fat.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     T(g, 320, 22, 'gut lumen', 'bs b-strong', { 'text-anchor': 'middle' });
     E('rect', { x: 120, y: 80, width: 400, height: 150, rx: 22, class: 'b-cellbody' }, g);
     for (let x = 130; x < 512; x += 12) E('rect', { x, y: 62, width: 7, height: 22, rx: 3.5, class: 'b-microvillus' }, g);
     T(g, 136, 106, 'intestinal cell', 'bs b-strong');
-    E('ellipse', { cx: 320, cy: 160, rx: 70, ry: 30, class: 'b-er' }, g);
+    E('ellipse', { cx: 320, cy: 160, rx: 70, ry: 30, class: 'b-er fxb-breathe' }, g);
     T(g, 320, 206, 'rebuilds triglycerides', 'bs', { 'text-anchor': 'middle' });
-    E('rect', { x: 120, y: 268, width: 180, height: 46, rx: 22, class: 'b-lymphv' }, g);
+    const lymph = E('rect', { x: 120, y: 268, width: 180, height: 46, rx: 22, class: 'b-lymphv' }, g);
     T(g, 210, 340, 'lacteal (lymph)', 'bs b-strong', { 'text-anchor': 'middle' });
     E('rect', { x: 340, y: 268, width: 180, height: 46, rx: 22, class: 'b-bloodband' }, g);
     T(g, 430, 340, 'blood capillary', 'bs b-strong', { 'text-anchor': 'middle' });
-    const block = T(g, 430, 296, '✕ too big', 'bs b-strong b-acid-t', { 'text-anchor': 'middle' });
+    const block = pill(g, 430, 296, '✕ too big', 'bs b-strong b-acid-t', { 'text-anchor': 'middle' }).parentNode;
     const mic = E('g', {}, g); E('circle', { r: 16, class: 'b-coat' }, mic); E('circle', { r: 10, class: 'b-fatdrop' }, mic);
     const bits = Array.from({ length: 6 }, () => E('circle', { r: 4, class: 'b-fatdrop' }, g));
     const chylo = E('g', {}, g); E('circle', { r: 20, class: 'b-chylo' }, chylo); E('circle', { r: 13, class: 'b-fatdrop' }, chylo);
@@ -507,7 +531,8 @@ const fat = {
         at(b, p[0], p[1]); show(b, smooth(2.2, 2.6, lt) * (1 - smooth(5.6, 6.2, lt)));
       });
       const cp = keys(lt, [[5.6, [320, 160]], [7.4, [320, 222]], [9, [210, 291]], [11.5, [140, 291]]]);
-      move(chylo, cp[0], cp[1]); show(chylo, smooth(5.6, 6.2, lt) * (1 - smooth(11.4, 12, lt)));
+      move(chylo, cp[0], cp[1], 1 + 0.03 * Math.sin(lt * 3));
+      lymph.classList.toggle('fxb-hl', lt > 8.8); show(chylo, smooth(5.6, 6.2, lt) * (1 - smooth(11.4, 12, lt)));
       const gp = keys(lt, [[7.4, [320, 222]], [8.4, [404, 262]]]);
       move(ghost, gp[0], gp[1]); show(ghost, win(lt, 7.6, 8.6, 0.3) * 0.5); show(block, win(lt, 8, 9.6, 0.3));
       if (lt < 2.4) return 'A micelle carries digested fat (fatty acids + monoglycerides) to the cell';

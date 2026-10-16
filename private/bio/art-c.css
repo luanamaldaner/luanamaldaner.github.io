@@ -1,0 +1,38 @@
+/* painted-art hides, group C */
+
+.bio-svg.art-l8-neuron :is(.b-soma, .b-nucleus, .b-axon, .b-myelin, .b-target) { opacity: 0 !important; }
+.bio-svg.art-l8-neuron .b-dendrite { opacity: 0 !important; }
+.bio-svg.art-l8-neuron .b-dendrite.glow { opacity: .5 !important; }
+.bio-svg.art-l8-neuron .b-bulb { fill: transparent !important; stroke: transparent !important; }
+.bio-svg.art-l8-neuron .b-bulb.glow { fill: var(--b-gold) !important; opacity: .85; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--b-gold) 80%, transparent)) !important; }
+
+.bio-svg.art-l8-ap :is(.b-outside, .b-inside, .b-lipid, .b-channel) { opacity: 0 !important; }
+
+.bio-svg.art-l8-race :is(.b-axonbar, .b-myelin) { opacity: 0 !important; }
+
+.bio-svg.art-l8-synapse :is(.b-terminal, .b-postcell, .b-receptor2) { opacity: 0 !important; }
+
+.bio-svg.art-l8-ans :is(.b-bodyfig, .b-limb, .b-cns, .b-cord, .b-nerve, .b-panel, .b-eye-w, .b-iris) { opacity: 0 !important; }
+
+.bio-svg.art-l9-signals :is(.b-sigcell, .b-vesselband, .b-axon) { opacity: 0 !important; }
+.bio-svg.art-l9-signals .b-colbox { fill: transparent !important; stroke: transparent !important; filter: none !important; }
+.bio-svg.art-l9-signals .b-colbox.on { fill: color-mix(in srgb, var(--b-gold) 10%, transparent) !important; stroke: var(--b-gold) !important; stroke-width: 2.5 !important; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--b-gold) 40%, transparent)) !important; }
+
+.bio-svg.art-l9-receptors :is(.b-cellbody, .b-transporter, .b-pump, .b-nucleusbig, .b-dna) { opacity: 0 !important; }
+
+.bio-svg.art-l9-pit :is(.b-brain, .b-stalk) { opacity: 0 !important; }
+.bio-svg.art-l9-pit :is(.b-ant, .b-post) { fill: transparent !important; stroke: transparent !important; filter: none !important; }
+.bio-svg.art-l9-pit .b-ant.on { stroke: var(--b-hor) !important; stroke-width: 3 !important; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--b-hor) 55%, transparent)) !important; }
+.bio-svg.art-l9-pit .b-post.on { stroke: var(--b-k) !important; stroke-width: 3 !important; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--b-k) 55%, transparent)) !important; }
+
+.bio-svg.art-l10-layers :is(.b-outside, .b-tissue-bg) { opacity: 0 !important; }
+.bio-svg.art-l10-layers :is(.b-skin, .b-mucusband) { fill: transparent !important; stroke: transparent !important; }
+.bio-svg.art-l10-layers .fxb-hl > .b-skin, .bio-svg.art-l10-layers .b-mucusband.fxb-hl { stroke: color-mix(in srgb, var(--b-gold) 70%, transparent) !important; stroke-width: 1.4 !important; }
+
+.bio-svg.art-l10-complement .b-bact.big { opacity: 0 !important; }
+.bio-svg.art-l10-complement .b-bloodband { fill: transparent !important; stroke: transparent !important; }
+.bio-svg.art-l10-complement .b-bloodband.fxb-hl { stroke: var(--b-gold) !important; stroke-width: 2.5 !important; }
+
+.bio-svg.art-l10-inflam :is(.b-tissue-bg, .b-splinter) { opacity: 0 !important; }
+
+.bio-svg.art-l10-antibody :is(.b-ab-heavy.big, .b-ab-light.big, .b-ab-var) { opacity: 0 !important; }

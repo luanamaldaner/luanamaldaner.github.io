@@ -1,6 +1,7 @@
 // Lecture 6 · Ch 29.2 + supplement · Water and ion balance, kidney function
 
 import { E, T, Track, at, move, show, setText, smooth, keys, frac, lerp, clamp, TAU, win, arrowDefs } from './kit.js';
+import { fx, pill, pillText, pillAt, ease, eased, env, flow, breathe, scaleAt } from './fx-b.js';
 
 // ---------------------------------------------------------------- 1. fish in fresh water vs seawater
 
@@ -9,17 +10,27 @@ const fish = {
   vars: { mode: 'fresh' },
   build(svg, s, ui) {
     ui.seg('mode', [['fresh', 'Freshwater fish'], ['sea', 'Saltwater fish'], ['salmon', 'Salmon (switches)']], 'Water');
+    fx(svg);
+    // painted artwork underneath; drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l6-fish');
+    E('image', { href: new URL('./art/l6-fish.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
-    const bgF = E('rect', { x: 0, y: 0, width: 640, height: 360, class: 'b-fresh' }, g);
+    E('rect', { x: 0, y: 0, width: 640, height: 360, class: 'b-fresh' }, g);
     const bgS = E('rect', { x: 0, y: 0, width: 640, height: 360, class: 'b-sea' }, g);
     const seaSalt = Array.from({ length: 40 }, (_, i) => E('circle', { cx: (i * 97) % 630 + 5, cy: (i * 53) % 350 + 5, r: 2.2, class: 'p-salt faint' }, g));
     const CX = 320, CY = 180, RX = 150, RY = 62;
-    E('path', { d: `M${CX - RX},${CY} C${CX - 90},${CY - 80} ${CX + 90},${CY - 80} ${CX + RX},${CY} C${CX + 90},${CY + 80} ${CX - 90},${CY + 80} ${CX - RX},${CY}z M${CX - RX + 6},${CY} L${CX - RX - 50},${CY - 44} L${CX - RX - 40},${CY} L${CX - RX - 50},${CY + 44}z`, class: 'b-fish' }, g);
-    E('circle', { cx: CX + 105, cy: CY - 14, r: 6, class: 'b-eye' }, g);
-    const gill = E('path', { d: `M${CX + 70},${CY - 34} q-14,34 0,68`, class: 'b-gill' }, g);
-    const inside = T(g, CX - 20, CY + 5, '', 'bl b-strong', { 'text-anchor': 'middle' });
-    const outside = T(g, 16, 28, '', 'bl b-strong');
-    const hormone = T(g, 624, 28, '', 'bl b-strong b-hor-t', { 'text-anchor': 'end' });
+    const fishG = E('g', {}, g);
+    const tail = E('path', { d: `M${CX - RX + 8},${CY} L${CX - RX - 50},${CY - 44} Q${CX - RX - 34},${CY} ${CX - RX - 50},${CY + 44}z`, class: 'b-fish' }, fishG);
+    E('path', { d: `M${CX - RX},${CY} C${CX - 90},${CY - 80} ${CX + 90},${CY - 80} ${CX + RX},${CY} C${CX + 90},${CY + 80} ${CX - 90},${CY + 80} ${CX - RX},${CY}z`, class: 'b-fish' }, fishG);
+    E('path', { d: `M${CX - 70},${CY - 44} C${CX - 30},${CY - 60} ${CX + 30},${CY - 60} ${CX + 70},${CY - 44}`, class: 'fxb-sheen-line' }, fishG);
+    E('circle', { cx: CX + 105, cy: CY - 14, r: 6, class: 'b-eye' }, fishG);
+    E('circle', { cx: CX + 107, cy: CY - 16, r: 1.8, class: 'fxb-glint' }, fishG);
+    const gillGlow = E('path', { d: `M${CX + 70},${CY - 34} q-14,34 0,68`, class: 'fxb-gillglow' }, fishG);
+    E('path', { d: `M${CX + 70},${CY - 34} q-14,34 0,68`, class: 'b-gill' }, fishG);
+    const inside = T(fishG, CX - 20, CY + 5, '', 'bl b-strong', { 'text-anchor': 'middle' });
+    const outside = pill(g, 44, 30, '', 'bl b-strong');
+    const hormone = pill(g, 598, 30, '', 'bs b-strong b-hor-t', { 'text-anchor': 'end' });
+    hormone.previousSibling.classList.add('rose');
     const sets = { fresh: E('g', {}, g), sea: E('g', {}, g) };
     const parts = {};
     for (const [mode, root] of Object.entries(sets)) {
@@ -30,23 +41,23 @@ const fish = {
         pump: Array.from({ length: 6 }, () => E('circle', { r: 4.5, class: 'p-salt' }, root)),
         urine: Array.from({ length: fresh ? 10 : 3 }, () => E('circle', { r: 4, class: 'p-water' }, root)),
         drink: fresh ? [] : Array.from({ length: 8 }, (_, i) => E('circle', { r: 4, class: i % 3 ? 'p-water' : 'p-salt' }, root)),
-        atp: E('text', { class: 'bs b-atp', 'text-anchor': 'middle' }, root),
       };
-      p.atp.textContent = 'ATP';
-      const lbl = (x, y, text, anchor = 'start') => T(root, x, y, text, 'bs b-strong', { 'text-anchor': anchor });
+      const lbl = (x, y, text, anchor = 'start') => pill(root, x, y, text, 'bs b-strong', { 'text-anchor': anchor });
       if (fresh) {
-        lbl(24, 120, 'water rushes IN →'); lbl(24, 250, '← salt leaks OUT');
-        lbl(CX + 96, 92, 'gills pump salt IN', 'start');
+        lbl(44, 120, 'water rushes IN →'); lbl(44, 250, '← salt leaks OUT');
+        lbl(CX + 138, 66, 'gills pump salt IN', 'start');
         lbl(CX - 150, 330, 'lots of dilute urine', 'start');
       } else {
-        lbl(24, 120, '← water leaks OUT'); lbl(24, 250, 'salt leaks IN →');
-        lbl(CX + 96, 92, 'gills pump salt OUT', 'start');
+        lbl(44, 120, '← water leaks OUT'); lbl(44, 250, 'salt leaks IN →');
+        lbl(CX + 138, 66, 'gills pump salt OUT', 'start');
         lbl(CX - 150, 330, 'very little urine', 'start');
-        lbl(616, 230, 'drinks seawater', 'end');
+        lbl(598, 214, 'drinks seawater', 'end');
       }
+      p.atp = pill(root, CX + 108, CY - 46, 'ATP', 'bs b-atp');
+      p.atp.previousSibling.classList.add('warm');
     }
-    T(g, 16, 350, '● water   ', 'bs b-water-t');
-    T(g, 80, 350, '● salt ions (Na⁺, Cl⁻)', 'bs b-salt-t');
+    T(g, 44, 350, '● water   ', 'bs b-water-t');
+    T(g, 108, 350, '● salt ions (Na⁺, Cl⁻)', 'bs b-salt-t');
     const edge = a => [CX + (RX - 18) * Math.cos(a), CY + (RY - 8) * Math.sin(a)];
     const far = a => [CX + (RX + 70) * Math.cos(a), CY + (RY + 70) * Math.sin(a)];
     return (lt, _dt, t) => {
@@ -54,38 +65,45 @@ const fish = {
       if (s.vars.mode === 'fresh') k = 0;
       else if (s.vars.mode === 'sea') k = 1;
       else k = smooth(0.42, 0.58, lt / 12) - smooth(0.92, 1, lt / 12) + (lt < 0.5 ? 0 : 0);
-      show(bgS, k); seaSalt.forEach(c => show(c, k));
+      show(bgS, k);
+      seaSalt.forEach((c, i) => { if (k > 0.004) at(c, (i * 97) % 630 + 5 + 3 * Math.sin(t * 0.5 + i), (i * 53) % 350 + 5 + 2 * Math.cos(t * 0.4 + i * 1.3)); show(c, k); });
       show(sets.fresh, 1 - k); show(sets.sea, k);
+      // the fish idles: a slow bob and a lazy tail
+      fishG.setAttribute('transform', `translate(0 ${(2.5 * Math.sin(t * 1.1)).toFixed(2)})`);
+      tail.setAttribute('transform', `rotate(${(5 * Math.sin(t * 2.2)).toFixed(2)} ${CX - RX + 8} ${CY})`);
+      const pumpBeat = 0.5 + 0.5 * Math.sin(TAU * t * 0.8);
+      show(gillGlow, 0.2 + 0.6 * pumpBeat);
       setText(inside, k < 0.5 ? 'body is saltier than the water' : 'body is less salty than the sea');
-      setText(outside, k < 0.5 ? 'Fresh water (hardly any salt)' : 'Seawater (very salty)');
-      setText(hormone, s.vars.mode !== 'salmon' ? '' : k < 0.5 ? 'prolactin: “freshwater mode”' : 'cortisol: “saltwater mode”');
+      pillText(outside, k < 0.5 ? 'Fresh water (hardly any salt)' : 'Seawater (very salty)');
+      pillText(hormone, s.vars.mode !== 'salmon' ? '' : k < 0.5 ? 'prolactin: “freshwater mode”' : 'cortisol: “saltwater mode”');
+      show(hormone.parentNode, s.vars.mode === 'salmon' ? 1 : 0);
       for (const mode of ['fresh', 'sea']) {
         const p = parts[mode], inward = mode === 'fresh';
+        if ((inward ? 1 - k : k) < 0.004) continue;
         p.water.forEach((w, i) => {
           const a = (i / p.water.length) * TAU + 0.3, u = frac(t * 0.22 + i * 0.37);
-          const [x, y] = inward ? lerpP(far(a), edge(a), u) : lerpP(edge(a), far(a), u);
-          at(w, x, y); show(w, Math.sin(Math.PI * u));
+          const [x, y] = inward ? flow(far(a), edge(a), ease(u), i, 12, 3, t) : flow(edge(a), far(a), ease(u), i, 12, 3, t);
+          at(w, x, y); show(w, env(u));
         });
         p.salt.forEach((w, i) => {
           const a = (i / p.salt.length) * TAU + 1.1, u = frac(t * 0.16 + i * 0.29);
-          const [x, y] = inward ? lerpP(edge(a), far(a), u) : lerpP(far(a), edge(a), u);
-          at(w, x, y); show(w, Math.sin(Math.PI * u));
+          const [x, y] = inward ? flow(edge(a), far(a), ease(u), i, -12, 3, t) : flow(far(a), edge(a), ease(u), i, -12, 3, t);
+          at(w, x, y); show(w, env(u));
         });
-        const G0 = [CX + 120, 70], G1 = [CX + 66, CY - 10];
+        const G0 = [CX + 124, 64], G1 = [CX + 66, CY - 12];
         p.pump.forEach((w, i) => {
           const u = frac(t * 0.35 + i / p.pump.length);
-          const [x, y] = inward ? lerpP(G0, G1, u) : lerpP(G1, G0, u);
-          at(w, x + 6 * Math.sin(u * 9 + i), y); show(w, Math.sin(Math.PI * u));
+          const [x, y] = inward ? flow(G0, G1, u, i, 16, 2, t) : flow(G1, G0, u, i, 16, 2, t);
+          at(w, x, y); show(w, env(u, 0.25));
         });
-        p.atp.setAttribute('x', CX + 98); p.atp.setAttribute('y', CY - 40);
-        show(p.atp, 0.4 + 0.6 * Math.max(0, Math.sin(TAU * t * 0.8)));
+        show(p.atp.parentNode, 0.45 + 0.55 * pumpBeat);
         p.urine.forEach((w, i) => {
           const u = frac(t * 0.3 + i / p.urine.length);
-          at(w, CX - 80 - u * 30, CY + 50 + u * 70); show(w, Math.sin(Math.PI * u));
+          at(w, CX - 80 - u * 30 + 2 * Math.sin(u * 6 + i), CY + 50 + ease(u) * 70); show(w, env(u));
         });
         p.drink.forEach((w, i) => {
           const u = frac(t * 0.3 + i / p.drink.length);
-          at(w, lerp(620, CX + RX + 2, u), CY + 4 + 6 * Math.sin(u * 8 + i)); show(w, Math.sin(Math.PI * u));
+          at(w, lerp(620, CX + RX + 2, ease(u)), CY + 4 + 5 * Math.sin(u * 8 + i)); show(w, env(u));
         });
       }
       if (s.vars.mode === 'salmon') return k < 0.5 ? 'In rivers, salmon act like freshwater fish (prolactin flips the gill pumps to pull salt IN)' : 'In the ocean, cortisol flips the gill “chloride cells” to pump salt OUT';
@@ -113,6 +131,7 @@ const lerpP = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k)];
 const nitrogen = {
   id: 'l6-nitrogen', title: 'Getting rid of nitrogen: ammonia, urea, uric acid', dur: 15,
   build(svg) {
+    fx(svg);
     const g = E('g', {}, svg);
     const COLS = [
       ['🐟', 'Ammonia', 'NH₃', ['fish and most', 'water animals'], [1, 1, 0.15]],
@@ -124,30 +143,37 @@ const nitrogen = {
       const x = 252 + i * 140;
       const grp = E('g', {}, g);
       const box = E('rect', { x: x - 68, y: 10, width: 136, height: 340, rx: 16, class: 'b-colbox' }, grp);
-      T(grp, x, 52, emoji, 'b-emoji', { 'text-anchor': 'middle' });
+      T(grp, x, 52, emoji, `b-emoji fxb-float d${i}`, { 'text-anchor': 'middle' });
       T(grp, x, 82, name, 'bl b-strong', { 'text-anchor': 'middle' });
       T(grp, x, 100, f, 'bs', { 'text-anchor': 'middle' });
       T(grp, x, 322, who[0], 'bs', { 'text-anchor': 'middle' }); T(grp, x, 337, who[1], 'bs', { 'text-anchor': 'middle' });
       const bars = vals.map((v, r) => {
         const y = 140 + r * 64;
         E('rect', { x: x - 55, y, width: 110, height: 16, rx: 8, class: 'b-track' }, grp);
-        return { el: E('rect', { x: x - 55, y, width: 0, height: 16, rx: 8, class: `b-barfill r${r}` }, grp), v };
+        return { el: E('rect', { x: x - 55, y, width: 0, height: 16, rx: 8, class: `b-barfill r${r}` }, grp), v, r };
       });
-      const drops = Array.from({ length: 6 }, (_, k) => E('path', { d: 'M0,-6 C4,0 5,3 0,6 C-5,3 -4,0 0,-6z', class: 'b-drop-w' }, grp));
-      return { box, bars, drops, x, vals };
+      const drops = Array.from({ length: 6 }, () => E('path', { d: 'M0,-6 C4,0 5,3 0,6 C-5,3 -4,0 0,-6z', class: 'b-drop-w' }, grp));
+      return { grp, box, bars, drops, x, vals, f: 0 };
     });
-    ROWS.forEach((r, i) => T(g, 20, 153 + i * 64, r, 'bs b-strong'));
-    return lt => {
-      const grow = 1;
+    ROWS.forEach((r, i) => T(g, 40, 153 + i * 64, r, 'bs b-strong'));
+    return (lt, dt) => {
       const focus = Math.min(2, Math.floor(lt / 5));
       cols.forEach((c, i) => {
-        c.bars.forEach(b => b.el.setAttribute('width', (110 * b.v * grow).toFixed(1)));
+        // bars sweep in at the start of each loop, then hold
+        c.bars.forEach(b => {
+          const grow = eased(0.2 + i * 0.18 + b.r * 0.12, 1.3 + i * 0.18 + b.r * 0.12, lt) * (1 - eased(14.5, 15, lt));
+          b.el.setAttribute('width', Math.max(0, 110 * b.v * grow).toFixed(1));
+        });
         c.box.classList.toggle('on', i === focus);
+        // the column being talked about lifts a little, the others go quiet
+        c.f += ((i === focus ? 1 : 0) - c.f) * Math.min(1, (dt || 1) * 5);
+        scaleAt(c.grp, c.x, 180, 1 + 0.025 * c.f);
+        c.grp.setAttribute('opacity', (0.62 + 0.38 * c.f).toFixed(3));
         const nd = Math.round(c.vals[1] * 6);
         c.drops.forEach((d, k) => {
           const u = frac(lt * 0.6 + k / 6);
-          move(d, c.x - 40 + k * 16, 222 + u * 26);
-          show(d, k < nd ? Math.sin(Math.PI * u) : 0);
+          move(d, c.x - 40 + k * 16, 222 + ease(u) * 26);
+          show(d, k < nd ? env(u, 0.3) : 0);
         });
       });
       return [
@@ -184,36 +210,44 @@ const nephron = {
   vars: { adh: 'on' },
   build(svg, s, ui) {
     ui.seg('adh', [['on', 'ADH high (thirsty)'], ['off', 'ADH low (drank lots)']], 'ADH');
+    const fid = fx(svg);
+    // painted artwork underneath; drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l6-nephron');
+    E('image', { href: new URL('./art/l6-nephron.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     E('rect', { x: 0, y: 0, width: 640, height: 150, class: 'b-cortex' }, g);
     const defs = E('defs', {}, svg);
     const grad = E('linearGradient', { id: 'b-med-grad', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
     E('stop', { offset: '0', class: 'b-med-top' }, grad); E('stop', { offset: '1', class: 'b-med-bot' }, grad);
-    E('rect', { x: 0, y: 150, width: 640, height: 210, fill: 'url(#b-med-grad)' }, g);
-    T(g, 590, 22, 'CORTEX', 'bs b-strong', { 'text-anchor': 'end' });
-    T(g, 590, 192, 'MEDULLA', 'bs b-strong', { 'text-anchor': 'end' });
-    E('rect', { x: 606, y: 152, width: 12, height: 196, rx: 6, fill: 'url(#b-med-grad)', class: 'b-scale' }, g);
-    T(g, 600, 210, 'salt level', 'bs', { 'text-anchor': 'end' });
-    [[300, 160], [1200, 346]].forEach(([v, y]) => T(g, 600, y + 4, `${v}`, 'bs b-strong', { 'text-anchor': 'end' }));
+    E('rect', { x: 0, y: 150, width: 640, height: 210, fill: 'url(#b-med-grad)', class: 'b-medulla' }, g);
+    const concColor = c => `hsl(${lerp(196, 38, clamp((c - 100) / 1100)).toFixed(0)} ${lerp(70, 85, clamp((c - 100) / 1100)).toFixed(0)}% ${lerp(62, 52, clamp((c - 100) / 1100)).toFixed(0)}%)`;
+    // the salt scale uses the same colours as the flowing filtrate
+    const sg = E('linearGradient', { id: `${fid}-scale`, x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+    for (let k = 0; k <= 4; k++) E('stop', { offset: k / 4, style: `stop-color: ${concColor(300 + 900 * k / 4)}` }, sg);
+    T(g, 584, 22, 'CORTEX', 'bs b-strong', { 'text-anchor': 'end' });
+    T(g, 584, 196, 'MEDULLA', 'bs b-strong', { 'text-anchor': 'end' });
+    E('rect', { x: 590, y: 152, width: 10, height: 196, rx: 5, fill: `url(#${sg.id})`, class: 'fxb-scale' }, g);
+    T(g, 584, 212, 'salt level', 'bs', { 'text-anchor': 'end' });
+    [[300, 160], [1200, 346]].forEach(([v, y]) => T(g, 584, y + 4, `${v}`, 'bs b-strong', { 'text-anchor': 'end' }));
     // blood side
     E('path', { d: 'M20,60 C50,60 70,74 92,76', class: 'b-art' }, g);
     E('path', { d: 'M92,84 C70,90 52,108 22,112', class: 'b-art thin' }, g);
-    T(g, 16, 52, 'blood in', 'bs');
-    T(g, 16, 128, 'blood out', 'bs');
-    E('path', { d: 'M128,76 a34,34 0 1 0 0,8', class: 'b-capsule' }, g);
+    T(g, 22, 50, 'blood in', 'bs');
+    T(g, 22, 130, 'blood out', 'bs');
+    const capsule = E('path', { d: 'M128,76 a34,34 0 1 0 0,8', class: 'b-capsule' }, g);
     const glom = E('path', { d: 'M92,80 c4,-22 26,-22 24,-4 c-2,14 -22,10 -18,-4 c3,-12 22,-12 22,2 c0,14 -22,22 -26,8 c-3,-10 10,-14 16,-6', class: 'b-glom' }, g);
     // tubule
     const tub = NEPH.map(d => E('path', { d, class: 'b-tubule' }, g));
     NEPH.forEach(d => E('path', { d, class: 'b-lumen-t' }, g));
     const tr = new Track(g, NEPH);
     const aqua = Array.from({ length: 6 }, (_, i) => E('rect', { x: 483, y: 170 + i * 28, width: 14, height: 6, rx: 3, class: 'b-aqua' }, g));
+    // one soft pill per part; the one the caption is about turns warm
     const labels = [
-      [60, 150, 'glomerulus +', 'Bowman’s capsule'], [150, 128, 'proximal tubule', ''], [206, 250, 'descending', 'limb'],
-      [300, 250, 'ascending', 'limb'], [372, 76, 'distal tubule', ''], [500, 128, 'collecting', 'duct'],
-    ];
-    labels.forEach(([x, y, a, b]) => { T(g, x, y, a, 'bs b-strong', { 'text-anchor': x < 230 && x > 150 && y > 200 ? 'end' : 'start' }); if (b) T(g, x, y + 14, b, 'bs b-strong', { 'text-anchor': x < 230 && x > 150 && y > 200 ? 'end' : 'start' }); });
+      [40, 154, 'glomerulus + Bowman’s capsule', 'start'], [236, 122, 'proximal tubule', 'end'], [238, 240, 'descending limb', 'end'],
+      [302, 240, 'ascending limb', 'start'], [384, 62, 'distal tubule', 'start'], [506, 132, 'collecting duct', 'start'],
+    ].map(([x, y, text, anchor]) => pill(g, x, y, text, 'bs b-strong', { 'text-anchor': anchor }));
     // flowing filtrate
-    const flow = Array.from({ length: 40 }, () => E('circle', { r: 3.4 }, g));
+    const flowDots = Array.from({ length: 40 }, () => E('circle', { r: 3.4, class: 'fxb-flowdot' }, g));
     // exchange streams: [from, to, class, count]
     const streams = [
       { key: 'filt', a: [100, 72], b: [126, 72], cls: 'p-water', n: 5, phase: 0 },
@@ -223,17 +257,16 @@ const nephron = {
       { key: 'desc', a: [246, 200], b: [196, 204], cls: 'p-water', n: 4, phase: 2 },
       { key: 'desc', a: [246, 280], b: [196, 286], cls: 'p-water', n: 4, phase: 2 },
       { key: 'asc', a: [294, 200], b: [340, 204], cls: 'p-salt', n: 4, phase: 2 },
-      { key: 'asc', a: [294, 270], b: [340, 276], cls: 'p-salt', n: 4, phase: 2 },
-      { key: 'dct', a: [372, 40], b: [366, 92], cls: 'p-k', n: 4, phase: 3 },
+      { key: 'asc', a: [294, 274], b: [340, 280], cls: 'p-salt', n: 4, phase: 2 },
+      { key: 'dct', a: [366, 30], b: [366, 92], cls: 'p-k', n: 4, phase: 3 },
       { key: 'cd', a: [486, 190], b: [440, 196], cls: 'p-water', n: 4, phase: 4 },
       { key: 'cd', a: [486, 270], b: [440, 276], cls: 'p-water', n: 4, phase: 4 },
-      { key: 'cd', a: [494, 230], b: [540, 236], cls: 'p-water', n: 4, phase: 4 },
+      { key: 'cd', a: [494, 236], b: [540, 242], cls: 'p-water', n: 4, phase: 4 },
     ];
     for (const st of streams) st.dots = Array.from({ length: st.n }, () => E('circle', { r: 3.6, class: st.cls }, g));
-    const urine = Array.from({ length: 8 }, () => E('path', { d: 'M0,-7 C4,0 6,3 0,7 C-6,3 -4,0 0,-7z' }, g));
-    T(g, 330, 316, 'urine leaving:', 'bs'); const out = T(g, 330, 332, '', 'bs b-strong');
+    const urine = Array.from({ length: 8 }, () => E('path', { d: 'M0,-7 C4,0 6,3 0,7 C-6,3 -4,0 0,-7z', class: 'fxb-drop' }, g));
+    T(g, 330, 316, 'urine leaving:', 'bs'); const out = pill(g, 330, 333, '', 'bs b-strong');
     T(g, 330, 22, '● water', 'bs b-water-t'); T(g, 330, 38, '● salt (Na⁺)', 'bs b-salt-t'); T(g, 420, 22, '● glucose', 'bs b-glu-t'); T(g, 420, 38, '● K⁺, H⁺', 'bs b-k-t');
-    const concColor = c => `hsl(${lerp(196, 38, clamp((c - 100) / 1100)).toFixed(0)} ${lerp(70, 85, clamp((c - 100) / 1100)).toFixed(0)}% ${lerp(62, 52, clamp((c - 100) / 1100)).toFixed(0)}%)`;
     const conc = (u, adh) => {
       const [i, k] = tr.seg(u);
       if (i === 0) return 300;
@@ -242,36 +275,45 @@ const nephron = {
       if (i === 3) return 100;
       return adh ? lerp(100, 1150, smooth(0.1, 1, k)) : 100;
     };
-    return (lt, _dt, t) => {
+    let aq = s.vars.adh === 'on' ? 1 : 0.12;
+    return (lt, dt, t) => {
       const adh = s.vars.adh === 'on';
       const step = Math.min(4, Math.floor(lt / 5));
       const segOn = [[], [0], [1, 2], [3], [4]][step];
+      const labOn = [[0], [1], [2, 3], [4], [5]][step];
       tub.forEach((p, i) => p.classList.toggle('glow', segOn.includes(i)));
       glom.classList.toggle('glow', step === 0);
-      flow.forEach((c, i) => {
-        const u = frac(t * 0.035 + i / flow.length);
+      labels.forEach((l, i) => l.previousSibling.classList.toggle('warm', labOn.includes(i)));
+      // the glomerulus throbs with each heartbeat
+      const beat = Math.exp(-((frac(t * 1.1) - 0.1) ** 2) / 0.006);
+      scaleAt(glom, 106, 79, 1 + 0.06 * beat);
+      scaleAt(capsule, 112, 80, 1 + 0.012 * beat);
+      flowDots.forEach((c, i) => {
+        const u = frac(t * 0.035 + i / flowDots.length);
         const [x, y] = tr.pos(u);
         at(c, x, y);
         c.style.fill = concColor(conc(u, adh));
       });
       for (const st of streams) {
         const active = st.key !== 'cd' || adh;
+        const emph = step === st.phase ? 1 : 0.4;
         st.dots.forEach((d, i) => {
           const u = frac(t * 0.5 + i / st.n + st.phase * 0.13);
-          at(d, lerp(st.a[0], st.b[0], u), lerp(st.a[1], st.b[1], u));
-          const emph = step === st.phase ? 1 : 0.45;
-          show(d, active ? Math.sin(Math.PI * u) * emph : 0);
+          const [x, y] = flow(st.a, st.b, ease(u), i, 5, 1.5, t);
+          at(d, x, y);
+          show(d, active ? env(u, 0.25) * emph : 0);
         });
       }
-      aqua.forEach(a => show(a, adh ? 1 : 0.12));
+      aq += ((adh ? 1 : 0.12) - aq) * Math.min(1, (dt || 1) * 3);
+      aqua.forEach((a, i) => { show(a, clamp(aq * 1.3 - i * 0.05)); scaleAt(a, 490, 173 + i * 28, 0.6 + 0.4 * aq); });
       urine.forEach((d, i) => {
         const n = adh ? 2 : 8;
         const u = frac(t * 0.45 + i / 8);
-        move(d, 490, 334 + u * 22, adh ? 0.9 : 1.1);
+        move(d, 490, 334 + ease(u) * 22, adh ? 0.9 : 1.1);
         d.style.fill = concColor(adh ? 1150 : 100);
-        show(d, i < n ? Math.sin(Math.PI * u) : 0);
+        show(d, i < n ? env(u, 0.3) : 0);
       });
-      setText(out, adh ? 'a little, very concentrated' : 'lots, very dilute');
+      pillText(out, adh ? 'a little, very concentrated' : 'lots, very dilute');
       return [
         '① Filtration: blood pressure pushes water and small solutes out of the glomerulus into Bowman’s capsule. Cells and big proteins stay in the blood.',
         '② Reabsorption: the proximal tubule takes back most of it, including ALL the glucose and amino acids and most of the salt and water',
@@ -315,50 +357,76 @@ const RA_LINKS = ['M200,56 L230,56', 'M410,56 L440,56', 'M530,88 L530,128', 'M44
 const raas = {
   id: 'l6-raas', title: 'Renin–angiotensin–aldosterone: raising blood pressure', dur: 18,
   build(svg) {
+    fx(svg);
     const g = E('g', {}, svg);
     const head = arrowDefs(svg, 'b-m-raas', 'b-head ink');
     const links = RA_LINKS.map(d => E('path', { d, class: 'b-link', 'marker-end': head }, g));
     const tr = new Track(g, RA_LINKS);
-    const nodes = RA_NODES.map(([x, y, w, h, text, kind]) => {
+    const ring = E('rect', { rx: 18, class: 'fxb-ring' }, g);
+    const nodes = RA_NODES.map(([x, y, w, h, text, kind], ni) => {
       const grp = E('g', {}, g);
       const r = E('rect', { x, y, width: w, height: h, rx: 14, class: `b-node-box ${kind}` }, grp);
       const words = text.split(' ');
       const lines = [''];
       for (const wd of words) { if ((lines[lines.length - 1] + ' ' + wd).length > 24) lines.push(wd); else lines[lines.length - 1] = (lines[lines.length - 1] + ' ' + wd).trim(); }
-      lines.forEach((ln, i) => T(grp, x + w / 2, y + h / 2 + (i - (lines.length - 1) / 2) * 16 + 5, ln, 'bs b-strong', { 'text-anchor': 'middle' }));
+      const dy = h / 2 + (ni === 2 || ni === 3 ? -4 : 0);
+      lines.forEach((ln, i) => T(grp, x + w / 2, y + dy + (i - (lines.length - 1) / 2) * 16 + 5, ln, 'bs b-strong fxb-nohalo', { 'text-anchor': 'middle' }));
       return r;
     });
     // peptide beads: angiotensinogen (long) → angiotensin I (10) → II (8)
-    const beads = Array.from({ length: 14 }, () => E('circle', { r: 4, class: 'b-bead' }, g));
+    const beads = Array.from({ length: 14 }, () => E('circle', { r: 3.6, class: 'b-bead' }, g));
     // blood pressure gauge
-    const GX = 110, GY = 200;
-    E('path', { d: `M${GX - 54},${GY} A54,54 0 0 1 ${GX + 54},${GY}`, class: 'b-gauge' }, g);
-    const needle = E('line', { x1: GX, y1: GY, x2: GX, y2: GY - 46, class: 'b-needle' }, g);
+    const GX = 110, GY = 200, GR = 54;
+    const arcPt = deg => [GX + GR * Math.sin(deg * Math.PI / 180), GY - GR * Math.cos(deg * Math.PI / 180)];
+    E('path', { d: `M${GX - GR},${GY} A${GR},${GR} 0 0 1 ${GX + GR},${GY}`, class: 'b-gauge' }, g);
+    const gFill = E('path', { class: 'fxb-gauge-fill' }, g);
+    const needle = E('line', { x1: GX, y1: GY, x2: GX, y2: GY - 44, class: 'b-needle' }, g);
+    E('circle', { cx: GX, cy: GY, r: 6, class: 'fxb-hub' }, g);
     T(g, GX - 62, GY - 2, 'low', 'bs', { 'text-anchor': 'end' }); T(g, GX + 62, GY - 2, 'normal', 'bs');
-    T(g, GX, GY - 60, 'blood pressure', 'bs b-strong', { 'text-anchor': 'middle' });
+    T(g, GX, GY - 64, 'blood pressure', 'bs b-strong', { 'text-anchor': 'middle' });
     const fb = E('path', { d: 'M176,176 C204,150 200,112 170,92', class: 'b-feedback', 'marker-end': head }, g);
-    const fbT = T(g, 20, 226, 'back to normal → renin stops', 'bs b-strong b-good-t');
+    const fbT = pill(g, 214, 113, 'back to normal → renin stops', 'bs b-strong b-good-t');
+    fbT.previousSibling.classList.add('cool');
     const token = E('circle', { r: 7, class: 'b-spark' }, g);
-    return lt => {
+    const LIT = [0, 2.5, 4.5, 7, 9, 9.5, 9.5, 9.5];
+    return (lt, _dt, t) => {
       // the token runs the main chain (links 0–3), then all three effects light up together
       if (!tr.table) tr.build();
       const chainEnd = tr.starts[4];
-      const lit = i => i < 5 ? lt >= [0, 2.5, 4.5, 7, 9][i] : lt >= 9.5;
+      const lit = i => lt >= LIT[i];
       nodes.forEach((r, i) => r.classList.toggle('lit', lit(i)));
       links.forEach((l, i) => l.classList.toggle('lit', i < 4 ? lt >= [2.5, 4.5, 7, 9][i] : lt >= 9.5));
-      if (lt < 9) { const [x, y] = tr.pos(keys(lt, [[1.5, 0], [2.5, tr.starts[1]], [3.5, tr.starts[1]], [4.5, tr.starts[2]], [6, tr.starts[2]], [7, tr.starts[3]], [8, tr.starts[3]], [9, chainEnd]])); at(token, x, y); show(token, smooth(1.2, 1.6, lt)); }
+      // a soft ring ripples out of the box that just lit up
+      let li = -1; for (let i = 0; i < 5; i++) if (lt >= LIT[i]) li = i;
+      const since = li < 0 ? 9 : lt - LIT[li];
+      if (li >= 0 && since < 1.1) {
+        const [x, y, w, h] = RA_NODES[li], k = ease(since / 1.1), p = 3 + 9 * k;
+        ring.setAttribute('x', x - p); ring.setAttribute('y', y - p); ring.setAttribute('width', w + 2 * p); ring.setAttribute('height', h + 2 * p);
+        show(ring, 0.8 * (1 - k));
+      } else show(ring, 0);
+      if (lt < 9) { const [x, y] = tr.pos(keys(lt, [[1.5, 0], [2.5, tr.starts[1]], [3.5, tr.starts[1]], [4.5, tr.starts[2]], [6, tr.starts[2]], [7, tr.starts[3]], [8, tr.starts[3]], [9, chainEnd]])); at(token, x, y); show(token, smooth(1.2, 1.6, lt) * (0.85 + 0.15 * Math.sin(t * 6))); }
       else show(token, 0);
-      // beads
+      // beads: the chain sits centred in its box; snipped-off beads drift away and fade
       const nb = lt < 4.5 ? 14 : lt < 7 ? 10 : 8;
-      const bx = lt < 4.5 ? 470 : lt < 7 ? 485 : 492, by = lt < 7 ? 80 : 184;
+      const toII = eased(7, 7.8, lt), by = lerp(80, 184, toII), sp = 8.4;
       beads.forEach((b, i) => {
-        at(b, bx + i * 9.5, by);
-        show(b, i < nb ? (lt < 2.5 ? 0 : 1) : 0);
-        b.classList.toggle('active', (lt >= 7 && i < 8));
+        const x0 = 530 - (nb - 1) * sp / 2;
+        let x = x0 + i * sp, y = by + Math.sin(t * 2 + i * 0.7) * 0.8, o = lt < 2.5 ? 0 : smooth(2.5, 2.9, lt);
+        const cut = i >= 10 ? 4.5 : i >= 8 ? 7 : 99;
+        if (lt >= cut) {
+          const k = eased(cut, cut + 1.2, lt), cx = 530 - ((i >= 10 ? 14 : 10) - 1) * sp / 2 + i * sp;
+          x = cx + 14 * k; y = (i >= 10 ? 80 : 80) + 22 * k; o *= 1 - k;
+        }
+        at(b, x, y); show(b, o);
+        b.classList.toggle('active', lt >= 7 && i < 8);
       });
       const bp = keys(lt, [[0, 0.15], [9, 0.15], [13, 0.9]]);
-      needle.setAttribute('transform', `rotate(${lerp(-80, 70, bp).toFixed(1)} ${GX} ${GY})`);
-      show(fb, smooth(13, 14, lt)); show(fbT, smooth(13, 14, lt));
+      const ang = lerp(-80, 70, bp);
+      needle.setAttribute('transform', `rotate(${ang.toFixed(1)} ${GX} ${GY})`);
+      const [ax, ay] = arcPt(ang);
+      gFill.setAttribute('d', `M${GX - GR},${GY} A${GR},${GR} 0 0 1 ${ax.toFixed(1)},${ay.toFixed(1)}`);
+      gFill.style.stroke = `color-mix(in srgb, var(--b-teal) ${(bp * 100).toFixed(0)}%, var(--b-red))`;
+      show(fb, smooth(13, 14, lt)); show(fbT.parentNode, smooth(13, 14, lt));
       if (lt < 2.5) return 'The juxtaglomerular apparatus senses low blood pressure, low blood volume or low Na⁺…';
       if (lt < 4.5) return '…and releases the enzyme renin into the blood';
       if (lt < 7) return 'Renin snips angiotensinogen (a protein from the liver, always in the blood) into angiotensin I';

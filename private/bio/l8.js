@@ -1,17 +1,21 @@
 // Lecture 8 · Ch 31.1–31.5 · Nervous systems
 
 import { E, T, Track, at, move, show, setText, smooth, keys, frac, lerp, clamp, gauss, TAU, win } from './kit.js';
+import { fx, pill, pillText, pillAt, ease, eased, env, flow, scaleAt } from './fx-b.js';
 
 // ---------------------------------------------------------------- 1. the parts of a neuron
 
 const neuron = {
   id: 'l8-neuron', title: 'A neuron, and the path a signal takes', dur: 10,
   build(svg) {
+    fx(svg);
+    svg.classList.add('has-art', 'art-l8-neuron');
+    E('image', { href: new URL('./art/l8-neuron.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     const DEND = ['M140,170 C110,150 90,120 60,100', 'M90,128 C80,110 70,90 74,70', 'M140,186 C100,190 70,200 34,196', 'M142,198 C116,226 96,250 70,268', 'M96,246 C80,248 60,244 44,236', 'M120,158 C120,120 132,90 150,64'];
     const dend = DEND.map(d => E('path', { d, class: 'b-dendrite' }, g));
-    E('circle', { cx: 160, cy: 182, r: 36, class: 'b-soma' }, g);
-    E('circle', { cx: 154, cy: 178, r: 13, class: 'b-nucleus' }, g);
+    E('circle', { cx: 160, cy: 182, r: 36, class: 'b-soma fxb-breathe' }, g);
+    E('circle', { cx: 154, cy: 178, r: 13, class: 'b-nucleus fxb-breathe d1' }, g);
     E('path', { d: 'M192,172 L214,178 L214,186 L192,192z', class: 'b-soma' }, g);
     E('line', { x1: 214, y1: 182, x2: 540, y2: 182, class: 'b-axon' }, g);
     const SH = [[226, 280], [292, 346], [358, 412], [424, 478], [490, 532]];
@@ -20,8 +24,8 @@ const neuron = {
     TERM.forEach(d => E('path', { d, class: 'b-axon thin' }, g));
     const bulbs = [[594, 138], [600, 182], [594, 226]].map(([x, y]) => E('circle', { cx: x, cy: y, r: 9, class: 'b-bulb' }, g));
     E('rect', { x: 614, y: 110, width: 30, height: 144, rx: 8, class: 'b-target' }, g);
-    const L = [[14, 40, 'dendrites: collect incoming signals'], [96, 290, 'cell body: adds them up'], [300, 150, 'axon: carries the action potential'], [318, 222, 'myelin (glia) + nodes'], [520, 92, 'axon terminals → synapse']];
-    const labels = L.map(([x, y, text], i) => T(g, x, y, text, 'bs b-strong b-region', { 'text-anchor': i < 2 ? 'start' : 'middle' }));
+    const L = [[40, 40, 'dendrites: collect incoming signals'], [96, 296, 'cell body: adds them up'], [380, 148, 'axon: carries the action potential'], [380, 224, 'myelin (glia) + nodes'], [520, 92, 'axon terminals → synapse']];
+    const labels = L.map(([x, y, text], i) => pill(g, x, y, text, 'bs b-strong', { 'text-anchor': i < 2 ? 'start' : 'middle' }));
     const inputs = DEND.map(() => E('circle', { r: 5, class: 'b-spark' }, g));
     const dTracks = DEND.map(d => new Track(g, d));
     const soma = E('circle', { cx: 160, cy: 182, r: 36, class: 'b-somaglow' }, g);
@@ -48,11 +52,11 @@ const neuron = {
       bulbs.forEach(b => b.classList.toggle('glow', lt > 6.5 && lt < 8.5));
       vesicles.forEach((v, i) => {
         const u = smooth(6.6 + i * 0.1, 8 + i * 0.1, lt);
-        at(v, lerp(600, 616, u), 140 + i * 17);
+        at(v, lerp(600, 616, ease(u)), 140 + i * 17 + 3 * Math.sin(u * 5 + i));
         show(v, u > 0 && u < 1 ? 1 : 0);
       });
       const step = lt < 2 ? 0 : lt < 3.2 ? 1 : lt < 5 ? 2 : lt < 6.5 ? 3 : 4;
-      labels.forEach((l, i) => l.classList.toggle('on', i === step));
+      labels.forEach((l, i) => { l.previousSibling.classList.toggle('warm', i === step); l.parentNode.setAttribute('opacity', i === step ? 1 : 0.72); });
       return [
         'Dendrites pick up signals from other cells and carry them toward the cell body',
         'The cell body (with the nucleus) adds up all the inputs. Enough together → it fires.',
@@ -80,26 +84,30 @@ const neuron = {
 const resting = {
   id: 'l8-rest', title: 'Why a resting neuron is negative inside (−70 mV)', dur: 12,
   build(svg) {
+    fx(svg);
+    svg.classList.add('has-art', 'art-l8-rest');
+    E('image', { href: new URL('./art/l8-rest.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     E('rect', { x: 0, y: 0, width: 640, height: 160, class: 'b-outside' }, g);
     E('rect', { x: 0, y: 204, width: 640, height: 156, class: 'b-inside' }, g);
     for (let x = 6; x < 640; x += 12) { E('circle', { cx: x, cy: 168, r: 5, class: 'b-lipid' }, g); E('circle', { cx: x, cy: 196, r: 5, class: 'b-lipid' }, g); }
-    T(g, 14, 24, 'outside the cell', 'bs b-strong'); T(g, 14, 350, 'inside the cell', 'bs b-strong');
+    pill(g, 40, 24, 'outside the cell', 'bs b-strong'); const insideL = pill(g, 40, 348, 'inside the cell', 'bs b-strong');
     const plus = Array.from({ length: 12 }, (_, i) => T(g, 40 + i * 50, 150, '+', 'bl b-strong b-acid-t', { 'text-anchor': 'middle' }));
     const minus = Array.from({ length: 12 }, (_, i) => T(g, 40 + i * 50, 224, '−', 'bl b-strong blue-t', { 'text-anchor': 'middle' }));
     // pump
     const pump = E('g', {}, g);
     E('rect', { x: -22, y: -28, width: 44, height: 56, rx: 14, class: 'b-pump' }, pump);
     move(pump, 170, 182);
-    T(g, 170, 254, 'Na⁺/K⁺ pump', 'bs b-strong', { 'text-anchor': 'middle' });
-    const atp = T(g, 204, 236, 'ATP', 'bs b-atp');
+    pill(g, 170, 254, 'Na⁺/K⁺ pump', 'bs b-strong', { 'text-anchor': 'middle' });
+    const atp = pill(g, 212, 232, 'ATP', 'bs b-atp').parentNode;
+    atp.firstChild.classList.add('warm');
     // leak channels
     E('rect', { x: 384, y: 158, width: 32, height: 48, rx: 6, class: 'b-channel k' }, g);
     E('rect', { x: 394, y: 158, width: 12, height: 48, class: 'b-pore' }, g);
-    T(g, 400, 254, 'K⁺ leak channel', 'bs b-strong', { 'text-anchor': 'middle' });
+    pill(g, 400, 254, 'K⁺ leak channel', 'bs b-strong', { 'text-anchor': 'middle' });
     E('rect', { x: 524, y: 158, width: 28, height: 48, rx: 6, class: 'b-channel na' }, g);
     E('rect', { x: 534, y: 158, width: 8, height: 48, class: 'b-pore' }, g);
-    T(g, 538, 254, 'Na⁺ leak (small)', 'bs b-strong', { 'text-anchor': 'middle' });
+    pill(g, 538, 254, 'Na⁺ leak (small)', 'bs b-strong', { 'text-anchor': 'middle' });
     // background ions
     const bgNa = Array.from({ length: 16 }, (_, i) => ({ x: 20 + (i * 83) % 600, y: 40 + (i * 29) % 90, el: E('circle', { r: 6, class: 'p-salt' }, g) }));
     const bgK = Array.from({ length: 16 }, (_, i) => ({ x: 20 + (i * 71) % 600, y: 270 + (i * 23) % 70, el: E('circle', { r: 6, class: 'p-k' }, g) }));
@@ -110,7 +118,7 @@ const resting = {
     // meter
     E('rect', { x: 560, y: 20, width: 70, height: 46, rx: 10, class: 'b-meter' }, g);
     const mv = T(g, 595, 50, '', 'bl b-strong b-meter-t', { 'text-anchor': 'middle' });
-    T(g, 16, 128, '● Na⁺', 'bs b-salt-t'); T(g, 16, 330, '● K⁺', 'bs b-k-t');
+    pill(g, 40, 128, '● Na⁺', 'bs b-salt-t'); pill(g, 40, 322, '● K⁺', 'bs b-k-t');
     return (lt, _dt, t) => {
       [...bgNa, ...bgK].forEach((p, i) => at(p.el, p.x + 5 * Math.sin(t * 1.3 + i), p.y + 4 * Math.cos(t * 1.1 + i * 2)));
       const cyc = 3, u = frac(t / cyc);
@@ -128,7 +136,7 @@ const resting = {
       show(atp, u < 0.2 || (u > 0.5 && u < 0.7) ? 1 : 0.25);
       leakK.forEach((k, i) => {
         const v = frac(t * 0.35 + i / 4);
-        at(k, 400 + 4 * Math.sin(v * 9), lerp(300, 60, v)); show(k, Math.sin(Math.PI * v));
+        at(k, 400 + 4 * Math.sin(v * 9), lerp(300, 60, ease(v))); show(k, env(v, 0.2));
       });
       const v = frac(t * 0.12);
       at(leakNa, 538, lerp(60, 300, v)); show(leakNa, Math.sin(Math.PI * v) * 0.8);
@@ -172,19 +180,22 @@ const action = {
     };
     ui.button('Small poke', () => poke(false));
     ui.button('Big poke', () => poke(true), 'btn-primary');
+    const fid = fx(svg);
+    svg.classList.add('has-art', 'art-l8-ap');
+    E('image', { href: new URL('./art/l8-ap.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     // membrane patch
     E('rect', { x: 0, y: 0, width: 300, height: 140, class: 'b-outside' }, g);
     E('rect', { x: 0, y: 190, width: 300, height: 170, class: 'b-inside' }, g);
     for (let x = 6; x < 300; x += 12) { E('circle', { cx: x, cy: 148, r: 5, class: 'b-lipid' }, g); E('circle', { cx: x, cy: 182, r: 5, class: 'b-lipid' }, g); }
-    T(g, 12, 22, 'outside', 'bs b-strong'); T(g, 12, 350, 'inside', 'bs b-strong');
+    T(g, 40, 24, 'outside', 'bs b-strong'); T(g, 40, 348, 'inside', 'bs b-strong');
     const chan = (x, cls, label) => {
       const grp = E('g', {}, g);
       E('rect', { x: x - 22, y: 136, width: 14, height: 58, rx: 5, class: `b-channel ${cls}` }, grp);
       E('rect', { x: x + 8, y: 136, width: 14, height: 58, rx: 5, class: `b-channel ${cls}` }, grp);
       const gate = E('rect', { x: -8, y: -4, width: 16, height: 8, rx: 3, class: `b-gate ${cls}` }, grp);
       T(g, x, 214, label, 'bs b-strong', { 'text-anchor': 'middle' });
-      return { gate, x };
+      return { gate, x, o: 0 };
     };
     const NA = chan(90, 'na', 'voltage-gated Na⁺');
     const K = chan(220, 'k', 'voltage-gated K⁺');
@@ -197,12 +208,15 @@ const action = {
     E('rect', { x: GX0 - 10, y: 18, width: GX1 - GX0 + 20, height: 300, rx: 12, class: 'b-monitor' }, g);
     for (const v of [40, 0, -40, -80]) { E('line', { x1: GX0, y1: GY(v), x2: GX1, y2: GY(v), class: 'b-grid' }, g); T(g, GX0 + 2, GY(v) - 3, `${v}`, 'bs'); }
     E('line', { x1: GX0, y1: GY(-55), x2: GX1, y2: GY(-55), class: 'b-threshold' }, g);
-    T(g, GX1, GY(-55) - 4, 'threshold −55', 'bs b-strong b-gold-t', { 'text-anchor': 'end' });
-    T(g, GX1, GY(-70) + 14, 'rest −70', 'bs', { 'text-anchor': 'end' });
+    pill(g, GX1 - 16, GY(-55) - 7, 'threshold −55', 'bs b-strong b-gold-t', { 'text-anchor': 'end' });
+    pill(g, GX1 - 16, GY(-70) + 22, 'rest −70', 'bs', { 'text-anchor': 'end' });
     T(g, GX0, 336, 'membrane voltage (mV) over time', 'bs');
-    const trace = E('path', { class: 'b-trace hot' }, g);
+    const clipId = `${fid}-apclip`;
+    E('rect', { x: GX0 - 10, y: 18, width: GX1 - GX0 + 20, height: 300, rx: 12 }, E('clipPath', { id: clipId }, svg.querySelector('defs')));
+    const trace = E('path', { class: 'b-trace hot', 'clip-path': `url(#${clipId})` }, g);
     const pen = E('circle', { r: 5, class: 'b-spark' }, g);
-    const phase = T(g, GX0 + 100, 40, '', 'bs b-strong b-hor-t', { 'text-anchor': 'middle' });
+    const phase = pill(g, GX0 + 110, 42, '', 'bs b-strong b-hor-t', { 'text-anchor': 'middle' });
+    phase.previousSibling.classList.add('rose');
     const samples = [];
     let lastLt = 0;
     const V = time => {
@@ -222,6 +236,7 @@ const action = {
       for (const [at0, strong] of [[1, false], [4.5, true], [5.6, true]]) if (lastLt < at0 && lt >= at0) poke(strong);
       lastLt = lt;
       const v = V(t);
+      if (samples.length && samples[samples.length - 1][0] > t) samples.length = 0;
       samples.push([t, v]);
       while (samples.length && samples[0][0] < t - WIN) samples.shift();
       let d = '';
@@ -234,11 +249,14 @@ const action = {
       const naOpen = since > 0.3 && since < 0.85;
       const naInact = since >= 0.85 && since < 2.4;
       const kOpen = since > 0.8 && since < 2.6;
-      NA.gate.setAttribute('transform', `translate(90 ${naOpen ? 128 : 165}) rotate(${naOpen ? 90 : 0})`);
-      K.gate.setAttribute('transform', `translate(220 ${kOpen ? 128 : 165}) rotate(${kOpen ? 90 : 0})`);
+      // gates swing open and shut smoothly instead of snapping
+      NA.o += ((naOpen ? 1 : 0) - NA.o) * Math.min(1, (dt || 1) * 12);
+      K.o += ((kOpen ? 1 : 0) - K.o) * Math.min(1, (dt || 1) * 8);
+      NA.gate.setAttribute('transform', `translate(90 ${lerp(165, 128, NA.o).toFixed(1)}) rotate(${(90 * NA.o).toFixed(1)})`);
+      K.gate.setAttribute('transform', `translate(220 ${lerp(165, 128, K.o).toFixed(1)}) rotate(${(90 * K.o).toFixed(1)})`);
       at(ball, 90, naInact ? 186 : 214); show(ball, naInact ? 1 : 0);
-      naIons.forEach((n, i) => { const u = frac(t * 1.2 + i / 6); at(n, 90 + 3 * Math.sin(i + u * 8), lerp(80, 280, u)); show(n, naOpen ? Math.sin(Math.PI * u) : 0); });
-      kIons.forEach((n, i) => { const u = frac(t * 1.0 + i / 6); at(n, 220 + 3 * Math.sin(i + u * 8), lerp(280, 80, u)); show(n, kOpen ? Math.sin(Math.PI * u) : 0); });
+      naIons.forEach((n, i) => { const u = frac(t * 1.2 + i / 6); at(n, 90 + 3 * Math.sin(i + u * 8), lerp(80, 280, ease(u))); show(n, env(u, 0.2) * NA.o); });
+      kIons.forEach((n, i) => { const u = frac(t * 1.0 + i / 6); at(n, 220 + 3 * Math.sin(i + u * 8), lerp(280, 80, ease(u))); show(n, env(u, 0.2) * K.o); });
       const lastPoke = events[events.length - 1];
       show(zap, lastPoke && t - lastPoke.t < 0.4 ? 1 : 0);
       let label = '';
@@ -247,7 +265,7 @@ const action = {
       else if (since < 1.8) label = 'repolarization';
       else if (since < 2.6) label = 'hyperpolarization';
       else if (since < AP_DUR) label = 'back to rest';
-      setText(phase, label);
+      pillText(phase, label); show(phase.parentNode, label ? 1 : 0);
       if (lastPoke && lastPoke.blocked && t - lastPoke.t < 1.6) return 'Poked again too soon: the Na⁺ channels are still inactivated (refractory period), so nothing happens';
       if (since < 0.35) return 'A strong stimulus pushes the voltage up to the threshold (−55 mV)…';
       if (since < 0.85) return '…voltage-gated Na⁺ channels fly open, Na⁺ rushes in, and the inside shoots up to about +40 mV (positive feedback)';
@@ -275,10 +293,13 @@ const action = {
 const race = {
   id: 'l8-race', title: 'Why myelin makes signals faster (saltatory conduction)', dur: 9,
   build(svg) {
+    fx(svg);
+    svg.classList.add('has-art', 'art-l8-race');
+    E('image', { href: new URL('./art/l8-race.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     const A = 60, B = 600;
-    T(g, 20, 64, 'No myelin', 'bl b-strong');
-    T(g, 20, 210, 'Myelinated', 'bl b-strong');
+    T(g, 40, 64, 'No myelin', 'bl b-strong');
+    T(g, 40, 210, 'Myelinated', 'bl b-strong');
     E('rect', { x: A, y: 102, width: B - A, height: 24, rx: 12, class: 'b-axonbar' }, g);
     E('rect', { x: A, y: 248, width: B - A, height: 24, rx: 12, class: 'b-axonbar' }, g);
     const nodes = [];
@@ -286,7 +307,7 @@ const race = {
     nodes.unshift(A + 4);
     T(g, 330, 302, 'nodes of Ranvier = the gaps between myelin', 'bs', { 'text-anchor': 'middle' });
     const refr = E('rect', { y: 100, height: 28, rx: 12, class: 'b-refr' }, g);
-    const refT = T(g, 0, 150, 'refractory: can’t fire again yet', 'bs b-strong', { 'text-anchor': 'middle' });
+    const refT = pill(g, 0, 152, 'refractory: can’t fire again yet', 'bs b-strong', { 'text-anchor': 'middle' });
     const ap1 = E('ellipse', { rx: 22, ry: 18, cy: 114, class: 'b-apglow' }, g);
     const ap2 = E('ellipse', { rx: 22, ry: 18, cy: 260, class: 'b-apglow' }, g);
     const jump = E('path', { class: 'b-jump' }, g);
@@ -295,10 +316,10 @@ const race = {
     return lt => {
       const t0 = 0.6;
       const x1 = A + clamp((lt - t0) * 70, 0, B - A);
-      ap1.setAttribute('cx', x1.toFixed(1)); show(ap1, lt > t0 && x1 < B ? 1 : 0);
+      ap1.setAttribute('cx', x1.toFixed(1)); ap1.setAttribute('rx', (22 + 2 * Math.sin(lt * 9)).toFixed(1)); show(ap1, lt > t0 && x1 < B ? 1 : 0);
       refr.setAttribute('x', Math.max(A, x1 - 90).toFixed(1)); refr.setAttribute('width', Math.max(0, Math.min(70, x1 - A - 20)).toFixed(1));
       show(refr, lt > t0 + 0.4 && x1 < B ? 1 : 0);
-      refT.setAttribute('x', Math.max(A + 60, x1 - 60).toFixed(1)); show(refT, lt > 1.6 && lt < 5 ? 1 : 0);
+      pillAt(refT, Math.max(A + 90, x1 - 60), 152); show(refT.parentNode, smooth(1.6, 2, lt) * (1 - smooth(4.6, 5, lt)));
       const per = 0.22;
       const k = (lt - t0) / per;
       const i = clamp(Math.floor(k), 0, nodes.length - 1);
@@ -327,6 +348,9 @@ const race = {
 const synapse = {
   id: 'l8-synapse', title: 'The chemical synapse', dur: 11,
   build(svg) {
+    fx(svg);
+    svg.classList.add('has-art', 'art-l8-synapse');
+    E('image', { href: new URL('./art/l8-synapse.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     E('path', { d: 'M250,0 L250,40 C140,60 120,150 160,166 L480,166 C520,150 500,60 390,40 L390,0z', class: 'b-terminal' }, g);
     T(g, 520, 40, 'presynaptic cell', 'bs b-strong');
@@ -344,13 +368,13 @@ const synapse = {
     const mg = E('path', { class: 'b-trace hot' }, g);
     E('line', { x1: 90, y1: 330, x2: 250, y2: 330, class: 'b-grid' }, g);
     T(g, 90, 352, 'voltage of the receiving cell', 'bs');
-    T(g, 14, 24, '● neurotransmitter', 'bs b-hor-t'); T(g, 14, 40, '● Ca²⁺', 'bs b-gold-t'); T(g, 14, 56, '● Na⁺', 'bs b-salt-t');
+    T(g, 40, 24, '● neurotransmitter', 'bs b-hor-t'); T(g, 40, 40, '● Ca²⁺', 'bs b-gold-t'); T(g, 40, 56, '● Na⁺', 'bs b-salt-t');
     return lt => {
       apGlow.setAttribute('cy', lerp(-20, 150, smooth(0, 1.6, lt)).toFixed(1)); show(apGlow, win(lt, 0.1, 1.8, 0.3));
       ca.forEach((c, i) => { const u = smooth(1.6 + i * 0.1, 2.6 + i * 0.1, lt); at(c, 200 + i * 80, lerp(186, 150, u)); show(c, u > 0 && u < 1 ? 1 : 0); });
       ves.forEach((v, i) => {
         const fuse = smooth(2.4 + i * 0.08, 3.4 + i * 0.08, lt) * (1 - smooth(9.5, 10.5, lt));
-        move(v.grp, v.x, lerp(v.y, 152, fuse), lerp(1, 0.6, smooth(3.2, 4, lt) * (1 - smooth(9.5, 10.5, lt))));
+        move(v.grp, v.x + 2 * Math.sin(lt * 1.3 + i) * (1 - fuse), lerp(v.y + 2.5 * Math.sin(lt * 1.7 + i * 2), 152, ease(fuse)), lerp(1, 0.6, smooth(3.2, 4, lt) * (1 - smooth(9.5, 10.5, lt))));
         show(v.grp, 1 - 0.7 * smooth(3.4, 4, lt) * (1 - smooth(9.5, 10.5, lt)));
       });
       nt.forEach((n, i) => {
@@ -361,7 +385,7 @@ const synapse = {
       });
       const open = win(lt, 5.6, 7.8, 0.3);
       recs.forEach(r => r.classList.toggle('on', open > 0.5));
-      na.forEach((n, i) => { const u = frac(lt * 0.9 + i / 8); at(n, RX[i % 5] + 4 * Math.sin(u * 8), lerp(150, 290, u)); show(n, open * Math.sin(Math.PI * u)); });
+      na.forEach((n, i) => { const u = frac(lt * 0.9 + i / 8); at(n, RX[i % 5] + 4 * Math.sin(u * 8), lerp(150, 290, ease(u))); show(n, open * env(u, 0.2)); });
       let d = '';
       for (let x = 0; x <= 160; x += 4) { const tt = lt - (160 - x) / 160 * 6; const bump = 26 * Math.max(0, smooth(5.6, 6.6, tt) - smooth(7.4, 9, tt)); d += `${x ? 'L' : 'M'}${90 + x},${(330 - bump).toFixed(1)}`; }
       mg.setAttribute('d', d);
@@ -386,6 +410,9 @@ const ans = {
   vars: { mode: 'symp' },
   build(svg, s, ui) {
     ui.seg('mode', [['symp', 'Sympathetic'], ['para', 'Parasympathetic']], 'Division');
+    fx(svg);
+    svg.classList.add('has-art', 'art-l8-ans');
+    E('image', { href: new URL('./art/l8-ans.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     // left: body with CNS and a reflex-style loop
     E('circle', { cx: 120, cy: 52, r: 30, class: 'b-bodyfig' }, g);
@@ -400,7 +427,7 @@ const ans = {
     const ad = Array.from({ length: 3 }, () => E('circle', { r: 4.5, class: 'p-deoxy' }, g));
     const ed = Array.from({ length: 3 }, () => E('circle', { r: 4.5, class: 'p-oxy' }, g));
     T(g, 206, 222, 'sensory in', 'bs b-strong blue-t');
-    T(g, 8, 222, 'motor out', 'bs b-strong red-t');
+    T(g, 22, 240, 'motor out', 'bs b-strong red-t');
     // right: organs
     const X = 290;
     E('rect', { x: X, y: 20, width: 335, height: 320, rx: 18, class: 'b-panel' }, g);
@@ -415,7 +442,7 @@ const ans = {
     const gutT = T(g, X + 110, 250, '', 'bs b-strong');
     const bpT = T(g, X + 110, 312, '', 'bs b-strong');
     const bp = E('rect', { x: X + 30, y: 300, width: 0, height: 14, rx: 7, class: 'b-bpbar' }, g);
-    let beat = 0, gutPh = 0;
+    let beat = 0, gutPh = 0, pr = 7, bw = 48;
     return (lt, dt, t) => {
       const sym = s.vars.mode === 'symp';
       setText(title, sym ? 'Sympathetic: fight or flight' : 'Parasympathetic: rest and digest');
@@ -423,14 +450,16 @@ const ans = {
       const sc = 1 + 0.18 * Math.exp(-((beat - 0.1) ** 2) / 0.004);
       move(heart, X + 60, 100, sc * 1.3);
       setText(hrT, sym ? 'heart rate ↑, stronger beats' : 'heart rate ↓');
-      pupil.setAttribute('r', (sym ? 10 : 4).toString());
+      pr += ((sym ? 10 : 4) - pr) * Math.min(1, (dt || 1) * 4);
+      pupil.setAttribute('r', pr.toFixed(2));
       setText(pupT, sym ? 'pupils open wide' : 'pupils small');
       gutPh += dt * (sym ? 0.3 : 2.2);
       let d = '';
       for (let x = 0; x <= 60; x += 3) d += `${x ? 'L' : 'M'}${X + 30 + x},${(244 + (sym ? 2 : 8) * Math.sin(x / 8 - gutPh)).toFixed(1)}`;
       gutP.setAttribute('d', d);
       setText(gutT, sym ? 'digestion slows down' : 'digestion speeds up');
-      bp.setAttribute('width', sym ? 66 : 30);
+      bw += ((sym ? 66 : 30) - bw) * Math.min(1, (dt || 1) * 4);
+      bp.setAttribute('width', bw.toFixed(1));
       setText(bpT, sym ? '' : '');
       bp.setAttribute('x', X + 30); bpT.setAttribute('x', X + 110);
       setText(bpT, sym ? 'blood pressure ↑' : 'blood pressure ↓');

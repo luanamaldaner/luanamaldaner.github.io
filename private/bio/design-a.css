@@ -1,0 +1,330 @@
+/* Biology animation design polish: lectures 1-5 (scenes opt in with .bio-a, see fx-a.js) */
+
+/* ---- shared gradient stops (live in the hidden #fxa-defs svg) ---- */
+.bio-svg .fxs-red-hi { stop-color: color-mix(in srgb, var(--b-red) 42%, #fff); }
+.bio-svg .fxs-red { stop-color: var(--b-red); }
+.bio-svg .fxs-red-lo { stop-color: color-mix(in srgb, var(--b-red) 78%, #1c1414); }
+.bio-svg .fxs-red-s0 { stop-color: color-mix(in srgb, var(--b-red) 8%, var(--b-stage)); }
+.bio-svg .fxs-red-s1 { stop-color: color-mix(in srgb, var(--b-red) 24%, var(--b-stage)); }
+.bio-svg .fxs-red-m0 { stop-color: color-mix(in srgb, var(--b-red) 18%, var(--b-stage)); }
+.bio-svg .fxs-red-m1 { stop-color: color-mix(in srgb, var(--b-red) 40%, var(--b-stage)); }
+.bio-svg .fxs-red-c0 { stop-color: color-mix(in srgb, var(--b-red) 10%, var(--b-stage)); }
+.bio-svg .fxs-red-c1 { stop-color: color-mix(in srgb, var(--b-red) 26%, var(--b-stage)); }
+.bio-svg .fxs-red-c2 { stop-color: color-mix(in srgb, var(--b-red) 42%, var(--b-stage)); }
+.bio-svg .fxs-blue-hi { stop-color: color-mix(in srgb, var(--b-blue) 42%, #fff); }
+.bio-svg .fxs-blue { stop-color: var(--b-blue); }
+.bio-svg .fxs-blue-lo { stop-color: color-mix(in srgb, var(--b-blue) 78%, #1c1414); }
+.bio-svg .fxs-blue-s0 { stop-color: color-mix(in srgb, var(--b-blue) 8%, var(--b-stage)); }
+.bio-svg .fxs-blue-s1 { stop-color: color-mix(in srgb, var(--b-blue) 24%, var(--b-stage)); }
+.bio-svg .fxs-blue-m0 { stop-color: color-mix(in srgb, var(--b-blue) 18%, var(--b-stage)); }
+.bio-svg .fxs-blue-m1 { stop-color: color-mix(in srgb, var(--b-blue) 40%, var(--b-stage)); }
+.bio-svg .fxs-blue-c0 { stop-color: color-mix(in srgb, var(--b-blue) 10%, var(--b-stage)); }
+.bio-svg .fxs-blue-c1 { stop-color: color-mix(in srgb, var(--b-blue) 26%, var(--b-stage)); }
+.bio-svg .fxs-blue-c2 { stop-color: color-mix(in srgb, var(--b-blue) 42%, var(--b-stage)); }
+.bio-svg .fxs-na-hi { stop-color: color-mix(in srgb, var(--b-na) 42%, #fff); }
+.bio-svg .fxs-na { stop-color: var(--b-na); }
+.bio-svg .fxs-na-lo { stop-color: color-mix(in srgb, var(--b-na) 78%, #1c1414); }
+.bio-svg .fxs-na-s0 { stop-color: color-mix(in srgb, var(--b-na) 8%, var(--b-stage)); }
+.bio-svg .fxs-na-s1 { stop-color: color-mix(in srgb, var(--b-na) 24%, var(--b-stage)); }
+.bio-svg .fxs-na-m0 { stop-color: color-mix(in srgb, var(--b-na) 18%, var(--b-stage)); }
+.bio-svg .fxs-na-m1 { stop-color: color-mix(in srgb, var(--b-na) 40%, var(--b-stage)); }
+.bio-svg .fxs-na-c0 { stop-color: color-mix(in srgb, var(--b-na) 10%, var(--b-stage)); }
+.bio-svg .fxs-na-c1 { stop-color: color-mix(in srgb, var(--b-na) 26%, var(--b-stage)); }
+.bio-svg .fxs-na-c2 { stop-color: color-mix(in srgb, var(--b-na) 42%, var(--b-stage)); }
+.bio-svg .fxs-k-hi { stop-color: color-mix(in srgb, var(--b-k) 42%, #fff); }
+.bio-svg .fxs-k { stop-color: var(--b-k); }
+.bio-svg .fxs-k-lo { stop-color: color-mix(in srgb, var(--b-k) 78%, #1c1414); }
+.bio-svg .fxs-k-s0 { stop-color: color-mix(in srgb, var(--b-k) 8%, var(--b-stage)); }
+.bio-svg .fxs-k-s1 { stop-color: color-mix(in srgb, var(--b-k) 24%, var(--b-stage)); }
+.bio-svg .fxs-k-m0 { stop-color: color-mix(in srgb, var(--b-k) 18%, var(--b-stage)); }
+.bio-svg .fxs-k-m1 { stop-color: color-mix(in srgb, var(--b-k) 40%, var(--b-stage)); }
+.bio-svg .fxs-k-c0 { stop-color: color-mix(in srgb, var(--b-k) 10%, var(--b-stage)); }
+.bio-svg .fxs-k-c1 { stop-color: color-mix(in srgb, var(--b-k) 26%, var(--b-stage)); }
+.bio-svg .fxs-k-c2 { stop-color: color-mix(in srgb, var(--b-k) 42%, var(--b-stage)); }
+.bio-svg .fxs-water-hi { stop-color: color-mix(in srgb, var(--b-water) 42%, #fff); }
+.bio-svg .fxs-water { stop-color: var(--b-water); }
+.bio-svg .fxs-water-lo { stop-color: color-mix(in srgb, var(--b-water) 78%, #1c1414); }
+.bio-svg .fxs-water-s0 { stop-color: color-mix(in srgb, var(--b-water) 8%, var(--b-stage)); }
+.bio-svg .fxs-water-s1 { stop-color: color-mix(in srgb, var(--b-water) 24%, var(--b-stage)); }
+.bio-svg .fxs-water-m0 { stop-color: color-mix(in srgb, var(--b-water) 18%, var(--b-stage)); }
+.bio-svg .fxs-water-m1 { stop-color: color-mix(in srgb, var(--b-water) 40%, var(--b-stage)); }
+.bio-svg .fxs-water-c0 { stop-color: color-mix(in srgb, var(--b-water) 10%, var(--b-stage)); }
+.bio-svg .fxs-water-c1 { stop-color: color-mix(in srgb, var(--b-water) 26%, var(--b-stage)); }
+.bio-svg .fxs-water-c2 { stop-color: color-mix(in srgb, var(--b-water) 42%, var(--b-stage)); }
+.bio-svg .fxs-glu-hi { stop-color: color-mix(in srgb, var(--b-glu) 42%, #fff); }
+.bio-svg .fxs-glu { stop-color: var(--b-glu); }
+.bio-svg .fxs-glu-lo { stop-color: color-mix(in srgb, var(--b-glu) 78%, #1c1414); }
+.bio-svg .fxs-glu-s0 { stop-color: color-mix(in srgb, var(--b-glu) 8%, var(--b-stage)); }
+.bio-svg .fxs-glu-s1 { stop-color: color-mix(in srgb, var(--b-glu) 24%, var(--b-stage)); }
+.bio-svg .fxs-glu-m0 { stop-color: color-mix(in srgb, var(--b-glu) 18%, var(--b-stage)); }
+.bio-svg .fxs-glu-m1 { stop-color: color-mix(in srgb, var(--b-glu) 40%, var(--b-stage)); }
+.bio-svg .fxs-glu-c0 { stop-color: color-mix(in srgb, var(--b-glu) 10%, var(--b-stage)); }
+.bio-svg .fxs-glu-c1 { stop-color: color-mix(in srgb, var(--b-glu) 26%, var(--b-stage)); }
+.bio-svg .fxs-glu-c2 { stop-color: color-mix(in srgb, var(--b-glu) 42%, var(--b-stage)); }
+.bio-svg .fxs-fat-hi { stop-color: color-mix(in srgb, var(--b-fat) 42%, #fff); }
+.bio-svg .fxs-fat { stop-color: var(--b-fat); }
+.bio-svg .fxs-fat-lo { stop-color: color-mix(in srgb, var(--b-fat) 78%, #1c1414); }
+.bio-svg .fxs-fat-s0 { stop-color: color-mix(in srgb, var(--b-fat) 8%, var(--b-stage)); }
+.bio-svg .fxs-fat-s1 { stop-color: color-mix(in srgb, var(--b-fat) 24%, var(--b-stage)); }
+.bio-svg .fxs-fat-m0 { stop-color: color-mix(in srgb, var(--b-fat) 18%, var(--b-stage)); }
+.bio-svg .fxs-fat-m1 { stop-color: color-mix(in srgb, var(--b-fat) 40%, var(--b-stage)); }
+.bio-svg .fxs-fat-c0 { stop-color: color-mix(in srgb, var(--b-fat) 10%, var(--b-stage)); }
+.bio-svg .fxs-fat-c1 { stop-color: color-mix(in srgb, var(--b-fat) 26%, var(--b-stage)); }
+.bio-svg .fxs-fat-c2 { stop-color: color-mix(in srgb, var(--b-fat) 42%, var(--b-stage)); }
+.bio-svg .fxs-hor-hi { stop-color: color-mix(in srgb, var(--b-hor) 42%, #fff); }
+.bio-svg .fxs-hor { stop-color: var(--b-hor); }
+.bio-svg .fxs-hor-lo { stop-color: color-mix(in srgb, var(--b-hor) 78%, #1c1414); }
+.bio-svg .fxs-hor-s0 { stop-color: color-mix(in srgb, var(--b-hor) 8%, var(--b-stage)); }
+.bio-svg .fxs-hor-s1 { stop-color: color-mix(in srgb, var(--b-hor) 24%, var(--b-stage)); }
+.bio-svg .fxs-hor-m0 { stop-color: color-mix(in srgb, var(--b-hor) 18%, var(--b-stage)); }
+.bio-svg .fxs-hor-m1 { stop-color: color-mix(in srgb, var(--b-hor) 40%, var(--b-stage)); }
+.bio-svg .fxs-hor-c0 { stop-color: color-mix(in srgb, var(--b-hor) 10%, var(--b-stage)); }
+.bio-svg .fxs-hor-c1 { stop-color: color-mix(in srgb, var(--b-hor) 26%, var(--b-stage)); }
+.bio-svg .fxs-hor-c2 { stop-color: color-mix(in srgb, var(--b-hor) 42%, var(--b-stage)); }
+.bio-svg .fxs-acid-hi { stop-color: color-mix(in srgb, var(--b-acid) 42%, #fff); }
+.bio-svg .fxs-acid { stop-color: var(--b-acid); }
+.bio-svg .fxs-acid-lo { stop-color: color-mix(in srgb, var(--b-acid) 78%, #1c1414); }
+.bio-svg .fxs-acid-s0 { stop-color: color-mix(in srgb, var(--b-acid) 8%, var(--b-stage)); }
+.bio-svg .fxs-acid-s1 { stop-color: color-mix(in srgb, var(--b-acid) 24%, var(--b-stage)); }
+.bio-svg .fxs-acid-m0 { stop-color: color-mix(in srgb, var(--b-acid) 18%, var(--b-stage)); }
+.bio-svg .fxs-acid-m1 { stop-color: color-mix(in srgb, var(--b-acid) 40%, var(--b-stage)); }
+.bio-svg .fxs-acid-c0 { stop-color: color-mix(in srgb, var(--b-acid) 10%, var(--b-stage)); }
+.bio-svg .fxs-acid-c1 { stop-color: color-mix(in srgb, var(--b-acid) 26%, var(--b-stage)); }
+.bio-svg .fxs-acid-c2 { stop-color: color-mix(in srgb, var(--b-acid) 42%, var(--b-stage)); }
+.bio-svg .fxs-gold-hi { stop-color: color-mix(in srgb, var(--b-gold) 42%, #fff); }
+.bio-svg .fxs-gold { stop-color: var(--b-gold); }
+.bio-svg .fxs-gold-lo { stop-color: color-mix(in srgb, var(--b-gold) 78%, #1c1414); }
+.bio-svg .fxs-gold-s0 { stop-color: color-mix(in srgb, var(--b-gold) 8%, var(--b-stage)); }
+.bio-svg .fxs-gold-s1 { stop-color: color-mix(in srgb, var(--b-gold) 24%, var(--b-stage)); }
+.bio-svg .fxs-gold-m0 { stop-color: color-mix(in srgb, var(--b-gold) 18%, var(--b-stage)); }
+.bio-svg .fxs-gold-m1 { stop-color: color-mix(in srgb, var(--b-gold) 40%, var(--b-stage)); }
+.bio-svg .fxs-gold-c0 { stop-color: color-mix(in srgb, var(--b-gold) 10%, var(--b-stage)); }
+.bio-svg .fxs-gold-c1 { stop-color: color-mix(in srgb, var(--b-gold) 26%, var(--b-stage)); }
+.bio-svg .fxs-gold-c2 { stop-color: color-mix(in srgb, var(--b-gold) 42%, var(--b-stage)); }
+.bio-svg .fxs-teal-hi { stop-color: color-mix(in srgb, var(--b-teal) 42%, #fff); }
+.bio-svg .fxs-teal { stop-color: var(--b-teal); }
+.bio-svg .fxs-teal-lo { stop-color: color-mix(in srgb, var(--b-teal) 78%, #1c1414); }
+.bio-svg .fxs-teal-s0 { stop-color: color-mix(in srgb, var(--b-teal) 8%, var(--b-stage)); }
+.bio-svg .fxs-teal-s1 { stop-color: color-mix(in srgb, var(--b-teal) 24%, var(--b-stage)); }
+.bio-svg .fxs-teal-m0 { stop-color: color-mix(in srgb, var(--b-teal) 18%, var(--b-stage)); }
+.bio-svg .fxs-teal-m1 { stop-color: color-mix(in srgb, var(--b-teal) 40%, var(--b-stage)); }
+.bio-svg .fxs-teal-c0 { stop-color: color-mix(in srgb, var(--b-teal) 10%, var(--b-stage)); }
+.bio-svg .fxs-teal-c1 { stop-color: color-mix(in srgb, var(--b-teal) 26%, var(--b-stage)); }
+.bio-svg .fxs-teal-c2 { stop-color: color-mix(in srgb, var(--b-teal) 42%, var(--b-stage)); }
+.bio-svg .fxs-mem-hi { stop-color: color-mix(in srgb, var(--b-mem) 42%, #fff); }
+.bio-svg .fxs-mem { stop-color: var(--b-mem); }
+.bio-svg .fxs-mem-lo { stop-color: color-mix(in srgb, var(--b-mem) 78%, #1c1414); }
+.bio-svg .fxs-mem-s0 { stop-color: color-mix(in srgb, var(--b-mem) 8%, var(--b-stage)); }
+.bio-svg .fxs-mem-s1 { stop-color: color-mix(in srgb, var(--b-mem) 24%, var(--b-stage)); }
+.bio-svg .fxs-mem-m0 { stop-color: color-mix(in srgb, var(--b-mem) 18%, var(--b-stage)); }
+.bio-svg .fxs-mem-m1 { stop-color: color-mix(in srgb, var(--b-mem) 40%, var(--b-stage)); }
+.bio-svg .fxs-mem-c0 { stop-color: color-mix(in srgb, var(--b-mem) 10%, var(--b-stage)); }
+.bio-svg .fxs-mem-c1 { stop-color: color-mix(in srgb, var(--b-mem) 26%, var(--b-stage)); }
+.bio-svg .fxs-mem-c2 { stop-color: color-mix(in srgb, var(--b-mem) 42%, var(--b-stage)); }
+.bio-svg .fxs-wall-hi { stop-color: color-mix(in srgb, var(--b-wall) 42%, #fff); }
+.bio-svg .fxs-wall { stop-color: var(--b-wall); }
+.bio-svg .fxs-wall-lo { stop-color: color-mix(in srgb, var(--b-wall) 78%, #1c1414); }
+.bio-svg .fxs-wall-s0 { stop-color: color-mix(in srgb, var(--b-wall) 8%, var(--b-stage)); }
+.bio-svg .fxs-wall-s1 { stop-color: color-mix(in srgb, var(--b-wall) 24%, var(--b-stage)); }
+.bio-svg .fxs-wall-m0 { stop-color: color-mix(in srgb, var(--b-wall) 18%, var(--b-stage)); }
+.bio-svg .fxs-wall-m1 { stop-color: color-mix(in srgb, var(--b-wall) 40%, var(--b-stage)); }
+.bio-svg .fxs-wall-c0 { stop-color: color-mix(in srgb, var(--b-wall) 10%, var(--b-stage)); }
+.bio-svg .fxs-wall-c1 { stop-color: color-mix(in srgb, var(--b-wall) 26%, var(--b-stage)); }
+.bio-svg .fxs-wall-c2 { stop-color: color-mix(in srgb, var(--b-wall) 42%, var(--b-stage)); }
+.bio-svg .fxs-cell-0 { stop-color: var(--b-cell); }
+.bio-svg .fxs-cell-1 { stop-color: color-mix(in srgb, var(--b-wall) 16%, var(--b-cell)); }
+.bio-svg .fxs-panel-0 { stop-color: color-mix(in srgb, var(--b-stage) 92%, #fff); }
+.bio-svg .fxs-panel-1 { stop-color: var(--b-stage); }
+
+/* ---- scene-wide look ---- */
+.bio-svg.bio-a { --fx-sh: rgb(92 52 40 / .13); --fx-sh2: rgb(92 52 40 / .2); --fx-halo: color-mix(in srgb, var(--b-stage) 82%, transparent); --fx-pillbg: color-mix(in srgb, var(--b-stage) 88%, transparent); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bio-svg.bio-a { --fx-sh: rgb(0 0 0 / .38); --fx-sh2: rgb(0 0 0 / .5); --fx-halo: color-mix(in srgb, var(--b-stage) 78%, transparent); }
+}
+:root[data-theme="dark"] .bio-svg.bio-a { --fx-sh: rgb(0 0 0 / .38); --fx-sh2: rgb(0 0 0 / .5); --fx-halo: color-mix(in srgb, var(--b-stage) 78%, transparent); }
+
+/* labels: one size system, a soft halo so they stay readable over lines and particles */
+.bio-svg.bio-a text { letter-spacing: .01em; }
+.bio-svg.bio-a .bl { font-size: 15px; font-weight: 500; }
+.bio-svg.bio-a .bs { font-size: 12.5px; }
+.bio-svg.bio-a .b-strong { font-weight: 600; }
+.bio-svg.bio-a .bl, .bio-svg.bio-a .bs { paint-order: stroke fill; stroke: var(--fx-halo); stroke-width: 3.2px; stroke-linejoin: round; }
+.bio-svg.bio-a .ion-t { stroke: none; }
+.bio-svg.bio-a .b-ch-label { stroke: color-mix(in srgb, var(--b-stage) 55%, transparent); stroke-width: 3px; }
+.bio-svg.bio-a .fx-dim { opacity: .5; }
+.bio-svg.bio-a .fx-fade { transition: opacity .5s ease; }
+.bio-svg.bio-a .fx-pill { fill: var(--fx-pillbg); stroke: color-mix(in srgb, var(--b-ink) 9%, transparent); stroke-width: 1; filter: drop-shadow(0 1px 1.5px var(--fx-sh)); }
+.bio-svg.bio-a .fx-pill.warm { fill: color-mix(in srgb, var(--b-gold) 14%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-gold) 45%, transparent); }
+
+/* rounded strokes everywhere */
+.bio-svg.bio-a path, .bio-svg.bio-a line, .bio-svg.bio-a polyline { stroke-linecap: round; stroke-linejoin: round; }
+.bio-svg.bio-a .b-axis { stroke: color-mix(in srgb, var(--muted) 70%, transparent); stroke-width: 1.4; }
+.bio-svg.bio-a .b-grid { stroke: color-mix(in srgb, var(--line) 75%, transparent); }
+.bio-svg.bio-a .b-leader { stroke: color-mix(in srgb, var(--muted) 75%, transparent); stroke-dasharray: 1 4; stroke-width: 1.3; }
+.bio-svg.bio-a .b-dot-ink { fill: color-mix(in srgb, var(--b-ink) 75%, transparent); }
+
+/* cards, boxes and panels: soft paper with a gentle shadow */
+.bio-svg.bio-a :is(.b-node-box, .b-panel, .b-monitor, .b-colbox, .b-badge, .b-tile) { filter: drop-shadow(0 1.5px 2.5px var(--fx-sh)); }
+.bio-svg.bio-a :is(.b-panel, .b-node-box:not(.lit), .b-colbox:not(.on), g:not(.on) > .b-badge) { fill: url(#fxa-panel); }
+.bio-svg.bio-a .b-monitor { fill: color-mix(in srgb, var(--b-teal) 6%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-teal) 18%, var(--line)); }
+.bio-svg.bio-a :is(.b-node-box, .b-colbox, .b-badge, .b-tile, .b-chamber, .b-link, .b-mirror, .b-blast, .b-germ, .b-choano, .b-pump, .b-transporter, .b-wbrain, .b-region) { transition: fill .5s ease, stroke .5s ease, stroke-width .5s ease, filter .5s ease; }
+.bio-svg.bio-a .b-node-box.lit { filter: drop-shadow(0 0 7px color-mix(in srgb, var(--b-gold) 42%, transparent)) drop-shadow(0 1.5px 2.5px var(--fx-sh)); }
+.bio-svg.bio-a .b-node-box.warn.lit { filter: drop-shadow(0 0 7px color-mix(in srgb, var(--b-red) 38%, transparent)) drop-shadow(0 1.5px 2.5px var(--fx-sh)); }
+.bio-svg.bio-a .b-node-box.fx.lit { filter: drop-shadow(0 0 7px color-mix(in srgb, var(--b-teal) 38%, transparent)) drop-shadow(0 1.5px 2.5px var(--fx-sh)); }
+.bio-svg.bio-a .b-colbox.on, .bio-svg.bio-a g.on > .b-badge { filter: drop-shadow(0 0 7px color-mix(in srgb, var(--b-gold) 38%, transparent)) drop-shadow(0 1.5px 2.5px var(--fx-sh)); }
+.bio-svg.bio-a .b-hl { fill: color-mix(in srgb, var(--b-gold) 11%, transparent); stroke: color-mix(in srgb, var(--b-gold) 50%, transparent); stroke-dasharray: 6 5; transition: x .7s cubic-bezier(.65,0,.35,1), y .7s cubic-bezier(.65,0,.35,1), width .7s cubic-bezier(.65,0,.35,1), height .7s cubic-bezier(.65,0,.35,1); }
+.bio-svg.bio-a .b-link { stroke-width: 2.4; }
+.bio-svg.bio-a .b-link.lit { stroke: color-mix(in srgb, var(--b-gold) 85%, var(--b-ink)); }
+.bio-svg.bio-a .b-track { fill: color-mix(in srgb, var(--track) 85%, transparent); }
+.bio-svg.bio-a .b-barfill { filter: drop-shadow(0 1px 1.5px var(--fx-sh)); }
+.bio-svg.bio-a .b-barfill.r0 { fill: url(#fxa-bead-acid); }
+.bio-svg.bio-a .b-barfill.r1 { fill: url(#fxa-bead-water); }
+.bio-svg.bio-a .b-barfill.r2 { fill: url(#fxa-bead-gold); }
+
+/* glossy beads for particles */
+.bio-svg.bio-a :is(.p-oxy, .p-deoxy, .p-water, .p-protein, .p-salt, .p-glu, .p-k, .p-co2, .p-h, .p-puff, .b-bact, .b-mesench) { stroke: color-mix(in srgb, var(--b-ink) 14%, transparent); stroke-width: .6; }
+.bio-svg.bio-a .p-oxy { fill: url(#fxa-bead-red); }
+.bio-svg.bio-a .p-deoxy { fill: url(#fxa-bead-blue); }
+.bio-svg.bio-a .p-water { fill: url(#fxa-bead-water); }
+.bio-svg.bio-a .p-protein { fill: url(#fxa-bead-gold); }
+.bio-svg.bio-a .p-salt { fill: url(#fxa-bead-na); }
+.bio-svg.bio-a .p-glu { fill: url(#fxa-bead-glu); }
+.bio-svg.bio-a .p-k, .bio-svg.bio-a .p-co2 { fill: url(#fxa-bead-k); }
+.bio-svg.bio-a .p-h { fill: url(#fxa-bead-acid); }
+.bio-svg.bio-a .p-puff.a { fill: url(#fxa-bead-gold); }
+.bio-svg.bio-a .p-puff.b { fill: url(#fxa-bead-hor); }
+.bio-svg.bio-a .b-bean-tok { fill: url(#fxa-bead-red); stroke: var(--b-stage); stroke-width: 1.5; filter: drop-shadow(0 1px 2px var(--fx-sh2)); }
+.bio-svg.bio-a .b-grain-tok { fill: url(#fxa-bead-fat); stroke: var(--b-stage); stroke-width: 1.5; filter: drop-shadow(0 1px 2px var(--fx-sh2)); }
+.bio-svg.bio-a .b-pt { stroke: var(--b-stage); stroke-width: 2.5; filter: drop-shadow(0 1px 2px var(--fx-sh2)); }
+.bio-svg.bio-a .b-pt.red { fill: url(#fxa-bead-red); }
+.bio-svg.bio-a .b-pt.teal { fill: url(#fxa-bead-teal); }
+.bio-svg.bio-a .b-pt.gold { fill: url(#fxa-bead-gold); }
+.bio-svg.bio-a .b-hdot { stroke: var(--b-stage); stroke-width: 2; filter: drop-shadow(0 1px 1.5px var(--fx-sh2)); }
+.bio-svg.bio-a .b-hdot.c0 { fill: url(#fxa-bead-teal); }
+.bio-svg.bio-a .b-hdot.c1 { fill: url(#fxa-bead-gold); }
+.bio-svg.bio-a .b-hdot.c2 { fill: url(#fxa-bead-hor); }
+.bio-svg.bio-a .b-dot { fill: url(#fxa-bead-hor); stroke: var(--b-stage); stroke-width: 2.5; }
+.bio-svg.bio-a .b-bact { fill: url(#fxa-bead-k); }
+.bio-svg.bio-a .b-mesench { fill: url(#fxa-bead-red); }
+.bio-svg.bio-a .b-spark { fill: #fff; stroke: var(--b-gold); stroke-width: 2.5; filter: drop-shadow(0 0 3px var(--b-gold)) drop-shadow(0 0 7px color-mix(in srgb, var(--b-gold) 60%, transparent)); }
+/* particles whose colour is set inline (temperature / O2 colour): a light rim and a soft shadow */
+.bio-svg.bio-a .fx-hbead { stroke: color-mix(in srgb, #fff 55%, transparent); stroke-width: 1.4; filter: drop-shadow(0 1px 1.5px var(--fx-sh2)); }
+
+/* organs and tissues: soft gradients + a gentle shadow instead of flat fills */
+.bio-svg.bio-a :is(.b-lung, .b-body, .b-heart, .b-heart-part, .b-cellbody, .b-capillary, .b-lymph, .b-sac, .b-chest, .b-bodyfig, .b-sponge-blob, .b-jelly, .b-flatworm, .b-hydro, .b-bowl, .b-icfcell, .b-mito, .b-muscle, .b-blast, .b-germ, .b-choano, .b-cell, .b-sponge) { filter: drop-shadow(0 2px 3px var(--fx-sh)); }
+.bio-svg.bio-a .b-lung { fill: url(#fxa-soft-red); stroke: color-mix(in srgb, var(--b-red) 40%, transparent); }
+.bio-svg.bio-a .b-body { fill: url(#fxa-soft-blue); stroke: color-mix(in srgb, var(--b-blue) 36%, transparent); }
+.bio-svg.bio-a .b-heart, .bio-svg.bio-a .b-heart-part { fill: url(#fxa-soft-red); }
+.bio-svg.bio-a .b-chamber.blue { fill: url(#fxa-mid-blue); }
+.bio-svg.bio-a .b-chamber.red { fill: url(#fxa-mid-red); }
+.bio-svg.bio-a .b-chamber.glow { stroke: var(--b-gold); stroke-width: 4.5; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--b-gold) 65%, transparent)); }
+.bio-svg.bio-a .b-cellbody, .bio-svg.bio-a .b-cell { fill: url(#fxa-plain-cell); }
+.bio-svg.bio-a .b-capillary, .bio-svg.bio-a .b-lumen { fill: url(#fxa-soft-red); }
+.bio-svg.bio-a .b-lymph { fill: url(#fxa-soft-glu); }
+.bio-svg.bio-a .b-sac { fill: url(#fxa-soft-water); }
+.bio-svg.bio-a .b-chest { fill: url(#fxa-soft-mem); }
+.bio-svg.bio-a .b-bodyfig { fill: url(#fxa-mid-mem); }
+.bio-svg.bio-a .b-sponge-blob { fill: url(#fxa-mid-gold); }
+.bio-svg.bio-a .b-jelly { fill: url(#fxa-cell-hor); }
+.bio-svg.bio-a .b-flatworm { fill: url(#fxa-mid-glu); }
+.bio-svg.bio-a .b-hydro { fill: url(#fxa-mid-water); }
+.bio-svg.bio-a .b-hydro.solid { fill: url(#fxa-mid-red); }
+.bio-svg.bio-a .b-bowl { fill: url(#fxa-mid-water); }
+.bio-svg.bio-a .b-icfcell { fill: url(#fxa-cell-k); }
+.bio-svg.bio-a .b-mito { fill: url(#fxa-mid-gold); }
+.bio-svg.bio-a .b-muscle { fill: url(#fxa-mid-red); }
+.bio-svg.bio-a .b-muscle-bg { fill: url(#fxa-soft-red); }
+.bio-svg.bio-a .b-water-bg { fill: url(#fxa-soft-blue); }
+.bio-svg.bio-a .b-isf { fill: url(#fxa-soft-water); }
+.bio-svg.bio-a .b-blast { fill: url(#fxa-cell-glu); }
+.bio-svg.bio-a .b-blast.lo { fill: url(#fxa-cell-gold); }
+.bio-svg.bio-a .b-blast.hi { fill: url(#fxa-cell-teal); }
+.bio-svg.bio-a .b-germ { fill: url(#fxa-cell-glu); }
+.bio-svg.bio-a .b-germ.ecto { fill: url(#fxa-cell-blue); }
+.bio-svg.bio-a .b-germ.meso { fill: url(#fxa-cell-red); }
+.bio-svg.bio-a .b-germ.endo { fill: url(#fxa-cell-gold); }
+.bio-svg.bio-a .b-choano { fill: url(#fxa-cell-water); }
+.bio-svg.bio-a .b-choano.feed { fill: url(#fxa-cell-glu); }
+.bio-svg.bio-a .b-choano.swim { fill: url(#fxa-cell-hor); }
+.bio-svg.bio-a .b-choano.rep { fill: url(#fxa-cell-gold); }
+.bio-svg.bio-a .b-pipe { opacity: .3; }
+.bio-svg.bio-a .b-vessel { opacity: .22; }
+.bio-svg.bio-a .b-vessel.glow { opacity: .5; }
+.bio-svg.bio-a .b-lay { filter: drop-shadow(0 1px 1.5px var(--fx-sh)); }
+.bio-svg.bio-a .b-lay.ecto { fill: url(#fxa-mid-blue); }
+.bio-svg.bio-a .b-lay.meso { fill: url(#fxa-mid-red); }
+.bio-svg.bio-a .b-lay.cav { fill: url(#fxa-soft-water); }
+.bio-svg.bio-a .b-lay.endo { fill: url(#fxa-mid-gold); }
+.bio-svg .fxs-wave-0 { stop-color: var(--b-gold); stop-opacity: .1; }
+.bio-svg .fxs-wave-1 { stop-color: var(--b-gold); stop-opacity: .3; }
+.bio-svg .fxs-wave-2 { stop-color: var(--b-gold); stop-opacity: .75; }
+.bio-svg .fxs-glow-0 { stop-color: var(--b-gold); stop-opacity: .35; }
+.bio-svg .fxs-glow-1 { stop-color: var(--b-gold); stop-opacity: 0; }
+
+/* emphasis helpers */
+.bio-svg.bio-a .fx-glow { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--b-gold) 55%, transparent)) drop-shadow(0 2px 3px var(--fx-sh)); stroke: var(--b-gold); stroke-width: 2.5; transition: filter .5s ease, stroke .5s ease; }
+.bio-svg.bio-a .fx-hot { fill: var(--b-ink); font-weight: 700; }
+
+/* ---- lecture 5 ---- */
+.bio-svg.bio-a .b-wave { fill: url(#fxa-wave); opacity: 1; }
+.bio-svg.bio-a .b-node { fill: var(--b-stage); stroke-width: 2.5; }
+.bio-svg.bio-a .b-node.fire { fill: var(--b-gold); filter: drop-shadow(0 0 5px var(--b-gold)) drop-shadow(0 0 10px color-mix(in srgb, var(--b-gold) 60%, transparent)); }
+.bio-svg.bio-a .b-wire { stroke-width: 2.6; opacity: .55; }
+.bio-svg.bio-a .b-trace { stroke-width: 2.4; filter: drop-shadow(0 0 2px color-mix(in srgb, var(--b-teal) 45%, transparent)); }
+.bio-svg.bio-a .b-ecg-label { font-size: 11.5px; }
+.bio-svg.bio-a .b-rbc.red { fill: url(#fxa-bead-red); stroke: color-mix(in srgb, var(--b-red) 65%, #000); stroke-width: 1.5; filter: drop-shadow(0 2px 3px var(--fx-sh2)); }
+.bio-svg.bio-a .b-rbc.blue { fill: url(#fxa-bead-blue); stroke: color-mix(in srgb, var(--b-blue) 65%, #000); stroke-width: 1.5; filter: drop-shadow(0 2px 3px var(--fx-sh2)); }
+.bio-svg.bio-a .b-o2 { filter: drop-shadow(0 0 2px rgb(255 255 255 / .8)); }
+.bio-svg.bio-a .b-curve { stroke-width: 3; filter: drop-shadow(0 1px 2px var(--fx-sh)); }
+.bio-svg.bio-a .b-wall-art { stroke-width: 3.5; filter: drop-shadow(0 1px 1.5px var(--fx-sh)); }
+.bio-svg.bio-a .b-valve { stroke-width: 3.5; }
+.bio-svg.bio-a .b-arrow { stroke-width: 2.4; }
+.bio-svg.bio-a .b-heat { stroke-width: 2.6; stroke-dasharray: 3 5; }
+.bio-svg.bio-a .b-ch-label { font-size: 13.5px; fill: color-mix(in srgb, var(--b-ink) 85%, transparent); }
+
+/* scenes pulled into the phone-safe middle (fit() scales them by .94): keep text the same size */
+.bio-svg.bio-a.fx-fitted .bl { font-size: 15.9px; }
+.bio-svg.bio-a.fx-fitted .bs { font-size: 13.3px; }
+.bio-svg.bio-a.fx-fitted .b-ch-label { font-size: 14.3px; }
+.bio-svg.bio-a.fx-fitted .b-ecg-label { font-size: 12.2px; }
+
+/* ---- lecture 2 ---- */
+.bio-svg.bio-a .b-blk { filter: drop-shadow(0 2px 2.5px var(--fx-sh)); stroke-width: 1.6; }
+.bio-svg.bio-a .b-slot { stroke: color-mix(in srgb, var(--line-strong) 70%, transparent); }
+.bio-svg.bio-a .fx-pen { stroke: var(--b-stage); stroke-width: 2; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--b-ink) 18%, transparent)); }
+.bio-svg.bio-a .b-line { stroke-width: 2.6; }
+.bio-svg.bio-a .b-hline { stroke-width: 2.6; }
+.bio-svg.bio-a .b-flame { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--b-acid) 45%, transparent)); }
+.bio-svg.bio-a .b-tile.bean, .bio-svg.bio-a .b-tile.grain, .bio-svg.bio-a .b-tile.mix { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--b-gold) 30%, transparent)) drop-shadow(0 1.5px 2.5px var(--fx-sh)); }
+.bio-svg.bio-a .b-tile.miss { stroke: color-mix(in srgb, var(--b-red) 70%, var(--b-ink)); }
+.bio-svg.bio-a .b-bean, .bio-svg.bio-a .b-grain { filter: drop-shadow(0 1px 1px var(--fx-sh)); }
+.bio-svg.bio-a .b-tract { stroke-width: 8; }
+
+/* ---- lecture 3 ---- */
+.bio-svg .fxs-dusk-0 { stop-color: var(--b-gold); stop-opacity: 0; }
+.bio-svg .fxs-dusk-1 { stop-color: var(--b-acid); stop-opacity: .42; }
+.bio-svg.bio-a .fx-dusk { fill: url(#fxa-dusk); }
+.bio-svg.bio-a .fx-star { fill: #fff; }
+.bio-svg.bio-a .fx-sunhalo { fill: url(#fxa-glow-gold); }
+.bio-svg.bio-a .b-sun { filter: drop-shadow(0 0 8px color-mix(in srgb, var(--b-gold) 70%, transparent)); }
+.bio-svg.bio-a .b-moon { filter: drop-shadow(0 0 6px rgb(255 255 255 / .45)); }
+.bio-svg.bio-a .b-tnz { transition: fill .6s ease, stroke .6s ease; }
+.bio-svg.bio-a .b-tnz.on { fill: color-mix(in srgb, var(--b-teal) 22%, transparent); stroke: color-mix(in srgb, var(--b-teal) 70%, transparent); }
+.bio-svg.bio-a .b-burrow { stroke: color-mix(in srgb, var(--b-water) 10%, var(--b-stage)); filter: drop-shadow(0 1px 2px var(--fx-sh)); }
+.bio-svg.bio-a .b-burrow-fill { fill: color-mix(in srgb, var(--b-water) 10%, var(--b-stage)); }
+.bio-svg.bio-a .b-soil { fill: url(#fxa-mid-wall); }
+.bio-svg.bio-a .b-snow { fill: url(#fxa-soft-water); }
+.bio-svg.bio-a .b-flake { filter: drop-shadow(0 0 2px rgb(255 255 255 / .6)); }
+.bio-svg.bio-a .b-fur { stroke-width: 2.6; }
+.bio-svg.bio-a .b-pump, .bio-svg.bio-a .b-transporter { filter: drop-shadow(0 1.5px 2px var(--fx-sh)); }
+.bio-svg.bio-a .b-pump.busy { filter: drop-shadow(0 0 6px var(--b-gold)); }
+.bio-svg.bio-a .b-transporter.busy { filter: drop-shadow(0 0 6px var(--b-teal)); }
+.bio-svg.bio-a .b-threshold { stroke-width: 1.8; }
+
+/* ---- lecture 4 ---- */
+.bio-svg.bio-a .b-airway { stroke: color-mix(in srgb, var(--b-water) 40%, var(--b-stage)); filter: drop-shadow(0 1.5px 2px var(--fx-sh)); }
+.bio-svg.bio-a .b-parab { stroke-width: 2.2; }
+.bio-svg.bio-a .b-diaphragm { stroke-width: 6.5; filter: drop-shadow(0 2px 3px var(--fx-sh)); }
+.bio-svg.bio-a .b-o2flow { stroke-width: 2.6; }
+.bio-svg.bio-a .b-jar { stroke: color-mix(in srgb, var(--line-strong) 80%, transparent); }
+.bio-svg.bio-a .b-lipid { fill: url(#fxa-mid-mem); }

@@ -1,6 +1,7 @@
 // Lecture 9 · Ch 32.1–32.4 · Endocrine system
 
 import { E, T, Track, at, move, show, setText, smooth, keys, frac, lerp, clamp, TAU, win, arrowDefs } from './kit.js';
+import { fx, pill, pillText, pillAt, ease, eased, env, flow, scaleAt } from './fx-b.js';
 
 // ---------------------------------------------------------------- 1. how far does the message go?
 
@@ -15,6 +16,9 @@ const KINDS = [
 const signals = {
   id: 'l9-signals', title: 'Chemical signals at different distances', dur: 15,
   build(svg) {
+    fx(svg);
+    svg.classList.add('has-art', 'art-l9-signals');
+    E('image', { href: new URL('./art/l9-signals.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     const P = [[14, 14], [222, 14], [430, 14], [118, 190], [326, 190]];
     const W = 196, H = 160;
@@ -22,10 +26,11 @@ const signals = {
       const grp = E('g', {}, g);
       const r = E('rect', { x, y, width: W, height: H, rx: 16, class: 'b-colbox' }, grp);
       T(grp, x + 12, y + 22, KINDS[i][0], 'bs b-strong');
-      return { r, x, y };
+      return { r, grp, x, y, f: 0 };
     });
     const dots = [];
-    const cell = (x, y, r = 18, cls = 'b-sigcell') => E('circle', { cx: x, cy: y, r, class: cls }, g);
+    let nc = 0;
+    const cell = (x, y, r = 18, cls = 'b-sigcell') => E('circle', { cx: x, cy: y, r, class: `${cls} fxb-breathe d${nc++ % 4}` }, g);
     // autocrine
     { const { x, y } = boxes[0]; cell(x + 98, y + 92, 24); dots.push({ n: 6, path: (u, i) => { const a = i / 6 * TAU; const r = 24 + 26 * Math.sin(Math.PI * u); return [x + 98 + Math.cos(a) * r, y + 92 + Math.sin(a) * r]; } }); }
     // paracrine
@@ -40,16 +45,20 @@ const signals = {
       E('circle', { cx: x + 98, cy: y + 92, r: 16, class: 'b-sigcell' }, g); E('rect', { x: x + 124, y: y + 62, width: 40, height: 60, rx: 10, class: 'b-sigcell t' }, g);
       dots.push({ n: 6, path: (u, i) => [lerp(x + 112, x + 126, u), y + 78 + i * 6] }); }
     // pheromone
-    { const { x, y } = boxes[4]; T(g, x + 36, y + 104, '🦋', 'b-emoji', { 'text-anchor': 'middle' }); T(g, x + 162, y + 104, '🦋', 'b-emoji', { 'text-anchor': 'middle' });
+    { const { x, y } = boxes[4]; T(g, x + 36, y + 104, '🦋', 'b-emoji fxb-float', { 'text-anchor': 'middle' }); T(g, x + 162, y + 104, '🦋', 'b-emoji fxb-float d1', { 'text-anchor': 'middle' });
       dots.push({ n: 7, path: (u, i) => [lerp(x + 56, x + 142, u), y + 92 + Math.sin(u * 9 + i) * 14] }); }
     dots.forEach(d => { d.els = Array.from({ length: d.n }, () => E('circle', { r: 4, class: 'p-hor' }, g)); });
-    return (lt, _dt, t) => {
+    return (lt, dt, t) => {
       const focus = Math.min(4, Math.floor(lt / 3));
-      boxes.forEach((b, i) => b.r.classList.toggle('on', i === focus));
+      boxes.forEach((b, i) => {
+        b.r.classList.toggle('on', i === focus);
+        b.f += ((i === focus ? 1 : 0) - b.f) * Math.min(1, (dt || 1) * 5);
+        scaleAt(b.r, b.x + W / 2, b.y + H / 2, 1 + 0.02 * b.f);
+      });
       dots.forEach((d, j) => d.els.forEach((el, i) => {
         const u = frac(t * 0.4 + i / d.n);
-        const [x, y] = d.path(u, i);
-        at(el, x, y); show(el, Math.sin(Math.PI * u) * (j === focus ? 1 : 0.45));
+        const [x, y] = d.path(ease(u), i);
+        at(el, x, y); show(el, env(u, 0.22) * (j === focus ? 1 : 0.35));
       }));
       return `${KINDS[focus][0]}: ${KINDS[focus][1].toLowerCase()}`;
     };
@@ -69,6 +78,9 @@ const signals = {
 const receptors = {
   id: 'l9-receptors', title: 'Peptide vs steroid hormones: outside vs inside receptors', dur: 15,
   build(svg) {
+    fx(svg);
+    svg.classList.add('has-art', 'art-l9-receptors');
+    E('image', { href: new URL('./art/l9-receptors.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     T(g, 160, 22, 'Peptide hormone (e.g. insulin)', 'bl b-strong', { 'text-anchor': 'middle' });
     T(g, 160, 40, 'water-soluble → can’t cross the membrane', 'bs', { 'text-anchor': 'middle' });
@@ -85,11 +97,12 @@ const receptors = {
     const pep = E('g', {}, g); [0, 1, 2].forEach(i => E('circle', { cx: i * 10 - 10, cy: 0, r: 6, class: 'p-deoxy' }, pep));
     const gT = T(g, 0, 0, 'G protein', 'bs b-strong', { 'text-anchor': 'middle' });
     const msgs = Array.from({ length: 18 }, () => E('circle', { r: 4, class: 'p-hor' }, g));
-    const resp = T(g, 160, 316, '', 'bs b-strong', { 'text-anchor': 'middle' });
-    const clock1 = T(g, 30, 356, '', 'bs b-strong b-good-t');
+    const resp = pill(g, 160, 296, '', 'bs b-strong', { 'text-anchor': 'middle' });
+    const resp2 = T(g, 160, 316, '', 'bs', { 'text-anchor': 'middle' });
+    const clock1 = T(g, 40, 354, '', 'bs b-strong b-good-t');
     // right cell
     E('rect', { x: 344, y: 96, width: 272, height: 240, rx: 28, class: 'b-cellbody' }, g);
-    E('circle', { cx: 520, cy: 240, r: 58, class: 'b-nucleusbig' }, g);
+    E('circle', { cx: 520, cy: 240, r: 58, class: 'b-nucleusbig fxb-breathe' }, g);
     T(g, 520, 316, 'nucleus', 'bs', { 'text-anchor': 'middle' });
     E('path', { d: 'M482,232 C496,222 510,242 524,232 C538,222 552,242 566,232', class: 'b-dna' }, g);
     E('path', { d: 'M482,244 C496,234 510,254 524,244 C538,234 552,254 566,244', class: 'b-dna' }, g);
@@ -98,8 +111,8 @@ const receptors = {
     const rec = E('ellipse', { rx: 16, ry: 11, class: 'b-irec' }, g);
     const mrna = E('path', { class: 'b-mrna' }, g);
     const prot = Array.from({ length: 7 }, () => E('circle', { r: 5, class: 'b-protbead' }, g));
-    const clock2 = T(g, 350, 356, '', 'bs b-strong b-acid-t');
-    return lt => {
+    const clock2 = T(g, 352, 354, '', 'bs b-strong b-acid-t');
+    return (lt, _dt, t) => {
       // peptide: bind → G protein → enzyme → many messengers
       const pp = keys(lt, [[0, [131, 60]], [1.5, [131, 74]]]);
       move(pep, pp[0], pp[1]);
@@ -109,14 +122,16 @@ const receptors = {
         const start = 3.6 + i * 0.12;
         const u = smooth(start, start + 1.4, lt);
         const a = (i / msgs.length) * Math.PI + 0.1;
-        at(m, 227 + Math.cos(a) * -1 * u * (40 + (i % 4) * 22), 130 + Math.sin(a) * u * (60 + (i % 3) * 30));
-        show(m, u > 0 ? 1 : 0);
+        const e = ease(u);
+        at(m, Math.min(282, 227 + Math.cos(a) * -1 * e * (40 + (i % 4) * 22) * (Math.cos(a) < 0 ? 0.55 : 1) + 2 * Math.sin(t * 2 + i) * e), 130 + Math.sin(a) * e * (60 + (i % 3) * 30) + 2 * Math.cos(t * 1.7 + i) * e);
+        show(m, smooth(start, start + 0.2, lt));
       });
-      setText(resp, lt > 5.5 ? 'one hormone → thousands of messengers (amplification)' : '');
+      pillText(resp, lt > 5.5 ? 'one hormone → thousands of messengers' : ''); show(resp.parentNode, smooth(5.5, 6, lt));
+      setText(resp2, lt > 5.5 ? '(amplification)' : ''); show(resp2, smooth(5.5, 6, lt));
       setText(clock1, lt > 6 ? '⏱ fast: seconds to minutes' : '');
       // steroid: cross membrane → receptor in cytoplasm → nucleus → mRNA → protein
       const sp = keys(lt, [[0, [404, 72]], [1.6, [404, 150]], [3, [430, 170]], [5, [512, 214]]]);
-      move(ster, sp[0], sp[1], 0.9);
+      move(ster, sp[0], sp[1], 0.9, 6 * Math.sin(t * 1.5));
       const rp = keys(lt, [[1.6, [430, 186]], [3, [430, 182]], [5, [512, 226]]]);
       at(rec, rp[0], rp[1]);
       const grow = smooth(5.5, 8.5, lt);
@@ -149,6 +164,9 @@ const receptors = {
 const pituitary = {
   id: 'l9-pit', title: 'Hypothalamus and pituitary: brain meets glands', dur: 18,
   build(svg) {
+    fx(svg);
+    svg.classList.add('has-art', 'art-l9-pit');
+    E('image', { href: new URL('./art/l9-pit.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     E('path', { d: 'M0,0 L640,0 L640,120 C520,130 420,120 380,150 L260,150 C220,120 120,130 0,120z', class: 'b-brain' }, g);
     T(g, 320, 26, 'Hypothalamus (brain)', 'bl b-strong', { 'text-anchor': 'middle' });
@@ -160,20 +178,20 @@ const pituitary = {
     T(g, 500, 330, 'posterior pituitary', 'bs b-strong', { 'text-anchor': 'middle' });
     T(g, 500, 346, '(an extension of the brain)', 'bs', { 'text-anchor': 'middle' });
     // posterior route: neuron from hypothalamus straight down
-    E('circle', { cx: 440, cy: 70, r: 16, class: 'b-soma' }, g);
+    E('circle', { cx: 440, cy: 70, r: 16, class: 'b-soma fxb-breathe' }, g);
     const pAx = 'M440,86 C430,130 360,150 340,190 C330,220 360,250 372,270';
     E('path', { d: pAx, class: 'b-axon thin' }, g);
     const pTr = new Track(g, pAx);
     E('path', { d: 'M470,260 C420,262 400,284 360,282 C330,280 330,260 360,252 C400,244 440,238 640,236', class: 'b-cap' }, g);
     const pOut = new Track(g, 'M372,272 C400,262 440,240 640,236');
     // anterior route: releasing hormone → portal vessels → endocrine cells
-    E('circle', { cx: 200, cy: 70, r: 16, class: 'b-soma' }, g);
+    E('circle', { cx: 200, cy: 70, r: 16, class: 'b-soma fxb-breathe d2' }, g);
     const aAx = 'M200,86 C220,110 270,120 296,140';
     E('path', { d: aAx, class: 'b-axon thin' }, g);
     const aTr = new Track(g, aAx);
     E('path', { d: 'M260,150 C280,130 310,140 304,160 C300,175 296,190 290,206 C280,232 250,236 240,260', class: 'b-cap' }, g);
     const portal = new Track(g, 'M300,146 C304,165 296,190 290,206 C280,232 250,236 240,258');
-    T(g, 360, 186, 'portal vessels', 'bs');
+    pill(g, 362, 186, 'portal vessels', 'bs');
     const cells = [[220, 262], [252, 286], [214, 300], [262, 252]].map(([x, y]) => E('circle', { cx: x, cy: y, r: 11, class: 'b-endocell' }, g));
     E('path', { d: 'M250,300 C230,320 160,300 0,290', class: 'b-cap' }, g);
     const aOut = new Track(g, 'M240,280 C220,300 160,300 0,290');
@@ -182,13 +200,16 @@ const pituitary = {
     const dA = Array.from({ length: 5 }, () => E('circle', { r: 4.5, class: 'p-rh' }, g));
     const dPor = Array.from({ length: 6 }, () => E('circle', { r: 4.5, class: 'p-rh' }, g));
     const dAo = Array.from({ length: 8 }, (_, i) => E('circle', { r: 4.5, class: `p-trop c${i % 4}` }, g));
-    const lp = T(g, 630, 222, 'ADH, oxytocin → blood', 'bs b-strong b-hor-t', { 'text-anchor': 'end' });
-    const la = E('g', {}, g); T(la, 8, 236, 'TSH, ACTH, LH, FSH,', 'bs b-strong'); T(la, 8, 252, 'GH, prolactin → blood', 'bs b-strong');
-    const lr = T(g, 190, 122, 'releasing hormones', 'bs b-strong b-teal-t', { 'text-anchor': 'end' });
+    const lp = pill(g, 600, 216, 'ADH, oxytocin → blood', 'bs b-strong b-hor-t', { 'text-anchor': 'end' }).parentNode;
+    lp.firstChild.classList.add('rose');
+    const la = E('g', {}, g); T(la, 40, 236, 'TSH, ACTH, LH, FSH,', 'bs b-strong'); T(la, 40, 252, 'GH, prolactin → blood', 'bs b-strong');
+    const lr = pill(g, 190, 124, 'releasing hormones', 'bs b-strong b-teal-t', { 'text-anchor': 'end' }).parentNode;
+    lr.firstChild.classList.add('cool');
     return (lt, _dt, t) => {
-      const postFocus = lt < 8 ? 1 : 0.3, antFocus = lt < 8 ? 0.3 : 1;
+      const sw = smooth(7.6, 8.4, lt) * (1 - smooth(17.4, 18, lt));
+      const postFocus = lerp(1, 0.25, sw), antFocus = lerp(0.25, 1, sw);
       post.classList.toggle('on', lt < 8); ant.classList.toggle('on', lt >= 8);
-      const run = (arr, tr, speed, op, off = 0) => arr.forEach((d, i) => { const u = frac(t * speed + i / arr.length + off); const [x, y] = tr.pos(u); at(d, x, y); show(d, op * Math.min(1, Math.sin(Math.PI * u) * 2)); });
+      const run = (arr, tr, speed, op, off = 0) => arr.forEach((d, i) => { const u = frac(t * speed + i / arr.length + off); const [x, y] = tr.pos(u); at(d, x + 1.5 * Math.sin(t * 3 + i), y); show(d, op * env(u, 0.12)); });
       run(dP, pTr, 0.35, postFocus);
       run(dPo, pOut, 0.3, postFocus, 0.3);
       run(dA, aTr, 0.4, antFocus);
@@ -234,6 +255,7 @@ const feedback = {
     ui.seg('fb', [['on', 'Feedback on'], ['off', 'Feedback broken']], 'Feedback');
     let pulse = -99;
     ui.button('Trigger it', () => { pulse = now; });
+    const fid = fx(svg);
     let now = 0;
     const g = E('g', {}, svg);
     const head = arrowDefs(svg, 'b-m-fb', 'b-head ink');
@@ -255,7 +277,8 @@ const feedback = {
     E('rect', { x: GX0 - 10, y: GY0 - 26, width: GX1 - GX0 + 20, height: GY1 - GY0 + 46, rx: 12, class: 'b-monitor' }, g);
     for (const v of [1, 2, 3]) { E('line', { x1: GX0, y1: GY1 - v * 60, x2: GX1, y2: GY1 - v * 60, class: 'b-grid' }, g); }
     T(g, GX0, GY1 + 14, 'normal level = 1 line', 'bs');
-    const lines = ['c0', 'c1', 'c2'].map(c => E('path', { class: `b-hline ${c}` }, g));
+    E('rect', { x: GX0, y: GY0 - 26, width: GX1 - GX0, height: GY1 - GY0 + 46 }, E('clipPath', { id: `${fid}-fbclip` }, svg.querySelector('defs')));
+    const lines = ['c0', 'c1', 'c2'].map(c => E('path', { class: `b-hline ${c}`, 'clip-path': `url(#${fid}-fbclip)` }, g));
     const legend = [0, 1, 2].map(i => T(g, GX0 + i * 88, GY0 - 8, '', `bs b-strong b-hl-t c${i}`));
     const hist = [];
     return (lt, dt, t) => {
@@ -278,6 +301,7 @@ const feedback = {
         x[1] += h * (x[0] * inh(x[2]) - x[1]) / 0.6;
         x[2] += h * (x[1] - x[2]) / 0.9;
       }
+      if (hist.length && hist[hist.length - 1][0] > t) hist.length = 0;
       if (dt > 0) hist.push([t, [...x]]);
       while (hist.length && hist[0][0] < t - WIN) hist.shift();
       lines.forEach((ln, i) => {
@@ -288,7 +312,7 @@ const feedback = {
       flows.forEach((arr, i) => arr.forEach((dd, j) => {
         const u = frac(t * 0.6 * Math.max(0.3, x[i]) + j / 4);
         const y0 = [NY[0] + NH, NY[1] + NH, NY[2] + NH][i], y1 = [NY[1], NY[2], 300][i];
-        at(dd, NX + 70, lerp(y0, y1, u)); show(dd, Math.min(1, x[i] / 1.4) * Math.sin(Math.PI * u));
+        at(dd, NX + 70, lerp(y0, y1, ease(u))); show(dd, Math.min(1, x[i] / 1.4) * env(u, 0.25));
       }));
       [fbA, fbB, ...minus].forEach(el => show(el, fbOn ? 0.4 + 0.6 * clamp(x[2] - 0.6) : 0.12));
       boxes.forEach((b, i) => b.classList.toggle('lit', x[i] > 1.3));

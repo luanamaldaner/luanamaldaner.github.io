@@ -1,6 +1,7 @@
 // Lecture 5 · Ch 30.4–30.6 · Circulation
 
 import { E, T, Track, at, move, show, setText, smooth, keys, frac, lerp, gauss, clamp, TAU, arrowDefs } from './kit.js';
+import { polish, fit, pill, pills, breath, scaleAbout, drift, ease, life, flag, beadify } from './fx-a.js';
 
 // ---------------------------------------------------------------- 1. heart and the two loops
 
@@ -16,10 +17,15 @@ const heart = {
     [15, '⑥ The left ventricle, the strongest chamber, pumps it out the aorta to the whole body'],
   ],
   build(svg, s, ui) {
+    polish(svg);
+    // painted artwork underneath; the drawn shapes stay on top only for motion and highlights
+    svg.classList.add('has-art', 'art-l5-heart');
+    E('image', { href: new URL('./art/l5-heart.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     ui.seg('mode', [['rest', 'Resting'], ['run', 'Exercising']], 'Activity');
     const g = E('g', {}, svg);
     // organs
     const lungs = E('g', {}, g);
+    const heartG = E('g', {}, g);
     E('path', { d: 'M240,30 q-30,0 -30,26 q0,22 34,22 h52 q12,0 12,-14 v-22 q0,-12 -14,-12z', class: 'b-lung' }, lungs);
     E('path', { d: 'M400,30 q30,0 30,26 q0,22 -34,22 h-52 q-12,0 -12,-14 v-22 q0,-12 14,-12z', class: 'b-lung' }, lungs);
     T(g, 320, 22, 'Lungs: pick up O₂, drop CO₂', 'bs', { 'text-anchor': 'middle' });
@@ -41,14 +47,14 @@ const heart = {
     const track = new Track(g, P);
 
     // heart outline and chambers
-    E('path', { d: 'M320,112 C290,92 222,96 214,150 C206,205 262,262 320,292 C378,262 434,205 426,150 C418,96 350,92 320,112z', class: 'b-heart' }, g);
-    E('line', { x1: 320, y1: 118, x2: 320, y2: 284, class: 'b-septum' }, g);
+    E('path', { d: 'M320,112 C290,92 222,96 214,150 C206,205 262,262 320,292 C378,262 434,205 426,150 C418,96 350,92 320,112z', class: 'b-heart' }, heartG);
+    E('line', { x1: 320, y1: 118, x2: 320, y2: 284, class: 'b-septum' }, heartG);
+    g.append(heartG);
     const ch = {};
     const chamber = (id, x, y, rx, ry, color, label) => {
       const c = E('g', {}, g);
       E('ellipse', { cx: 0, cy: 0, rx, ry, class: `b-chamber ${color}` }, c);
-      T(c, 0, 5, label, 'bl b-ch-label', { 'text-anchor': 'middle' });
-      ch[id] = { g: c, x, y, el: c.firstChild };
+      ch[id] = { g: c, x, y, el: c.firstChild, label };
     };
     chamber('RA', 258, 152, 34, 28, 'blue', 'RA');
     chamber('RV', 266, 222, 40, 40, 'blue', 'RV');
@@ -68,6 +74,8 @@ const heart = {
       return { g: c, red: E('circle', { r: 5.2, class: 'p-oxy' }, c), blue: E('circle', { r: 5.2, class: 'p-deoxy' }, c) };
     });
 
+    // chamber names sit above the moving blood so they never get covered
+    for (const k of Object.keys(ch)) ch[k].t = T(g, ch[k].x, ch[k].y + 5, ch[k].label, 'bl b-ch-label', { 'text-anchor': 'middle' });
     // readout
     const rd = E('g', {}, g);
     const r1 = T(rd, 14, 26, '', 'bs');
@@ -75,9 +83,9 @@ const heart = {
     const r3 = T(rd, 14, 66, '', 'bl b-strong');
     const sys = T(g, 320, 284, '', 'bs b-phase', { 'text-anchor': 'middle' });
 
-    let phase = 0, flow = 0;
+    let phase = 0, flow = 0, idle = 0;
     const HL = [['RA', 1], ['RV'], ['RV', 3], ['LA', 4, 5], ['LV'], ['LV', 7]];
-    return (t, dt) => {
+    return (lt, dt) => {
       const run = s.vars.mode === 'run';
       const hr = run ? 150 : 70, sv = run ? 110 : 70;
       phase = frac(phase + dt * hr / 60 * 0.8);
@@ -86,18 +94,23 @@ const heart = {
       const ven = 1 - (run ? 0.2 : 0.13) * vsq;
       for (const k of ['RA', 'LA']) move(ch[k].g, ch[k].x, ch[k].y, atr);
       for (const k of ['RV', 'LV']) move(ch[k].g, ch[k].x, ch[k].y, ven);
+      idle += dt;
+      scaleAbout(heartG, 320, 200, 1 - 0.018 * vsq);
+      scaleAbout(lungs, 320, 54, 1 + 0.025 * breath(idle, run ? 2.2 : 4.2));
       setText(sys, vsq > 0.05 ? 'systole: ventricles squeeze' : 'diastole: ventricles relax and fill');
       flow = frac(flow + dt * (run ? 0.085 : 0.045) * (0.45 + 1.4 * vsq));
 
-      const step = Math.min(5, Math.floor(t / 3));
+      const step = Math.min(5, Math.floor((lt % 18) / 3));
       const on = new Set(HL[step].map(String));
-      for (const k of Object.keys(ch)) ch[k].el.classList.toggle('glow', on.has(k));
+      for (const k of Object.keys(ch)) { ch[k].el.classList.toggle('glow', on.has(k)); flag(ch[k].t, 'fx-hot', on.has(k)); }
       vessels.forEach((v, i) => v.classList.toggle('glow', on.has(String(i))));
 
       cells.forEach((c, i) => {
         const u = frac(flow + i / N);
-        const [x, y] = track.pos(u);
+        const [x0, y0] = track.pos(u);
         const [seg, k] = track.seg(u);
+        const a = track.angle(u), lane = ((i * 7) % 5 - 2) * 1.6;
+        const x = x0 - Math.sin(a) * lane, y = y0 + Math.cos(a) * lane;
         const oxy = seg === 0 ? 1 - smooth(0.25, 0.75, k) : seg === 4 ? smooth(0.25, 0.75, k) : seg >= 5 ? 1 : 0;
         move(c.g, x, y);
         show(c.red, oxy); show(c.blue, 1 - oxy);
@@ -131,6 +144,10 @@ const ecg = {
   id: 'l5-ecg', title: 'What makes the heart beat (and the ECG)',
   vars: { speed: 'slow' },
   build(svg, s, ui) {
+    polish(svg);
+    // painted artwork underneath (pre-scaled to cancel fit()); drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l5-ecg');
+    E('image', { href: new URL('./art/l5-ecg.jpg', import.meta.url).href, x: -20.43, y: -11.49, width: 680.85, height: 382.98, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     ui.seg('speed', [['slow', 'Slow motion'], ['real', 'Real speed']], 'Speed');
     const g = E('g', {}, svg);
     const defs = E('defs', {}, svg);
@@ -138,13 +155,14 @@ const ecg = {
     const ventD = 'M102,176 C142,184 205,184 240,178 C258,214 228,280 172,318 C118,282 88,216 102,176z';
     const ca = E('clipPath', { id: 'b-atria-clip' }, defs); E('path', { d: atriaD }, ca);
     const cv = E('clipPath', { id: 'b-vent-clip' }, defs); E('path', { d: ventD }, cv);
-    E('path', { d: atriaD, class: 'b-heart-part' }, g);
-    E('path', { d: ventD, class: 'b-heart-part' }, g);
-    const wa = E('circle', { cx: 120, cy: 122, r: 0, class: 'b-wave', 'clip-path': 'url(#b-atria-clip)' }, g);
-    const wv = E('circle', { cx: 172, cy: 300, r: 0, class: 'b-wave', 'clip-path': 'url(#b-vent-clip)' }, g);
+    const hA = E('g', {}, g), hV = E('g', {}, g);
+    E('path', { d: atriaD, class: 'b-heart-part' }, hA);
+    E('path', { d: ventD, class: 'b-heart-part' }, hV);
+    const wa = E('circle', { cx: 120, cy: 122, r: 0, class: 'b-wave', 'clip-path': 'url(#b-atria-clip)' }, hA);
+    const wv = E('circle', { cx: 172, cy: 300, r: 0, class: 'b-wave', 'clip-path': 'url(#b-vent-clip)' }, hV);
     // wiring
-    E('path', { d: 'M174,178 L174,282 M174,282 C140,292 112,262 108,206 M174,282 C210,292 236,262 238,206', class: 'b-wire' }, g);
-    const sa = E('circle', { cx: 120, cy: 122, r: 7, class: 'b-node' }, g);
+    E('path', { d: 'M174,178 L174,282 M174,282 C140,292 112,262 108,206 M174,282 C210,292 236,262 238,206', class: 'b-wire' }, hV);
+    const sa = E('circle', { cx: 120, cy: 122, r: 7, class: 'b-node' }, hA);
     const av = E('circle', { cx: 174, cy: 176, r: 7, class: 'b-node' }, g);
     T(g, 110, 100, 'SA node', 'bs b-strong', { 'text-anchor': 'middle' });
     T(g, 188, 200, 'AV node', 'bs b-strong');
@@ -163,6 +181,7 @@ const ecg = {
     const cursor = E('circle', { r: 4, class: 'b-spark' }, g);
     const labs = Array.from({ length: 9 }, (_, i) => T(g, 0, 0, ['P', 'QRS', 'T'][i % 3], 'bs b-ecg-label', { 'text-anchor': 'middle' }));
 
+    fit(svg);
     return (_lt, _dt, t) => {
       const slow = s.vars.speed === 'slow';
       const P = slow ? 3.2 : 0.86;
@@ -174,6 +193,9 @@ const ecg = {
       const rv = smooth(0.24, 0.33, ph) * 170;
       wv.setAttribute('r', rv.toFixed(1));
       show(wv, ph < 0.24 ? 0 : 0.85 * (1 - smooth(0.46, 0.6, ph)));
+      const sqA = Math.sin(Math.PI * clamp((ph - 0.06) / 0.2)), sqV = Math.sin(Math.PI * clamp((ph - 0.3) / 0.25));
+      scaleAbout(hA, 175, 140, 1 - 0.03 * sqA);
+      scaleAbout(hV, 172, 230, 1 - 0.045 * sqV);
       sa.classList.toggle('fire', ph < 0.06);
       av.classList.toggle('fire', ph > 0.14 && ph < 0.25);
       // the spark that runs along the wiring
@@ -205,11 +227,11 @@ const ecg = {
           const el = labs[b * 3 + w];
           const tt = (k0 - b + wp) * P;
           const back = (t - tt) / W;
-          if (back < 0 || back > 0.95) { show(el, 0); continue; }
+          if (back < 0 || back > 0.9) { show(el, 0); continue; }
           let xr = c - back; if (xr < 0) xr += 1;
           el.setAttribute('x', (X0 + xr * (X1 - X0)).toFixed(1));
           el.setAttribute('y', (YB - A * ecgAt(wp) - 12).toFixed(1));
-          show(el, 1);
+          show(el, Math.min(smooth(0, 0.02, back), 1 - smooth(0.78, 0.9, back)));
         }
       });
       if (!slow) return 'Real speed, about 70 beats a minute. Switch back to slow motion to follow each step.';
@@ -243,6 +265,10 @@ const hemoglobin = {
   id: 'l5-hb', title: 'Hemoglobin loads O₂ in the lungs, drops it in tissues', dur: 9,
   vars: { mode: 'rest' },
   build(svg, s, ui) {
+    polish(svg);
+    // painted artwork underneath (pre-scaled to cancel fit()); drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l5-hb');
+    E('image', { href: new URL('./art/l5-hb.jpg', import.meta.url).href, x: -20.43, y: -11.49, width: 680.85, height: 382.98, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     ui.seg('mode', [['rest', 'Tissue at rest'], ['run', 'Working muscle']], 'Tissue');
     const g = E('g', {}, svg);
     const GX = 70, GY = 300, GW = 300, GH = 240;
@@ -267,8 +293,8 @@ const hemoglobin = {
 
     // the trip
     const loop = 'M560,90 C620,90 620,140 620,190 C620,240 620,290 560,290 C500,290 480,290 480,240 C480,190 480,140 480,120 C480,95 500,90 560,90';
-    E('rect', { x: 488, y: 40, width: 144, height: 40, rx: 14, class: 'b-lung' }, g); T(g, 560, 66, 'lungs', 'bl', { 'text-anchor': 'middle' });
-    E('rect', { x: 488, y: 300, width: 144, height: 40, rx: 14, class: 'b-body' }, g);
+    const lungBox = E('rect', { x: 488, y: 40, width: 144, height: 40, rx: 14, class: 'b-lung' }, g); T(g, 560, 66, 'lungs', 'bl', { 'text-anchor': 'middle' });
+    const tisBox = E('rect', { x: 488, y: 300, width: 144, height: 40, rx: 14, class: 'b-body' }, g);
     const tisLabel = T(g, 560, 326, 'tissues', 'bl', { 'text-anchor': 'middle' });
     E('path', { d: loop, class: 'b-vessel soft' }, g);
     const tr = new Track(g, loop);
@@ -280,12 +306,15 @@ const hemoglobin = {
       return E('circle', { cx: x, cy: y, r: 3.6, class: 'b-o2' }, rbc);
     });
     T(g, 655, 190, '', 'bs');
+    fit(svg);
     return t => {
       const run = s.vars.mode === 'run';
       const pt = run ? 20 : 40;
       const u = t / this.dur;
       const [x, y] = tr.pos(u);
-      move(rbc, x, y);
+      move(rbc, x, y, 1 + 0.03 * breath(t, 1.6));
+      flag(lungBox, 'fx-glow', u < 0.12 || u > 0.92);
+      flag(tisBox, 'fx-glow', u > 0.4 && u < 0.62);
       // PO2 along the loop: lungs at the top (u≈0), tissues at the bottom (u≈0.5)
       const pLvl = keys(u, [[0, 100], [0.38, 100], [0.5, pt], [0.88, pt], [1, 100]]);
       const sat = satAt(pLvl);
@@ -339,6 +368,10 @@ const speedAt = x => x < 200 ? 150 : x < 300 ? lerp(150, 60, smooth(200, 300, x)
 const vessels = {
   id: 'l5-vessels', title: 'Arteries → capillaries → veins', dur: 20,
   build(svg) {
+    polish(svg);
+    // painted artwork underneath (pre-scaled to cancel fit()); drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l5-vessels');
+    E('image', { href: new URL('./art/l5-vessels.jpg', import.meta.url).href, x: -20.43, y: -11.49, width: 680.85, height: 382.98, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     const CY = 92;
     const hl = E('rect', { y: 34, height: 290, rx: 12, class: 'b-hl' }, g);
@@ -349,7 +382,7 @@ const vessels = {
     let wt = '', wb = '';
     for (let x = 30; x <= 612; x += 4) { wt += `${x === 30 ? 'M' : 'L'}${x},${(CY - radiusAt(x)).toFixed(1)}`; wb += `${x === 30 ? 'M' : 'L'}${x},${(CY + radiusAt(x)).toFixed(1)}`; }
     E('path', { d: wt, class: 'b-wall-art' }, g); E('path', { d: wb, class: 'b-wall-art' }, g);
-    REGIONS.forEach(([name, a, b]) => T(g, (a + b) / 2, 150, name, 'bs b-strong', { 'text-anchor': 'middle' }));
+    const regT = REGIONS.map(([name, a, b]) => T(g, (a + b) / 2, 150, name, 'bs b-strong fx-fade', { 'text-anchor': 'middle' }));
     // valves and muscles on the vein
     const VX = 560;
     const flapT = E('line', { x1: VX, y1: CY - 24, x2: VX + 18, y2: CY - 4, class: 'b-valve' }, g);
@@ -364,10 +397,12 @@ const vessels = {
     for (const p of [40, 80, 120]) { E('line', { x1: PX0, y1: py(p), x2: PX1, y2: py(p), class: 'b-grid' }, g); T(g, PX0 + 4, py(p) - 3, `${p}`, 'bs'); }
     T(g, PX1, PY - PH - 2, 'blood pressure (mmHg)', 'bs', { 'text-anchor': 'end' });
     const curve = E('path', { class: 'b-curve' }, g);
+    fit(svg);
     return (lt, dt, t) => {
       const ri = Math.min(4, Math.floor(lt / 4));
       const [, a, b] = REGIONS[ri];
       hl.setAttribute('x', a - 4); hl.setAttribute('width', b - a + 8);
+      regT.forEach((r, i) => { flag(r, 'fx-dim', i !== ri); flag(r, 'fx-hot', i === ri); });
       let d = '';
       for (let x = PX0; x <= PX1; x += 4) d += `${x === PX0 ? 'M' : 'L'}${x},${py(meanP(x) + ampP(x) * Math.sin(TAU * (t * 1.1 - x / 260))).toFixed(1)}`;
       curve.setAttribute('d', d);
@@ -406,22 +441,26 @@ const vessels = {
 const exchange = {
   id: 'l5-exchange', title: 'Fluid leaks out of capillaries, lymph brings it back', dur: 12,
   build(svg) {
+    polish(svg);
+    // painted artwork underneath (pre-scaled to cancel fit()); drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l5-exchange');
+    E('image', { href: new URL('./art/l5-exchange.jpg', import.meta.url).href, x: -20.43, y: -11.49, width: 680.85, height: 382.98, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     E('rect', { x: 30, y: 92, width: 580, height: 106, class: 'b-tissue-bg' }, g);
     for (let i = 0; i < 6; i++) E('rect', { x: 50 + i * 96, y: 106, width: 70, height: 40, rx: 12, class: 'b-cell' }, g);
-    T(g, 36, 168, 'fluid between cells (interstitial fluid)', 'bs');
+    const isfT = T(g, 36, 168, 'fluid between cells (interstitial fluid)', 'bs');
     // lymph vessel, blind-ended on the left
     E('path', { d: 'M190,74 a14,14 0 0 1 0,-28 H610 v28z', class: 'b-lymph' }, g);
     T(g, 606, 40, 'lymph vessel → back into veins in the neck', 'bs', { 'text-anchor': 'end' });
     // capillary
     E('rect', { x: 30, y: 206, width: 580, height: 40, rx: 20, class: 'b-capillary' }, g);
-    T(g, 40, 200, 'artery end', 'bs b-strong red-t');
-    T(g, 600, 200, 'vein end', 'bs b-strong blue-t', { 'text-anchor': 'end' });
+    const artT = T(g, 40, 200, 'artery end', 'bs b-strong red-t fx-fade');
+    const veinT = T(g, 600, 200, 'vein end', 'bs b-strong blue-t fx-fade', { 'text-anchor': 'end' });
     // net arrows
     const arrows = [];
     const mOut = arrowDefs(svg, 'b-m-out', 'b-head red'), mIn = arrowDefs(svg, 'b-m-in', 'b-head blue');
     for (let i = 0; i < 9; i++) {
-      const x = 70 + i * 60;
+      const x = 132 + i * 47;
       arrows.push({ x, el: E('path', { class: 'b-arrow' }, g) });
     }
     const water = Array.from({ length: 34 }, () => E('circle', { r: 3.6, class: 'p-water' }, g));
@@ -433,7 +472,11 @@ const exchange = {
     E('path', { d: `M${GX0},${gy(35)} L${GX1},${gy(15)}`, class: 'b-line red' }, g);
     E('path', { d: `M${GX0},${gy(25)} L${GX1},${gy(25)}`, class: 'b-line blue' }, g);
     T(g, GX0 + 4, gy(35) - 6, 'blood pressure pushes water out', 'bs red-t');
+    const labelLayer = E('g', {}, g);
+    [isfT, artT, veinT].forEach(el => labelLayer.append(el));
+    const syncP = pills([isfT, artT, veinT]);
     T(g, GX1 - 4, gy(25) - 6, 'proteins pull water back in', 'bs blue-t', { 'text-anchor': 'end' });
+    fit(svg);
     return (lt, _dt, t) => {
       arrows.forEach(({ x, el }) => {
         const net = (35 - 20 * (x - 30) / 580) - 25; // + means out
@@ -451,7 +494,8 @@ const exchange = {
         let p;
         if (toLymph) p = keys(u, [[0, [x0, 226]], [0.25, [x0 + 10, 170]], [0.5, [x0 + 40, 120]], [0.7, [x0 + 60, 62]], [1, [Math.min(605, x0 + 360), 62]]]);
         else p = keys(u, [[0, [x0, 226]], [0.25, [x0 + 20, 172]], [0.55, [x0 + 200, 168]], [0.8, [x0 + 240, 226]], [1, [x0 + 300, 226]]]);
-        at(w, p[0], p[1]);
+        const [jx, jy] = drift(i, t, 1.6);
+        at(w, p[0] + jx, p[1] + jy);
         show(w, Math.min(smooth(0, 0.06, u), 1 - smooth(0.94, 1, u)));
       });
       prot.forEach((p, i) => at(p, 30 + frac(t * 0.05 + i / prot.length) * 580, 226 + (i % 2 ? 7 : -7)));
@@ -460,6 +504,9 @@ const exchange = {
         at(r, x, 226);
         r.setAttribute('class', x > 330 ? 'p-deoxy' : 'p-oxy');
       });
+      g.append(labelLayer);
+      syncP();
+      flag(artT, 'fx-dim', lt >= 4 && lt < 8); flag(veinT, 'fx-dim', lt < 4);
       if (lt < 4) return 'Artery end: blood pressure is stronger than the protein pull, so water leaks out';
       if (lt < 8) return 'Vein end: pressure has dropped, so the proteins left in the blood pull some water back in';
       return 'A little is left over every time (2–4 L a day!). Lymph vessels collect it and return it to the blood';
@@ -483,6 +530,10 @@ const tuna = {
   id: 'l5-tuna', title: 'Countercurrent heat exchange (tuna)', dur: 10,
   beats: [[0, 'Cold blood (blue) flows in through the artery toward the warm muscle'], [5, 'Warm blood leaving the muscle passes its heat across to the incoming artery']],
   build(svg) {
+    polish(svg);
+    // painted artwork underneath; drawn shapes stay on top for motion and highlights
+    svg.classList.add('has-art', 'art-l5-tuna');
+    E('image', { href: new URL('./art/l5-tuna.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
     E('rect', { x: 40, y: 60, width: 120, height: 220, rx: 22, class: 'b-water-bg' }, g);
     T(g, 100, 50, 'cold skin side', 'bs', { 'text-anchor': 'middle' });
@@ -490,18 +541,19 @@ const tuna = {
     T(g, 540, 50, 'warm red muscle', 'bs', { 'text-anchor': 'middle' });
     const A = 'M150,130 L490,130', V = 'M490,210 L150,210';
     E('path', { d: A, class: 'b-pipe red' }, g); E('path', { d: V, class: 'b-pipe blue' }, g);
-    T(g, 320, 112, 'artery: blood flowing in → gets warmer', 'bs', { 'text-anchor': 'middle' });
-    T(g, 320, 244, '← vein: warm blood flowing out gives its heat away', 'bs', { 'text-anchor': 'middle' });
+    const aT = T(g, 320, 112, 'artery: blood flowing in → gets warmer', 'bs fx-fade', { 'text-anchor': 'middle' });
+    const vT = T(g, 320, 244, '← vein: warm blood flowing out gives its heat away', 'bs fx-fade', { 'text-anchor': 'middle' });
     const ta = new Track(g, A), tv = new Track(g, V);
     const heat = Array.from({ length: 7 }, (_, i) => E('path', { d: 'M0,0 l0,-46', class: 'b-heat' }, g));
-    const ca = Array.from({ length: 10 }, () => E('circle', { r: 7 }, g));
-    const cv = Array.from({ length: 10 }, () => E('circle', { r: 7 }, g));
+    const ca = beadify(Array.from({ length: 10 }, () => E('circle', { r: 7 }, g)));
+    const cv = beadify(Array.from({ length: 10 }, () => E('circle', { r: 7 }, g)));
     const temp = k => `hsl(${lerp(215, 2, k).toFixed(0)} 75% 58%)`;
     T(g, 320, 312, 'Heat jumps across from vein to artery all along the way,', 'bs', { 'text-anchor': 'middle' });
     T(g, 320, 330, 'so it stays in the muscle instead of being lost to the cold water.', 'bs', { 'text-anchor': 'middle' });
     return (lt, _dt, t) => {
-      ca.forEach((c, i) => { const u = frac(t * 0.08 + i / 10); const [x, y] = ta.pos(u); at(c, x, y); c.style.fill = temp(0.08 + 0.75 * u); });
-      cv.forEach((c, i) => { const u = frac(t * 0.08 + i / 10); const [x, y] = tv.pos(u); at(c, x, y); c.style.fill = temp(0.95 - 0.75 * u); });
+      flag(aT, 'b-strong', lt < 5); flag(vT, 'b-strong', lt >= 5); flag(aT, 'fx-dim', lt >= 5); flag(vT, 'fx-dim', lt < 5);
+      ca.forEach((c, i) => { const u = frac(t * 0.08 + i / 10); const [x, y] = ta.pos(u); at(c, x, y + 1.5 * Math.sin(t * 2 + i)); c.style.fill = temp(0.08 + 0.75 * u); });
+      cv.forEach((c, i) => { const u = frac(t * 0.08 + i / 10); const [x, y] = tv.pos(u); at(c, x, y + 1.5 * Math.sin(t * 2 + i + 1)); c.style.fill = temp(0.95 - 0.75 * u); });
       heat.forEach((h, i) => {
         const x = 190 + i * 45, k = frac(t * 0.7 + i * 0.13);
         h.setAttribute('transform', `translate(${x} ${208 - k * 22})`);

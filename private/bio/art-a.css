@@ -1,0 +1,32 @@
+/* painted-art hides, group A (lectures 1-3) */
+
+/* L3 · desert day: sky, ground and burrow are painted; sun, moon, stars, dusk/night tints, rat and graph stay live */
+.bio-svg.art-l3-desert :is(.b-skybg, .b-soil, .b-sand, .b-burrow, .b-burrow-fill) { opacity: 0 !important; }
+
+/* L3 · fox leg: snow, warm core and leg are painted; blood vessels, cells and heat squiggles stay live */
+.bio-svg.art-l3-fox :is(.b-snow, .b-muscle-bg, .b-bodyfig) { opacity: 0 !important; }
+
+/* L3 · effectors: zoom panel, mitochondrion and skin/sweat glands are painted; the person, pumps and particles stay live */
+.bio-svg.art-l3-effectors :is(.b-monitor, .b-mito, .b-lipid, .b-skin, .b-tissue-bg, .b-sweat) { opacity: 0 !important; }
+
+/* L1 · cleavage: the two fertilization envelopes are painted; the dividing cells stay live */
+.bio-svg.art-l1-cleave .b-envelope { opacity: 0 !important; }
+
+/* L1 · gastrulation: the blastocoel sphere is painted; cells, gut and labels stay live */
+.bio-svg.art-l1-gast .b-blastbg { opacity: 0 !important; }
+
+/* L1 · body cavities: the painting shows the coelomate cross-section. The skin ring is always painted;
+   the inner rings are painted only while the coelomate plan is showing (l1.js toggles .art-coel),
+   otherwise the drawn rings morph to the other plans */
+.bio-svg.art-l1-cavity .b-lay { transition: opacity .35s; }
+.bio-svg.art-l1-cavity .b-lay.ecto { opacity: 0 !important; }
+.bio-svg.art-l1-cavity.art-coel :is(.b-lay, .b-perit) { opacity: 0 !important; }
+
+/* L2 · body fluids, part A: tissue fluid, capillary and cells are painted; blood cells, water, ions and the highlight stay live */
+.bio-svg.art-l2-fluid .b-partA :is(.b-isf, .b-bloodband, .b-endo, .b-icfcell, .b-nucleus) { opacity: 0 !important; }
+
+/* L2 · order costs energy: the floor line is painted as a wooden shelf; blocks, slots, chain and meter stay live */
+.bio-svg.art-l2-order .b-axis { opacity: 0 !important; }
+
+/* Backdrop-only paintings (nothing hidden: every drawn shape in these scenes moves, breathes, dims or fades):
+   l1-colony (pond water), l1-sym (seawater), l2-amino (linen-covered table under the bowls) */

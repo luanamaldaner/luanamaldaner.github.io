@@ -1,0 +1,14 @@
+/* Painted scene artwork (generated illustrations under the animated layer).
+   Each painted scene hides only the drawn shapes its painting replaces. */
+.bio-svg.has-art .b-art { pointer-events: none; }
+.bio-svg.has-art image.b-art { opacity: 1 !important; }
+
+.bio-svg.art-l5-heart :is(.b-lung, .b-body, .b-heart, .b-septum, .b-vessel) { opacity: 0 !important; }
+.bio-svg.art-l5-heart .b-chamber { fill: transparent !important; stroke: transparent !important; filter: none !important; }
+.bio-svg.art-l5-heart .b-chamber.glow { stroke: var(--b-gold) !important; stroke-width: 4 !important; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--b-gold) 65%, transparent)) !important; }
+
+.bio-svg.art-l8-rest :is(.b-outside, .b-inside, .b-lipid, .b-pump, .b-channel, .b-pore) { opacity: 0 !important; }
+
+/* dark mode: dim the painting so it sits in the dark stage */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bio-svg.has-art .b-art { filter: brightness(.55) saturate(.9); } }
+:root[data-theme="dark"] .bio-svg.has-art .b-art { filter: brightness(.55) saturate(.9); }

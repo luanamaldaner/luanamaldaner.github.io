@@ -1,14 +1,20 @@
-// The Biology tab: make-up lectures 5–9 for Bio 2 (BSC2011), each told with
-// plain words and small looping animations, plus a quick quiz per lecture.
+// The Biology tab: Bio 2 (BSC2011) lectures 1–10, each told with plain words
+// and small looping animations, a guided step-by-step walkthrough and a quiz.
 
 import { E, NS } from './kit.js';
-import L5 from './l5.js';
-import L6 from './l6.js';
-import L7 from './l7.js';
-import L8 from './l8.js';
-import L9 from './l9.js';
+import L1 from './l1.js?v=2';
+import L2 from './l2.js?v=2';
+import L3 from './l3.js?v=2';
+import L4 from './l4.js?v=2';
+import L5 from './l5.js?v=2';
+import L6 from './l6.js?v=2';
+import L7 from './l7.js?v=2';
+import L8 from './l8.js?v=2';
+import L9 from './l9.js?v=2';
+import L10 from './l10.js?v=2';
+import WALKS from './walks.js?v=2';
 
-const LECTURES = [L5, L6, L7, L8, L9];
+const LECTURES = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];
 
 let C; // h, card, render … handed over by app.js
 
@@ -22,6 +28,7 @@ const st = {
   watched: savedSet('watched'),   // scene ids played through once
   done: savedSet('done'),         // lectures marked as made up
   quiz: {},                        // lecture id -> { i, picked, right, order }
+  walk: null,                      // { lec, i, picked } while a guided walkthrough is open
 };
 
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -30,6 +37,7 @@ const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced
 
 const states = new Map();   // scene id -> { t, playing, speed, vars, played }
 const live = new Set();     // mounted scene instances
+const byId = new Map();     // scene id -> mounted instance
 let raf = 0, last = 0;
 
 function sceneState(sc) {
@@ -98,6 +106,7 @@ function sceneCard(sc, n, onWatched) {
   const bar = h('span', { class: 'bio-bar-fill' });
   const ctl = h('div', { class: 'bio-ctl' });
   const inst = { sc, st: s, svg, cap, bar: sc.dur ? bar : null, visible: true, onWatched };
+  byId.set(sc.id, inst);
 
   // scene-specific controls (segmented toggles and buttons)
   const ui = {
@@ -129,6 +138,11 @@ function sceneCard(sc, n, onWatched) {
   };
   play.onclick = () => { s.playing = !s.playing; syncPlay(); kick(); };
   syncPlay();
+  // let the walkthrough jump to a moment and play from there
+  inst.cue = (from = 0, vars) => {
+    if (vars) { Object.assign(s.vars, vars); }
+    s.t = from; if (from === 0 && sc.reset) sc.reset(s); s.playing = true; syncPlay(); draw(inst, 0); kick();
+  };
   const restart = h('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Start over', title: 'Start over', onclick: () => {
     s.t = 0; if (sc.reset) sc.reset(s); s.playing = true; syncPlay(); draw(inst, 0); kick();
   } }, playIcon('restart'));
@@ -169,7 +183,7 @@ export function renderBio(ctx) {
   C = ctx;
   const { h, card } = C;
   for (const inst of live) if (inst.io) inst.io.disconnect();
-  live.clear();
+  live.clear(); byId.clear();
 
   const lec = LECTURES.find(l => l.id === st.lec) || LECTURES[0];
   const tabs = h('div', { class: 'bio-tabs', role: 'tablist' }, LECTURES.map(l => h('button', {
@@ -199,6 +213,10 @@ export function renderBio(ctx) {
         type: 'button', class: `btn btn-small${isDone ? '' : ' btn-primary'}`,
         onclick: () => { if (isDone) st.done.delete(lec.id); else st.done.add(lec.id); saveSet('done', st.done); C.render(); },
       }, isDone ? 'Made up ✓ (undo)' : 'Mark as made up')),
+    WALKS[lec.id] ? h('button', {
+      type: 'button', class: 'bio-start',
+      onclick: () => { st.walk = { lec: lec.id, i: 0, picked: null }; C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); },
+    }, h('span', { class: 'bio-start-play', text: '▶' }), h('span', null, h('strong', { text: 'Start the guided lecture' }), h('span', { class: 'muted small', text: ` · ${WALKS[lec.id].length} short steps, about ${Math.max(5, Math.round(WALKS[lec.id].length * 1.5))} min` }))) : null,
     h('h3', { class: 'bio-sub-h', text: 'The whole lecture in one minute' }),
     h('ul', { class: 'bio-minute' }, lec.minute.map(t => h('li', { text: t }))),
     h('div', { class: 'bio-prog' }, h('span', { class: 'bio-prog-track' }, prog), progText),
@@ -207,19 +225,91 @@ export function renderBio(ctx) {
     }, `${i + 1}. ${sc.title}`))));
 
   const scenes = lec.scenes.map((sc, i) => sceneCard(sc, i + 1, paintProg));
+  const walking = st.walk && st.walk.lec === lec.id && WALKS[lec.id];
+  if (walking) queueMicrotask(() => focusStep(lec, false));
 
   const page = h('div', { class: 'page bio' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Biology' }),
-      h('p', { class: 'muted small bio-head-sub' }, 'Bio 2 · make-up lectures 5–9 · tap any animation to pause it', h('span', { class: 'bio-phone-hint', text: ' · swipe sideways inside one to see all of it' })))),
+      h('p', { class: 'muted small bio-head-sub' }, 'Bio 2 · tap any animation to pause it', h('span', { class: 'bio-phone-hint', text: ' · swipe sideways inside one to see all of it' })))),
     tabs,
     h('div', { class: 'bio-layout' },
-      h('div', { class: 'bio-main' }, intro, ...scenes, quizCard(lec)),
+      h('div', { class: 'bio-main' }, walking ? walkPanel(lec) : intro, ...scenes, quizCard(lec)),
       h('aside', { class: 'bio-side' },
         card('Connections', null, h('ul', { class: 'bio-links' }, lec.links.map(([text, to]) => h('li', null,
           to ? h('button', { type: 'button', class: 'link', onclick: () => { st.lec = to; save('lec', to); C.render(); window.scrollTo({ top: 0 }); } }, text) : h('span', { text }))))),
         card('Exam traps', null, h('ul', { class: 'bullets bio-traps' }, lec.traps.map(t => h('li', { text: t })))))));
   kick();
   return page;
+}
+
+// ---------------------------------------------------------------- guided walkthrough
+
+// Each step: { title, say: [paragraphs], scene?: id, from?: seconds, vars?: {...},
+//              takeaway?: string, check?: { q, a, o: [..3], why } }
+function focusStep(lec, scroll = true) {
+  const steps = WALKS[lec.id];
+  const step = steps[st.walk.i];
+  document.querySelectorAll('.bio-scene.walk-on').forEach(el => el.classList.remove('walk-on'));
+  if (!step || !step.scene) return;
+  const inst = byId.get(step.scene);
+  const el = document.getElementById(`scene-${step.scene}`);
+  // pull the step's animation up into the walkthrough card, right under the text
+  const slot = document.querySelector('.bio-walk-stage');
+  if (el && slot) { slot.replaceChildren(el); el.classList.add('walk-on'); }
+  if (inst) inst.cue(step.from || 0, step.vars);
+  const panel = document.querySelector('.bio-walk');
+  if (scroll && panel) window.scrollTo({ top: panel.getBoundingClientRect().top + window.scrollY - 12, behavior: 'smooth' });
+}
+
+function walkPanel(lec) {
+  const { h } = C;
+  const steps = WALKS[lec.id];
+  const w = st.walk;
+  const step = steps[w.i];
+  const n = steps.length;
+  const go = i => { w.i = Math.max(0, Math.min(n, i)); w.picked = null; C.render(); queueMicrotask(() => focusStep(lec)); };
+  if (w.i >= n) {
+    return h('section', { class: 'card bio-walk done', style: `--lc: var(${lec.color})` },
+      h('p', { class: 'bio-kicker', text: `Lecture ${lec.n} · guided lecture` }),
+      h('h2', { class: 'bio-walk-title', text: 'You made it through the whole lecture ✿' }),
+      h('p', { text: 'Try the quiz at the bottom of the page to lock it in, or replay any animation below.' }),
+      h('div', { class: 'bio-walk-nav' },
+        h('button', { type: 'button', class: 'btn', text: '← Back', onclick: () => go(n - 1) }),
+        h('button', { type: 'button', class: 'btn btn-primary', text: 'Go to the quiz', onclick: () => { st.walk = null; if (!st.done.has(lec.id)) { st.done.add(lec.id); saveSet('done', st.done); } C.render(); queueMicrotask(() => document.querySelector('.bio-quiz')?.scrollIntoView({ behavior: 'smooth' })); } }),
+        h('button', { type: 'button', class: 'link', text: 'Close', onclick: () => { st.walk = null; C.render(); } })));
+  }
+  const dots = h('div', { class: 'bio-walk-dots', role: 'tablist', 'aria-label': 'Steps' }, steps.map((s2, i) => h('button', {
+    type: 'button', class: `bio-walk-dot${i === w.i ? ' on' : i < w.i ? ' past' : ''}`, title: `${i + 1}. ${s2.title}`, 'aria-label': `Step ${i + 1}: ${s2.title}`,
+    onclick: () => go(i),
+  })));
+  const ck = step.check;
+  let check = null;
+  if (ck) {
+    if (!w.opts || w.optsFor !== w.i) { w.opts = shuffle([ck.a, ...ck.o]); w.optsFor = w.i; }
+    const answered = w.picked != null;
+    check = h('div', { class: 'bio-walk-check' },
+      h('p', { class: 'bio-walk-q', text: `Quick check: ${ck.q}` }),
+      h('div', { class: 'q-options' }, w.opts.map(o => {
+        let cls = 'q-opt';
+        if (answered && o === ck.a) cls += ' right'; else if (answered && o === w.picked) cls += ' wrong';
+        return h('button', { type: 'button', class: cls, disabled: answered, onclick: () => { w.picked = o; C.render(); } }, o);
+      })),
+      answered ? h('p', { class: `bio-walk-why ${w.picked === ck.a ? 'ok' : 'no'}`, text: `${w.picked === ck.a ? 'Yes ✿ ' : `It's “${ck.a}”. `}${ck.why}` }) : null);
+  }
+  return h('section', { class: 'card bio-walk', style: `--lc: var(${lec.color})` },
+    h('div', { class: 'bio-walk-top' },
+      h('p', { class: 'bio-kicker', text: `Lecture ${lec.n} · step ${w.i + 1} of ${n}` }),
+      h('button', { type: 'button', class: 'link', text: 'Exit guided lecture', onclick: () => { st.walk = null; document.querySelectorAll('.bio-scene.walk-on').forEach(el => el.classList.remove('walk-on')); C.render(); } })),
+    h('div', { class: 'bio-walk-bar' }, h('span', { style: `width:${(100 * (w.i + 1) / n).toFixed(1)}%` })),
+    h('h2', { class: 'bio-walk-title', text: step.title }),
+    h('div', { class: 'bio-walk-say' }, (step.say || []).map(t => h('p', { text: t }))),
+    step.scene ? h('div', { class: 'bio-walk-stage' }) : null,
+    step.takeaway ? h('p', { class: 'bio-walk-take' }, h('strong', { text: 'Takeaway: ' }), step.takeaway) : null,
+    check,
+    h('div', { class: 'bio-walk-nav' },
+      h('button', { type: 'button', class: 'btn', text: '← Back', disabled: w.i === 0, onclick: () => go(w.i - 1) }),
+      dots,
+      h('button', { type: 'button', class: 'btn btn-primary', text: w.i + 1 < n ? 'Next →' : 'Finish ✿', onclick: () => go(w.i + 1) })));
 }
 
 // ---------------------------------------------------------------- quiz

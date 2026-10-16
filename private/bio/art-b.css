@@ -1,0 +1,41 @@
+/* painted-art hides, group B (lectures 4–7) */
+
+/* style.css (.55) and design-b.css (.6) fade `.b-art` (meant for the nephron's blood-vessel paths), which also
+   catches the painted <image class="b-art">; keep the paintings themselves fully opaque */
+.bio-svg.has-art:is(.art-l4-path, .art-l4-airwater, .art-l4-gills, .art-l4-bird, .art-l4-mammal, .art-l5-ecg, .art-l5-hb, .art-l5-vessels, .art-l5-exchange, .art-l5-tuna, .art-l6-fish, .art-l6-nephron, .art-l7-gut, .art-l7-acid, .art-l7-bile, .art-l7-villi, .art-l7-fat) image.b-art { opacity: 1 !important; }
+
+/* shared: a painted shape that still lights up — invisible until its highlight turns on */
+.bio-svg:is(.art-l4-path, .art-l4-bird) .b-lung,
+.bio-svg.art-l5-hb :is(.b-lung, .b-body),
+.bio-svg.art-l7-fat .b-lymphv { fill: transparent !important; stroke: transparent !important; filter: none !important; }
+.bio-svg:is(.art-l4-path, .art-l4-bird) .b-lung.fx-glow,
+.bio-svg.art-l5-hb :is(.b-lung, .b-body).fx-glow,
+.bio-svg.art-l7-fat .b-lymphv.fxb-hl { stroke: var(--b-gold) !important; stroke-width: 3.5 !important; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--b-gold) 65%, transparent)) !important; }
+
+/* lecture 4 */
+.bio-svg.art-l4-path :is(.b-airway, .b-capillary, .b-cellbody, .b-mito) { opacity: 0 !important; }
+.bio-svg.art-l4-airwater :is(rect.b-skybg[x="24"], rect.b-water-bg[x="24"], .b-jar) { opacity: 0 !important; }
+.bio-svg.art-l4-gills :is(.b-water-bg, .b-lipid, .b-capillary) { opacity: 0 !important; }
+.bio-svg.art-l4-bird .b-airway { opacity: 0 !important; }
+.bio-svg.art-l4-mammal :is(.b-chest, .b-airway, .b-rib) { opacity: 0 !important; }
+
+/* lecture 5 */
+.bio-svg.art-l5-ecg .b-heart-part { fill: transparent !important; filter: none !important; }
+.bio-svg.art-l5-hb .b-vessel { opacity: 0 !important; }
+.bio-svg.art-l5-vessels :is(.b-lumen, .b-wall-art) { opacity: 0 !important; }
+.bio-svg.art-l5-exchange :is(.b-tissue-bg, .b-cell, .b-lymph, .b-capillary) { opacity: 0 !important; }
+.bio-svg.art-l5-tuna :is(.b-water-bg, .b-muscle-bg, .b-pipe) { opacity: 0 !important; }
+
+/* lecture 6 */
+.bio-svg.art-l6-fish .b-fresh { opacity: 0 !important; }
+.bio-svg.art-l6-fish .b-sea { fill-opacity: .6; }
+.bio-svg.art-l6-nephron :is(.b-cortex, .b-medulla, path.b-art, .b-capsule, .b-lumen-t) { opacity: 0 !important; }
+.bio-svg.art-l6-nephron .b-tubule { stroke: transparent !important; filter: none !important; }
+.bio-svg.art-l6-nephron .b-tubule.glow { stroke: color-mix(in srgb, var(--b-gold) 45%, transparent) !important; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--b-gold) 70%, transparent)) !important; }
+
+/* lecture 7 */
+.bio-svg.art-l7-gut :is(.b-bloodband, .b-gland, .b-liver, .b-gall, .b-duct, .b-pancreas) { opacity: 0 !important; }
+.bio-svg.art-l7-acid :is(.b-lumen-acid, .b-bloodband, .b-mucus, .b-cellbody, .b-receptor, .b-pump) { opacity: 0 !important; }
+.bio-svg.art-l7-bile .b-epi { opacity: 0 !important; }
+.bio-svg.art-l7-villi :is(.b-epi, .b-cellbody, .b-microvillus, .b-bloodband) { opacity: 0 !important; }
+.bio-svg.art-l7-fat :is(.b-cellbody, .b-microvillus, .b-er, .b-bloodband) { opacity: 0 !important; }
