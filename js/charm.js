@@ -121,11 +121,12 @@ function addBlossoms() {
 // Which look to show. A = soft minimal (default), B = nature, C = Frutiger Aero.
 // Preview the others with ?look=b or ?look=c; the choice is remembered.
 function pickLook() {
+  // Always the current look; ?look=a..e previews another one for that page view only.
   let look = 'e';
   try {
+    localStorage.removeItem('charm-look');
     const q = new URLSearchParams(location.search).get('look');
-    if (q && /^[a-e]$/.test(q)) localStorage.setItem('charm-look', q);
-    look = localStorage.getItem('charm-look') || 'e';
+    if (q && /^[a-e]$/.test(q)) look = q;
   } catch {}
   document.documentElement.dataset.look = look;
 }
