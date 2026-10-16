@@ -1942,3 +1942,9 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .pt-def { margin: 8px 0 4px; font-size: 14px; }
 .pt-ex { margin: 0 0 4px; font-size: 13px; font-style: italic; color: var(--muted); }
 .pt-foot { margin: 10px 0 0; }
+
+/* ---------- focus strict mode */
+.focus-strict { display: flex; gap: 10px; align-items: flex-start; max-width: 420px; margin: 4px auto 12px; text-align: left; font-size: 13px; cursor: pointer; }
+.focus-strict input { margin-top: 3px; }
+.focus-art.wilted .plant { filter: grayscale(1) sepia(.35) brightness(.85); transform: rotate(16deg) translateY(4px); transform-origin: 0 0; transition: transform .8s ease, filter .8s ease; }
+.focus-done.wilted { color: var(--danger); }

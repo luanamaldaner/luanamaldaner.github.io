@@ -2,7 +2,12 @@
 // spaced-repetition cards for Bio + Prog, and a daily "Today I learned".
 // Everything is built from the vault through helpers app.js hands over.
 
-import { ALL_CARDS, DECKS, ptToday, ptDay } from './decks.js?v=3';
+import { ALL_CARDS as BASE_CARDS, DECKS as BASE_DECKS, ptToday, ptDay } from './decks.js?v=3';
+import { getMistakes } from '../orgo/mistakes.js?v=1';
+
+// Static decks plus the Orgo questions you got wrong (read fresh on every render).
+let ALL_CARDS = BASE_CARDS, DECKS = BASE_DECKS;
+function refreshDecks() { const m = getMistakes(); ALL_CARDS = [...BASE_CARDS, ...m]; DECKS = m.length ? [...BASE_DECKS, 'Orgo mistakes'] : BASE_DECKS; }
 import { TIL, tilIndex } from './til.js?v=1';
 
 let C; // { h, s, card, icon, iconBtn, commit, touch, uid, S, live, todayStr, addDays, parse, toStr, fmtShort, fmtWeekday, fmtTime, totalsFor, focusMinutes, taskItems, forestPlot, render, go }
@@ -345,6 +350,7 @@ const cs = { deck: 'All', current: null, flipped: false, again: new Set() };
 const rec = id => (C.S().orgo || []).find(x => x.id === `fc:${id}` && !x.deleted);
 
 export function renderCards() {
+  refreshDecks();
   const { h, card } = C;
   const today = C.todayStr();
   const inDeck = c => cs.deck === 'All' || c.deck === cs.deck || (cs.deck === 'All Bio' && c.deck.startsWith('Bio')) || (cs.deck === 'All Prog' && c.deck.startsWith('Prog'));

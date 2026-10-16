@@ -3,6 +3,8 @@
 // product. Streaks and a 60-second speed round keep it game-like. All answers come from the same
 // decide() table and reaction list the rest of the Orgo tab uses.
 
+import { addMistake } from './mistakes.js?v=1';
+
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SPEED_SEC = 60;
 // substrates where Zaitsev vs Hofmann gives two different alkenes
@@ -85,6 +87,12 @@ function answer(C, D, o) {
   if (R.picked[R.i] !== undefined) return;
   R.picked[R.i] = o;
   const ok = o === q.answer;
+  if (!ok) {
+    const right = R.kind === 'alkene' ? q.draw[q.answer].name : q.answer;
+    const front = R.kind === 'alkene' ? `${R.reels[0]} + ${R.reels[1]} → which product?` : `${R.sub.name} + ${R.reels[1]}, ${R.reels[2]}: ${q.prompt.toLowerCase()}`;
+    addMistake(front, `${right}
+${R.explain.slice(0, 2).join(' ')}`);
+  }
   if (rs.speed) {
     rs.speed.total++; if (ok) rs.speed.right++;
     if (!ok || R.i + 1 >= R.qs.length) { setTimeout(() => { if (rs.speed) spin(C, D); }, ok ? 250 : 900); }

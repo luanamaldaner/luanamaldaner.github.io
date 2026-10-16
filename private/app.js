@@ -18,10 +18,10 @@ import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
-import { renderOrgo } from './orgo/orgo.js?v=10';
+import { renderOrgo } from './orgo/orgo.js?v=11';
 import { renderProg } from './prog/prog.js?v=3';
 import { renderBio } from './bio/bio.js?v=6';
-import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard } from './extras/extras.js?v=3';
+import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard } from './extras/extras.js?v=4';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -569,6 +569,7 @@ function startAutoLock() {
   document.addEventListener('visibilitychange', async () => {
     if (!S) return;
     if (document.hidden) { hiddenAt = Date.now(); if (dirty) doSave(); return; }
+    if (focus.mode === 'running' && focus.kind === 'focus' && focusStrict() && hiddenAt && Date.now() - hiddenAt > WILT_MS) wiltFocus();
     if (hiddenAt && focus.mode !== 'running' && Date.now() - hiddenAt > limit()) { lock(); return; }
     lastActive = Date.now();
     // Pick up edits made on another device while this tab was in the background.
@@ -1051,6 +1052,7 @@ function focusLeft() {
   if (focus.mode === 'running') return Math.max(0, focus.endAt - Date.now());
   if (focus.mode === 'paused') return focus.remaining;
   if (focus.mode === 'done') return 0;
+  if (focus.mode === 'wilted') return focus.remaining || 0;
   return focus.minutes * 60e3;
 }
 
@@ -1086,6 +1088,24 @@ async function focusNotify(text) {
     if (reg) reg.showNotification('Dashboard', { body: text, icon: 'icon-192.png', tag: 'focus' });
     else new Notification('Dashboard', { body: text, icon: 'icon-192.png' });
   } catch {}
+}
+
+// Strict mode: leaving the dashboard for more than 15 s during a focus session wilts the flower.
+const WILT_MS = 15e3;
+function focusStrict() { try { return localStorage.getItem('focus.strict') === '1'; } catch { return false; } }
+function setFocusStrict(on) { try { localStorage.setItem('focus.strict', on ? '1' : '0'); } catch {} render(); }
+function wiltFocus() {
+  clearInterval(focus.timer);
+  const spent = Math.round((focus.minutes * 60e3 - focusLeft()) / 60e3);
+  if (spent >= 1) {
+    const t = live('todos').find(x => x.id === focus.taskId);
+    S.focus.push(touch({ id: uid(), date: todayStr(), minutes: spent, taskId: t ? t.id : '', title: t ? t.title : '', endedAt: Date.now(), wilted: true }));
+    scheduleSave(500);
+  }
+  focus.remaining = Math.max(0, focus.endAt - Date.now());
+  focus.mode = 'wilted';
+  document.title = 'Dashboard';
+  rerenderSafely();
 }
 
 function startFocus(kind, minutes) {
@@ -1162,7 +1182,7 @@ function focusBloom(minutes) {
 
 function focusFlower(p, bloomed) {
   const bloom = focusBloom(focus.kind === 'break' ? (focus.lastFocus || 25) : focus.minutes);
-  const svg = s('svg', { viewBox: '0 0 200 200', class: `focus-art${bloomed ? ' bloomed' : ''}`, role: 'img', 'aria-label': `${bloom.label} ${bloomed ? 'in bloom' : 'growing'}` });
+  const svg = s('svg', { viewBox: '0 0 200 200', class: `focus-art${bloomed ? ' bloomed' : ''}${focus.mode === 'wilted' ? ' wilted' : ''}`, role: 'img', 'aria-label': `${bloom.label} ${bloomed ? 'in bloom' : 'growing'}` });
   svg.append(s('circle', { cx: 100, cy: 100, r: 88, class: 'focus-track', pathLength: 100 }));
   svg.append(s('circle', {
     id: 'focus-ring', cx: 100, cy: 100, r: 88, class: `focus-ring${focus.kind === 'break' ? ' break' : ''}`, pathLength: 100,
@@ -1200,6 +1220,8 @@ function renderFocus() {
     controls = [
       chips(FOCUS_LENGTHS, 'focus'),
       h('p', { class: 'focus-preview', text: `${focus.minutes} min grows a ${focusBloom(focus.minutes).label}` }),
+      h('label', { class: 'focus-strict' }, h('input', { type: 'checkbox', checked: focusStrict(), onchange: e => setFocusStrict(e.target.checked) }),
+        h('span', null, h('strong', { text: 'Strict mode 🥀' }), h('span', { class: 'muted small', text: ' Leave the dashboard for more than 15 s (other tabs, apps, phone locked) and your flower wilts.' }))),
       h('button', { class: 'btn btn-primary btn-wide', type: 'button', onclick: () => startFocus('focus', focus.kind === 'focus' ? focus.minutes : 25) }, 'Start focusing'),
     ];
   } else if (focus.mode === 'running' || focus.mode === 'paused') {
@@ -1209,6 +1231,13 @@ function renderFocus() {
         : h('button', { class: 'btn btn-primary', type: 'button', text: 'Resume', onclick: resumeFocus }),
       h('button', { class: 'btn', type: 'button', text: focus.kind === 'focus' ? 'Stop & save' : 'Skip break', onclick: () => stopFocus(true) }),
       focus.kind === 'focus' ? h('button', { class: 'btn btn-danger', type: 'button', text: 'Discard', onclick: () => stopFocus(false) }) : null)];
+  } else if (focus.mode === 'wilted') {
+    controls = [
+      h('p', { class: 'focus-done wilted', text: `Your ${focusBloom(focus.minutes).label} wilted 🥀 You left for more than 15 seconds.` }),
+      h('div', { class: 'row center-row' },
+        h('button', { class: 'btn btn-primary', type: 'button', text: 'Try again', onclick: () => startFocus('focus', focus.minutes) }),
+        h('button', { class: 'btn', type: 'button', text: 'Done for now', onclick: () => { focus.mode = 'idle'; render(); } })),
+    ];
   } else {
     const t = live('todos').find(x => x.id === focus.taskId && !x.done);
     controls = [
@@ -1231,14 +1260,14 @@ function renderFocus() {
     h('div', { class: 'grid' },
       h('div', { class: 'col' },
         h('section', { class: 'card focus-card' },
-          h('div', { class: 'focus-kind', text: focus.mode === 'done' ? (focus.kind === 'break' ? 'Break complete' : 'Session complete') : focus.kind === 'break' ? 'On a break' : focus.mode === 'idle' ? 'Ready when you are' : focus.mode === 'paused' ? 'Paused' : 'Focusing' }),
+          h('div', { class: 'focus-kind', text: focus.mode === 'wilted' ? 'Wilted' : focus.mode === 'done' ? (focus.kind === 'break' ? 'Break complete' : 'Session complete') : focus.kind === 'break' ? 'On a break' : focus.mode === 'idle' ? 'Ready when you are' : focus.mode === 'paused' ? 'Paused' : 'Focusing' }),
           h('div', { class: 'focus-dial' }, focusFlower(p, bloomed), h('div', { id: 'focus-time', class: 'focus-time', text: fmtClock(left) })),
-          focus.mode === 'done' ? null : select,
+          focus.mode === 'done' || focus.mode === 'wilted' ? null : select,
           ...controls)),
       h('div', { class: 'col col-narrow' },
         card('Today', h('span', { class: 'card-meta', text: `${focusMinutes(today)} min` }),
           sessions.length ? h('ul', { class: 'mini-list' }, sessions.map(f => h('li', null,
-            h('span', { text: f.title || 'Focus session' }),
+            h('span', { text: `${f.wilted ? '🥀 ' : ''}${f.title || 'Focus session'}` }),
             h('span', { class: 'muted small', text: `${f.minutes} min` }))))
             : h('p', { class: 'empty', text: 'No sessions yet today ✿' }),
           h('dl', { class: 'stats' }, h('div', null, h('dt', { text: 'Last 7 days' }), h('dd', { text: `${week} min` })))),
