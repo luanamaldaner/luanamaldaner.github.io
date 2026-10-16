@@ -324,6 +324,7 @@ function walkPanel(lec) {
     step.scene ? h('div', { class: 'bio-walk-stage' }) : null,
     step.takeaway ? h('p', { class: 'bio-walk-take' }, h('strong', { text: 'Takeaway: ' }), step.takeaway) : null,
     check,
+    explainBox(lec, w.i, step),
     questionsBox(lec, w.i, step),
     h('div', { class: 'bio-walk-nav' },
       h('button', { type: 'button', class: 'btn', text: '← Back', disabled: w.i === 0, onclick: () => go(w.i - 1) }),
@@ -350,6 +351,49 @@ function withTerms(text, used) {
   }
   out.push(text.slice(last));
   return out;
+}
+
+// ---------------------------------------------------------------- explain it back
+// Say (or type) the step in your own words; the key science words of the step are checked off.
+const ex = { key: null, text: '', listening: false, rec: null, checked: false };
+function stepTerms(step) {
+  const text = [...(step.say || []), step.takeaway || ''].join(' ');
+  const found = new Set();
+  if (TERM_RE) for (const m of text.matchAll(TERM_RE)) if (GLOSSARY[m[0].toLowerCase()]) found.add(m[0].toLowerCase());
+  const stems = new Set(), out = [];
+  for (const t of found) { const st = t.replace(/(ies|y|es|s)$/, ''); if (!stems.has(st)) { stems.add(st); out.push(t); } }
+  return out.slice(0, 10);
+}
+function explainBox(lec, i, step) {
+  const { h } = C;
+  const key = `${lec.id}:${i}`;
+  if (ex.key !== key) { if (ex.rec) try { ex.rec.stop(); } catch {} Object.assign(ex, { key, text: '', listening: false, rec: null, checked: false }); }
+  const terms = stepTerms(step);
+  if (terms.length < 2) return null;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const ta = h('textarea', { class: 'bio-ex-input', rows: 3, placeholder: SR ? 'Tap 🎙️ Speak and explain this step out loud, or type it here.' : 'Explain this step in your own words.', 'aria-label': 'Your explanation', value: ex.text, oninput: e => { ex.text = e.target.value; } });
+  const listen = () => {
+    if (ex.listening) { try { ex.rec.stop(); } catch {} return; }
+    const r = new SR(); r.lang = 'en-US'; r.interimResults = true; r.continuous = true;
+    const base = ex.text ? ex.text + ' ' : '';
+    r.onresult = e => { let t = ''; for (const res of e.results) t += res[0].transcript; ex.text = base + t; ta.value = ex.text; };
+    r.onend = () => { ex.listening = false; ex.rec = null; ex.checked = true; C.render(); };
+    r.onerror = () => { ex.listening = false; };
+    ex.rec = r; ex.listening = true; r.start(); C.render();
+  };
+  const said = ex.text.toLowerCase();
+  const hit = t => said.includes(t) || said.includes(t.replace(/(ies|y|es|s)$/, ''));
+  const covered = terms.filter(hit);
+  return h('details', { class: 'bio-q bio-ex', open: ex.text ? '' : null },
+    h('summary', null, '🎙️ Explain it back'),
+    h('p', { class: 'muted small', text: 'Teaching it is the best test. Explain this step like you’re telling a friend, then see which key words you used.' }),
+    ta,
+    h('div', { class: 'row' },
+      SR ? h('button', { type: 'button', class: `btn btn-small${ex.listening ? ' btn-danger' : ''}`, text: ex.listening ? '■ Stop' : '🎙️ Speak', onclick: listen }) : null,
+      h('button', { type: 'button', class: 'btn btn-small btn-primary', text: 'Check', onclick: () => { ex.text = ta.value; ex.checked = true; C.render(); } })),
+    ex.checked && ex.text.trim() ? h('div', { class: 'bio-ex-result' },
+      h('p', { class: 'small' }, h('strong', { text: `${covered.length} of ${terms.length} key words` }), covered.length === terms.length ? ' ✿ You nailed it.' : covered.length >= terms.length / 2 ? ' Good! Try working in the missing ones.' : ' Reread the step, then try again.'),
+      h('div', { class: 'chips' }, terms.map(t => h('span', { class: `chip bio-ex-term${hit(t) ? ' ok' : ''}`, title: GLOSSARY[t], text: `${hit(t) ? '✓' : '○'} ${t}` })))) : null);
 }
 
 // ---------------------------------------------------------------- questions
