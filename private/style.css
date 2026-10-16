@@ -2129,3 +2129,26 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .ty-em { font-size: 20px; text-align: center; }
 .ty-txt { display: grid; font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { .ty-dot { animation: none; } }
+
+/* ---------- micro lab */
+.ml-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ml-field { position: relative; height: 150px; border-radius: 50%; background: radial-gradient(circle, #fbfaf5 55%, #e9e6dc); border: 6px solid #2b2b2b; overflow: hidden; }
+.ml-rod { position: absolute; width: 34px; height: 12px; border-radius: 8px; transition: background .6s ease; }
+.ml-cap { margin: 6px 0 0; text-align: center; }
+.ml-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.ml-in { display: grid; gap: 4px; }
+.ml-tubes { display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 0; }
+.ml-tube { position: relative; width: 34px; height: 92px; border-radius: 6px 6px 17px 17px; border: 2px solid var(--line-strong); background: var(--card); cursor: pointer; overflow: hidden; padding: 0; }
+.ml-tube.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.ml-liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 62%; background: #d9a441; }
+.ml-tlabel { position: absolute; top: 4px; left: 0; right: 0; text-align: center; font: 600 9px/1 var(--mono); color: var(--muted); }
+.ml-result { padding: 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 6%, var(--card)); }
+.ml-result p { margin: 0 0 4px; }
+.ml-big { font: 600 24px/1.2 var(--serif) !important; color: var(--accent); }
+.ml-ok { color: var(--accent); }
+.ml-warn { color: #c0661e; }
+@media (max-width: 720px) { .ml-field { height: 120px; } }
+.ml-field { height: auto; aspect-ratio: 1; max-width: 200px; margin: 0 auto; }
+.ml-tube { width: 42px; }
+.ml-tlabel { font-size: 8.5px; letter-spacing: -.02em; }
+.lab-card .bio-walk-dots { display: flex; gap: 6px; }
