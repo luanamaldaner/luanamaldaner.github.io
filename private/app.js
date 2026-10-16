@@ -22,7 +22,7 @@ import { renderOrgo } from './orgo/orgo.js?v=12';
 import { renderProg } from './prog/prog.js?v=3';
 import { bossCard } from './extras/boss.js?v=1';
 import { renderBio } from './bio/bio.js?v=7';
-import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard } from './extras/extras.js?v=5';
+import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=6';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -1629,7 +1629,7 @@ function planCard() {
 }
 
 // Study corner: the daily study cards share one tabbed card so Today stays calm.
-const CORNER = [['plan', '📅 Plan', () => planCard()], ['boss', '👾 Boss', () => bossCard(ORGO_CTX)], ['pt', '✍️ Palavras', () => palavrasCard()]];
+const CORNER = [['plan', '📅 Plan', () => planCard()], ['boss', '👾 Boss', () => bossCard(ORGO_CTX)], ['pt', '✍️ Palavras', () => palavrasCard()], ['jr', '📓 Journal', () => journalCard()]];
 function studyCorner() {
   let tab = 'plan';
   try { tab = localStorage.getItem('corner.tab') || 'plan'; } catch {}
@@ -2022,14 +2022,14 @@ function noteTitle(n) {
 }
 
 function renderNotes() {
-  const notes = live('notes').filter(n => n.kind !== 'bioq').sort((a, b) => b.updatedAt - a.updatedAt);
+  const notes = live('notes').filter(n => n.kind !== 'bioq' && n.kind !== 'journal').sort((a, b) => b.updatedAt - a.updatedAt);
   if (!notes.find(n => n.id === activeNoteId)) activeNoteId = notes[0] ? notes[0].id : null;
   const active = notes.find(n => n.id === activeNoteId);
 
   const listEl = h('ul', { class: 'note-list' });
   const fillList = (filter = '') => {
     const q = filter.toLowerCase();
-    listEl.replaceChildren(...live('notes').filter(n => n.kind !== 'bioq').sort((a, b) => b.updatedAt - a.updatedAt)
+    listEl.replaceChildren(...live('notes').filter(n => n.kind !== 'bioq' && n.kind !== 'journal').sort((a, b) => b.updatedAt - a.updatedAt)
       .filter(n => !q || `${n.title}\n${n.body}`.toLowerCase().includes(q))
       .map(n => h('li', null, h('button', {
         type: 'button', class: `note-item${n.id === activeNoteId ? ' active' : ''}`,

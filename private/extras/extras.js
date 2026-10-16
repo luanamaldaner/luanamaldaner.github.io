@@ -617,3 +617,48 @@ function showWrap() {
   document.body.append(el);
   el.querySelector('.wr-tap').focus();
 }
+
+// ---------------------------------------------------------------- 3-line journal + mood
+// Stored as vault notes with kind 'journal' (one per day), so it syncs like everything else.
+
+const MOODS = [[1, '😞', 'Rough'], [2, '😕', 'Meh'], [3, '😐', 'Okay'], [4, '🙂', 'Good'], [5, '🤩', 'Amazing']];
+const PROMPTS = ['One good thing today', 'Something I learned', 'Tomorrow I want to…'];
+const journalFor = day => C.live('notes').find(n => n.kind === 'journal' && n.date === day);
+
+export function journalCard() {
+  const { h, card } = C;
+  const today = C.todayStr();
+  const S = C.S();
+  const e = journalFor(today);
+  const save = patch => C.commit(() => {
+    let n = journalFor(today);
+    if (!n) { n = { id: C.uid(), kind: 'journal', date: today, title: `Journal · ${today}`, body: '', lines: ['', '', ''], mood: 0 }; S.notes.push(n); }
+    Object.assign(n, patch);
+    n.body = n.lines.filter(Boolean).join('\n');
+    C.touch(n);
+  });
+  const inputs = PROMPTS.map((p, i) => h('input', { class: 'jr-line', placeholder: p, 'aria-label': p, value: e ? e.lines[i] || '' : '', maxlength: 200 }));
+  const doSave = () => save({ lines: inputs.map(x => x.value.trim()) });
+  inputs.forEach(x => x.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); doSave(); } }));
+
+  // the last 14 days: mood dot over a sleep bar
+  const sleepBy = Object.fromEntries(sleepLog().map(r => [r.date, sleepHours(r)]));
+  const days = Array.from({ length: 14 }, (_, i) => C.addDays(today, i - 13));
+  const graph = h('div', { class: 'jr-graph', 'aria-label': 'Mood and sleep, last 14 days' }, days.map(d => {
+    const j = journalFor(d), hrs = sleepBy[d];
+    return h('div', { class: 'jr-day', title: `${C.fmtShort(d)}: ${j && j.mood ? MOODS[j.mood - 1][2] : 'no mood'} · ${hrs ? fmtH(hrs) : 'no sleep logged'}` },
+      h('span', { class: 'jr-mood', text: j && j.mood ? MOODS[j.mood - 1][1] : '·' }),
+      h('span', { class: 'jr-sleep' }, h('span', { style: `height:${hrs ? Math.min(100, (hrs / 10) * 100).toFixed(0) : 0}%` })),
+      h('span', { class: 'jr-d', text: C.fmtWeekday(d).slice(0, 1) }));
+  }));
+
+  return card('Journal', h('span', { class: 'card-meta', text: e && e.lines.some(Boolean) ? 'saved ✓' : '3 lines' }),
+    h('div', { class: 'jr-moods', role: 'group', 'aria-label': 'Mood today' }, MOODS.map(([v, em, label]) => h('button', {
+      type: 'button', class: `jr-face${e && e.mood === v ? ' on' : ''}`, title: label, 'aria-label': label, 'aria-pressed': String(!!(e && e.mood === v)),
+      onclick: () => save({ mood: v, lines: inputs.map(x => x.value.trim()) }),
+    }, em))),
+    h('div', { class: 'jr-lines' }, inputs),
+    h('div', { class: 'row' }, h('button', { type: 'button', class: 'btn btn-small btn-primary', text: 'Save', onclick: doSave })),
+    graph,
+    h('p', { class: 'muted small', text: 'Bars are hours slept, faces are your mood.' }));
+}
