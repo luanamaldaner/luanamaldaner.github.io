@@ -1997,3 +1997,20 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .wr-sub { font-size: 15px; opacity: .85; }
 @keyframes wr-pop { from { transform: translateY(14px) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .wrapped, .wr-big { animation: none; } }
+
+/* ---------- break buddy */
+.bb { display: grid; justify-items: center; gap: 8px; margin: 4px 0 14px; }
+.bb-circle { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, #3a8fd8 45%, var(--card)), color-mix(in srgb, #2a9d8f 25%, var(--card))); animation: bb-breathe 16s ease-in-out infinite; }
+@keyframes bb-breathe { 0% { transform: scale(.6); } 25% { transform: scale(1.15); } 50% { transform: scale(1.15); } 75% { transform: scale(.6); } 100% { transform: scale(.6); } }
+.bb-label { font: 600 15px/1 var(--serif); color: #2a7f9d; }
+.bb-stretch { font-size: 13px; max-width: 380px; text-align: center; margin: 4px 0 0; }
+@media (prefers-reduced-motion: reduce) { .bb-circle { animation: none; } }
+
+/* ---------- daily boss */
+.boss { background: linear-gradient(160deg, color-mix(in srgb, #7b4bd8 9%, var(--card)), var(--card) 55%); }
+.boss.won { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.boss-label { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #7b4bd8; font-weight: 600; }
+.boss-q { font: 500 15px/1.4 var(--serif); margin: 0 0 10px; }
+.boss-code { font: 13px/1.5 var(--mono); background: var(--code-bg, #f6f4fb); padding: 10px 12px; border-radius: 10px; overflow-x: auto; margin: 0 0 10px; }
+.boss-opts { display: grid; gap: 6px; margin-bottom: 10px; }
+.boss .q-opt { padding: 8px 11px; font-size: 13px; }

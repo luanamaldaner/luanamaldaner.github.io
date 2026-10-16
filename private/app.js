@@ -20,6 +20,7 @@ import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
 import { renderOrgo } from './orgo/orgo.js?v=12';
 import { renderProg } from './prog/prog.js?v=3';
+import { bossCard } from './extras/boss.js?v=1';
 import { renderBio } from './bio/bio.js?v=7';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard } from './extras/extras.js?v=5';
 
@@ -602,7 +603,7 @@ const VIEWS = {
 };
 
 // What the Orgo tab needs from the app (it lives in its own module).
-const ORGO_CTX = { h, card, commit, touch, uid, render: () => render(), S: () => S, todayStr, addDays };
+const ORGO_CTX = { h, card, commit, touch, uid, render: () => render(), S: () => S, todayStr, addDays, go };
 
 // Sleep, week in review, cards and "today I learned" live in extras/.
 initExtras({
@@ -735,7 +736,7 @@ function renderToday() {
       })() })), flowerGadget()),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, calendarCard(today), h('div', { class: 'todo-split' }, assignmentsCard(), tasksCard())),
-      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), internsCard(), countdownCard(), planCard(), palavrasCard(), caloriesMini(), tilCard())),
+      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), internsCard(), countdownCard(), planCard(), bossCard(ORGO_CTX), palavrasCard(), caloriesMini(), tilCard())),
     tagList());
 }
 
@@ -1197,6 +1198,30 @@ function focusFlower(p, bloomed) {
   return svg;
 }
 
+// Break buddy: during a break, a box-breathing circle (4 s in, hold, out, hold) and one stretch.
+const STRETCHES = [
+  ['Neck rolls', 'Slowly roll your head in a circle, 5 times each way.'],
+  ['Shoulder shrugs', 'Lift your shoulders to your ears, hold 3 s, drop. Repeat 8 times.'],
+  ['Wrist stretch', 'Arm out, palm up, gently pull your fingers back for 15 s. Switch hands.'],
+  ['Stand and reach', 'Stand up, reach for the ceiling, then fold forward and let your arms hang.'],
+  ['Eye break (20-20-20)', 'Look at something about 20 feet away for 20 seconds.'],
+  ['Seated twist', 'Sit tall, turn your chest to the right, hold 15 s, then left.'],
+  ['Water', 'Drink a glass of water. Your brain is about 75% water ✿'],
+  ['Chest opener', 'Clasp your hands behind your back and gently lift, chest forward, 15 s.'],
+];
+const BREATH = ['Breathe in', 'Hold', 'Breathe out', 'Hold'];
+let breathTimer = null;
+function breakBuddy() {
+  clearInterval(breathTimer);
+  const [name, how] = STRETCHES[Math.floor(Date.now() / 3e5) % STRETCHES.length];
+  const label = h('span', { class: 'bb-label', text: BREATH[0] });
+  const t0 = Date.now();
+  breathTimer = setInterval(() => { if (!label.isConnected) { clearInterval(breathTimer); return; } label.textContent = BREATH[Math.floor((Date.now() - t0) / 4000) % 4]; }, 250);
+  return h('div', { class: 'bb' },
+    h('div', { class: 'bb-circle', 'aria-hidden': 'true' }), label,
+    h('p', { class: 'bb-stretch' }, h('strong', { text: `${name}: ` }), how));
+}
+
 function renderFocus() {
   const left = focusLeft();
   const total = focus.minutes * 60e3;
@@ -1262,7 +1287,8 @@ function renderFocus() {
         h('section', { class: 'card focus-card' },
           h('div', { class: 'focus-kind', text: focus.mode === 'wilted' ? 'Wilted' : focus.mode === 'done' ? (focus.kind === 'break' ? 'Break complete' : 'Session complete') : focus.kind === 'break' ? 'On a break' : focus.mode === 'idle' ? 'Ready when you are' : focus.mode === 'paused' ? 'Paused' : 'Focusing' }),
           h('div', { class: 'focus-dial' }, focusFlower(p, bloomed), h('div', { id: 'focus-time', class: 'focus-time', text: fmtClock(left) })),
-          focus.mode === 'done' || focus.mode === 'wilted' ? null : select,
+          focus.kind === 'break' && (focus.mode === 'running' || focus.mode === 'paused') ? breakBuddy() : null,
+          focus.mode === 'done' || focus.mode === 'wilted' || focus.kind === 'break' ? null : select,
           ...controls)),
       h('div', { class: 'col col-narrow' },
         card('Today', h('span', { class: 'card-meta', text: `${focusMinutes(today)} min` }),
