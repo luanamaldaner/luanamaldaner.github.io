@@ -2,7 +2,7 @@
 // spaced-repetition cards for Bio + Prog, and a daily "Today I learned".
 // Everything is built from the vault through helpers app.js hands over.
 
-import { ALL_CARDS, DECKS } from './decks.js?v=1';
+import { ALL_CARDS, DECKS } from './decks.js?v=2';
 import { TIL, tilIndex } from './til.js?v=1';
 
 let C; // { h, s, card, icon, iconBtn, commit, touch, uid, S, live, todayStr, addDays, parse, toStr, fmtShort, fmtWeekday, fmtTime, totalsFor, focusMinutes, taskItems, forestPlot, render, go }

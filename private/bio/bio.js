@@ -14,6 +14,8 @@ import L9 from './l9.js?v=2';
 import L10 from './l10.js?v=2';
 import WALKS from './walks.js?v=3';
 import GLOSSARY from './glossary.js?v=1';
+import { examPage } from './exam.js?v=1';
+import { mapPage } from './map.js?v=2';
 
 const LECTURES = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];
 
@@ -186,12 +188,27 @@ export function renderBio(ctx) {
   for (const inst of live) if (inst.io) inst.io.disconnect();
   live.clear(); byId.clear();
 
+  const exam = st.lec === 'EXAM', map = st.lec === 'MAP';
   const lec = LECTURES.find(l => l.id === st.lec) || LECTURES[0];
   const tabs = h('div', { class: 'bio-tabs', role: 'tablist' }, LECTURES.map(l => h('button', {
-    type: 'button', role: 'tab', class: `bio-tab${l.id === lec.id ? ' on' : ''}`, 'aria-selected': String(l.id === lec.id),
+    type: 'button', role: 'tab', class: `bio-tab${!exam && !map && l.id === lec.id ? ' on' : ''}`, 'aria-selected': String(!exam && !map && l.id === lec.id),
     style: `--lc: var(${l.color})`,
     onclick: () => { if (st.lec !== l.id) { st.lec = l.id; save('lec', l.id); C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
-  }, h('span', { class: 'bio-tab-n', text: l.n }), h('span', { text: l.short }), st.done.has(l.id) ? h('span', { class: 'bio-tab-ok', text: '✓' }) : null)));
+  }, h('span', { class: 'bio-tab-n', text: l.n }), h('span', { text: l.short }), st.done.has(l.id) ? h('span', { class: 'bio-tab-ok', text: '✓' }) : null)),
+  h('button', {
+    type: 'button', role: 'tab', class: `bio-tab bio-tab-exam${exam ? ' on' : ''}`, 'aria-selected': String(exam), style: '--lc: var(--accent)',
+    onclick: () => { if (!exam) { st.lec = 'EXAM'; save('lec', 'EXAM'); C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
+  }, h('span', { class: 'bio-tab-n', text: '✎' }), h('span', { text: 'Mock exam' })),
+  h('button', {
+    type: 'button', role: 'tab', class: `bio-tab bio-tab-exam${map ? ' on' : ''}`, 'aria-selected': String(map), style: '--lc: #3a8fd8',
+    onclick: () => { if (!map) { st.lec = 'MAP'; save('lec', 'MAP'); C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
+  }, h('span', { class: 'bio-tab-n', text: '✦' }), h('span', { text: 'Concept map' })));
+  if (exam || map) {
+    const jump = (lid, i) => { st.lec = lid; save('lec', lid); st.walk = { lec: lid, i, picked: null }; C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    return h('div', { class: 'page bio' },
+      h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Biology' }), h('p', { class: 'muted small bio-head-sub', text: exam ? 'Bio 2 · mock exam' : 'Bio 2 · concept map' }))),
+      tabs, exam ? examPage(C, LECTURES, WALKS) : mapPage(C, LECTURES, WALKS, jump));
+  }
 
   const total = lec.scenes.length;
   const watchedCount = () => lec.scenes.filter(s => st.watched.has(s.id)).length;
