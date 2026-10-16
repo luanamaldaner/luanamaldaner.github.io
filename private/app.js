@@ -21,7 +21,7 @@ import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?
 import { renderOrgo } from './orgo/orgo.js?v=13';
 import { renderProg } from './prog/prog.js?v=3';
 import { bossCard } from './extras/boss.js?v=2';
-import { renderLab, microbeCard } from './extras/lab.js?v=4';
+import { renderLab, microbeCard } from './extras/lab.js?v=5';
 import { renderDegree } from './extras/degree.js?v=1';
 import { renderBio } from './bio/bio.js?v=10';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=7';

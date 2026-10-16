@@ -58,7 +58,56 @@ function dilutionView(C) {
       h('p', { class: `small ${countable ? 'ml-ok' : 'ml-warn'}`, text: countable ? '✓ 30–300 colonies: a countable plate, so this estimate is trustworthy.' : ms.colonies > 300 ? '⚠ Over 300 colonies is "too numerous to count": use a more diluted tube.' : '⚠ Under 30 colonies is too few to be reliable: use a less diluted tube.' })));
 }
 
+
+// ---------------------------------------------------------------- name that shape (drawn micrographs)
+const NS = 'http://www.w3.org/2000/svg';
+const S_ = (tag, a, p) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); if (p) p.append(e); return e; };
+const SHAPES = {
+  'Diplococci': (g, c) => { for (const [x, y] of [[60, 60], [150, 110], [90, 160], [190, 50]]) { S_('circle', { cx: x, cy: y, r: 9, fill: c }, g); S_('circle', { cx: x + 18, cy: y, r: 9, fill: c }, g); } },
+  'Streptococci': (g, c) => { for (const [x0, y0, dx, dy] of [[30, 50, 17, 4], [60, 150, 16, -6], [140, 90, 12, 12]]) for (let i = 0; i < 6; i++) S_('circle', { cx: x0 + i * dx, cy: y0 + i * dy, r: 8, fill: c }, g); },
+  'Staphylococci': (g, c) => { for (const [x0, y0] of [[70, 80], [170, 140]]) for (let i = 0; i < 11; i++) S_('circle', { cx: x0 + ((i * 37) % 50) - 25, cy: y0 + ((i * 53) % 44) - 22, r: 8, fill: c }, g); },
+  'Tetrads': (g, c) => { for (const [x, y] of [[50, 50], [150, 70], [80, 150], [190, 160]]) for (const [a, b] of [[0, 0], [17, 0], [0, 17], [17, 17]]) S_('circle', { cx: x + a, cy: y + b, r: 8, fill: c }, g); },
+  'Bacilli (single rods)': (g, c) => { for (const [x, y, r] of [[50, 50, 20], [150, 60, -30], [90, 140, 60], [180, 150, 10], [40, 180, -60]]) S_('rect', { x: x - 18, y: y - 6, width: 36, height: 12, rx: 6, fill: c, transform: `rotate(${r} ${x} ${y})` }, g); },
+  'Streptobacilli': (g, c) => { for (const [x0, y0, ang] of [[25, 60, 8], [40, 160, -12]]) for (let i = 0; i < 5; i++) { const x = x0 + i * 40 * Math.cos(ang * Math.PI / 180), y = y0 + i * 40 * Math.sin(ang * Math.PI / 180); S_('rect', { x: x, y: y - 6, width: 37, height: 12, rx: 6, fill: c, transform: `rotate(${ang} ${x} ${y})` }, g); } },
+  'Coccobacilli': (g, c) => { for (let i = 0; i < 12; i++) S_('ellipse', { cx: 30 + ((i * 61) % 180), cy: 30 + ((i * 41) % 160), rx: 11, ry: 7, fill: c, transform: `rotate(${(i * 47) % 180} ${30 + ((i * 61) % 180)} ${30 + ((i * 41) % 160)})` }, g); },
+  'Vibrios (comma-shaped)': (g, c) => { for (const [x, y, r] of [[60, 60, 0], [150, 80, 40], [80, 150, -30], [180, 160, 80]]) S_('path', { d: `M${x - 16} ${y} q16 -14 32 0`, stroke: c, 'stroke-width': 9, fill: 'none', 'stroke-linecap': 'round', transform: `rotate(${r} ${x} ${y})` }, g); },
+  'Spirilla (rigid spirals)': (g, c) => { for (const [x, y, r] of [[40, 70, 10], [60, 160, -15]]) S_('path', { d: `M${x} ${y} q12 -16 24 0 t24 0 t24 0 t24 0`, stroke: c, 'stroke-width': 7, fill: 'none', 'stroke-linecap': 'round', transform: `rotate(${r} ${x} ${y})` }, g); },
+  'Spirochetes (thin, tight coils)': (g, c) => { for (const [x, y, r] of [[30, 60, 5], [40, 150, -10]]) { let d = `M${x} ${y}`; for (let i = 0; i < 18; i++) d += ` q4 ${i % 2 ? 7 : -7} 8 0`; S_('path', { d, stroke: c, 'stroke-width': 2.5, fill: 'none', transform: `rotate(${r} ${x} ${y})` }, g); } },
+};
+const SHAPE_NAMES = Object.keys(SHAPES);
+const COLORS = { pos: '#5b2fa0', neg: '#df5f88' };
+const mq = { cur: null, picked: null, gram: null, right: 0, total: 0 };
+function newMorph() {
+  const name = SHAPE_NAMES[Math.floor(Math.random() * SHAPE_NAMES.length)];
+  const gram = Math.random() < 0.5 ? 'pos' : 'neg';
+  const others = SHAPE_NAMES.filter(n => n !== name).sort(() => Math.random() - 0.5).slice(0, 3);
+  mq.cur = { name, gram, opts: [name, ...others].sort(() => Math.random() - 0.5) };
+  mq.picked = null; mq.gram = null;
+}
+function morphView(C) {
+  const { h } = C;
+  if (!mq.cur) newMorph();
+  const q = mq.cur;
+  const svg = S_('svg', { viewBox: '0 0 240 220', class: 'ml-micro', role: 'img', 'aria-label': 'Drawn microscope field' });
+  S_('rect', { x: 0, y: 0, width: 240, height: 220, fill: '#fbf9f2' }, svg);
+  SHAPES[q.name](S_('g', { opacity: 0.92 }, svg), COLORS[q.gram]);
+  const done = mq.picked !== null && mq.gram !== null;
+  const opt = (label, chosen, right, on) => h('button', { type: 'button', class: `q-opt${chosen !== null && label === right ? ' right' : chosen === label ? ' wrong' : ''}`, disabled: chosen !== null, onclick: on }, label);
+  return h('section', { class: 'card lab-card' },
+    h('div', { class: 'lab-top' }, h('p', { class: 'bio-kicker', style: '--lc: var(--accent)', text: 'Name that shape' }), h('span', { class: 'muted small', text: `${mq.right} / ${mq.total} right` })),
+    h('div', { class: 'ml-morph' },
+      h('div', { class: 'ml-scope' }, svg),
+      h('div', { class: 'ml-qs' },
+        h('p', { class: 'q-prompt', text: '1. What shape and arrangement is this?' }),
+        h('div', { class: 'q-options lab-opts' }, q.opts.map(o => opt(o, mq.picked, q.name, () => { mq.picked = o; mq.total++; if (o === q.name) mq.right++; C.render(); }))),
+        h('p', { class: 'q-prompt', text: '2. Gram result?' }),
+        h('div', { class: 'q-options' }, ['Gram-positive', 'Gram-negative'].map(o => opt(o, mq.gram, q.gram === 'pos' ? 'Gram-positive' : 'Gram-negative', () => { mq.gram = o; C.render(); }))))),
+    done ? h('div', { class: 'row' }, h('span', { class: 'small', text: `${q.gram === 'pos' ? 'Purple = Gram-positive (kept the crystal violet).' : 'Pink = Gram-negative (took the safranin).'}` }),
+      h('button', { type: 'button', class: 'btn btn-primary', text: 'Next field →', onclick: () => { newMorph(); C.render(); } })) : null,
+    h('p', { class: 'muted small', text: 'These are drawings, not real micrographs, so you can practice the shapes and arrangements.' }));
+}
+
 export function microLabPage(C) {
   const { h } = C;
-  return h('div', { class: 'lab-stack' }, gramView(C), dilutionView(C));
+  return h('div', { class: 'lab-stack' }, gramView(C), morphView(C), dilutionView(C));
 }
