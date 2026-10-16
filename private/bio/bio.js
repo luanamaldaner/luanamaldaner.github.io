@@ -17,6 +17,7 @@ import GLOSSARY from './glossary.js?v=1';
 import { examPage } from './exam.js?v=4';
 import { mapPage } from './map.js?v=2';
 import { addCorrect } from '../extras/packs.js?v=1';
+import { figureFor } from './figure.js?v=1';
 
 const LECTURES = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];
 
@@ -323,6 +324,7 @@ function walkPanel(lec) {
     h('h2', { class: 'bio-walk-title', text: step.title }),
     h('div', { class: 'bio-walk-say' }, (() => { const used = new Set(); return (step.say || []).map(t => h('p', null, ...withTerms(t, used))); })()),
     step.scene ? h('div', { class: 'bio-walk-stage' }) : null,
+    figureFor(C, lec.id, w.i),
     step.takeaway ? h('p', { class: 'bio-walk-take' }, h('strong', { text: 'Takeaway: ' }), step.takeaway) : null,
     check,
     explainBox(lec, w.i, step),

@@ -1,0 +1,62 @@
+// Labeled figures (see figure.js for the format). Keys are 'L<n>:<step index>'.
+export default {
+  'L8:1': {
+    img: 'l8-cns-pns.webp', ratio: '3 / 2', alt: 'A human body showing the brain, spinal cord and yellow nerves, next to a spinal cord cross-section with a sensory neuron from the fingertip skin and a motor neuron to a muscle',
+    caption: 'Left: the whole system. Right: one signal in (afferent) and one out (efferent). Tap a label.',
+    labels: [
+      { x: 20, y: 6.5, lx: 30, ly: 5, a: 'r', t: 'Brain', d: 'Part of the CNS, the "headquarters." It processes signals and sends out commands.' },
+      { x: 20, y: 30, lx: 30, ly: 16, a: 'r', t: 'Spinal cord', d: 'Part of the CNS. The main cable between the brain and the body, running down the back.' },
+      { x: 52, y: 40, lx: 42, ly: 24, a: 'c', t: 'Central nervous system (CNS)', d: 'The brain and spinal cord (here, a slice of spinal cord). The "headquarters."' },
+      { x: 25.5, y: 72, lx: 40, ly: 82, a: 'c', t: 'Peripheral nervous system (PNS)', d: 'Everything outside the brain and spinal cord: the wiring out to the body.' },
+      { x: 74, y: 46, lx: 81, ly: 47, a: 'c', t: 'Nerve', d: 'A bundle of hundreds to thousands of neurons, like wires in a cable.' },
+      { x: 80, y: 41, lx: 73, ly: 27, a: 'c', t: 'Afferent (sensory) neuron', d: 'Carries signals TOWARD the CNS, here from the skin. Afferent Arrives.' },
+      { x: 70, y: 57, lx: 58, ly: 70, a: 'c', t: 'Efferent (motor) neuron', d: 'Carries signals AWAY from the CNS, here telling a muscle to contract. Efferent Exits.' },
+      { x: 91, y: 22, lx: 76, ly: 8, a: 'c', t: 'Skin', d: 'A sense organ. Touch here starts a signal in an afferent neuron.' },
+      { x: 90, y: 66, lx: 72, ly: 92, a: 'c', t: 'Muscle', d: 'Gets commands from efferent (motor) neurons and contracts.' },
+    ],
+  },
+  'L8:2': {
+    img: 'l8-neuron.webp', ratio: '3 / 2', alt: 'An orange neuron whose axon terminals meet the dendrites of a second, purple neuron',
+    caption: 'Left: the sending neuron. Right: the receiving neuron. The signal runs left to right. Tap a label.',
+    labels: [
+      { x: 9, y: 35, lx: 3, ly: 14, a: 'r', t: 'Dendrites', d: 'Short branches (like antennas) that pick up signals and carry them toward the cell body.' },
+      { x: 24, y: 41, lx: 27, ly: 14, a: 'c', t: 'Cell body', d: 'Holds the nucleus and organelles, and adds up all the incoming signals.' },
+      { x: 16.5, y: 47, lx: 15, ly: 86, a: 'c', t: 'Nucleus', d: 'Holds the DNA. It sits inside the cell body.' },
+      { x: 45, y: 50, lx: 45, ly: 32, a: 'c', t: 'Axon', d: 'Long cable that carries the action potential AWAY from the cell body, sometimes very far.' },
+      { x: 71.5, y: 40.5, lx: 64, ly: 22, a: 'c', t: 'Axon terminals', d: 'Ends of the axon. They meet the next cell at a synapse.' },
+      { x: 73, y: 47, lx: 73, ly: 86, a: 'c', t: 'Synapse', d: 'The meeting point (a tiny gap) between the axon terminals and the next cell.' },
+      { x: 58, y: 51, lx: 50, ly: 70, a: 'c', t: 'Presynaptic cell', d: 'The sending cell ("before the synapse").' },
+      { x: 84, y: 51, lx: 88, ly: 14, a: 'c', t: 'Postsynaptic cell', d: 'The receiving cell ("after the synapse").' },
+    ],
+  },
+  'L9:10': {
+    img: 'l9-pituitary.webp', ratio: '3 / 2', alt: 'A brain cut in half showing the hypothalamus and pituitary, with dotted paths to the thyroid, adrenal gland, ovaries, testis, breast, bone and muscle, and frog skin',
+    caption: 'The anterior pituitary sends hormones to glands and tissues all over the body. Tap a label.',
+    labels: [
+      { x: 45.5, y: 20, lx: 34, ly: 18, a: 'l', t: 'Hypothalamus', d: 'Brain region just above the pituitary. It sends the signals that control the pituitary.' },
+      { x: 45, y: 34, lx: 34, ly: 34, a: 'l', t: 'Anterior pituitary', d: 'Front lobe. Makes ACTH, TSH, LH, FSH (tropic) plus GH, prolactin and MSH.' },
+      { x: 48.5, y: 33.5, lx: 60, ly: 34, a: 'r', t: 'Posterior pituitary', d: 'Back lobe. It does not make these hormones; it releases oxytocin and ADH made in the hypothalamus.' },
+      { x: 10, y: 70, lx: 10, ly: 56, a: 'c', t: 'Thyroid (TSH)', d: 'TSH (thyroid-stimulating hormone) controls the thyroid.' },
+      { x: 18.5, y: 62.5, lx: 22, ly: 47, a: 'c', t: 'Adrenal cortex (ACTH)', d: 'ACTH controls the adrenal cortex, the outer layer of the adrenal gland on top of the kidney.' },
+      { x: 29, y: 75, lx: 30, ly: 92, a: 'c', t: 'Ovaries (LH, FSH)', d: 'LH and FSH (the gonadotropins) control the gonads. In females, the gonads are the ovaries.' },
+      { x: 49, y: 80, lx: 49, ly: 96, a: 'c', t: 'Testes (LH, FSH)', d: 'LH and FSH also control the testes, the male gonads.' },
+      { x: 64, y: 72, lx: 67, ly: 92, a: 'c', t: 'Breast (prolactin)', d: 'Prolactin drives milk production in mammals.' },
+      { x: 77.5, y: 76, lx: 86, ly: 50, a: 'c', t: 'Bone and muscle (GH)', d: 'Growth hormone (GH) helps many tissues grow, like bone and muscle.' },
+      { x: 87, y: 79, lx: 89, ly: 96, a: 'c', t: 'Skin-color cells (MSH)', d: 'MSH is named for its effect on skin-color cells in amphibians (like this frog skin).' },
+    ],
+  },
+  'L10:2': {
+    img: 'l10-wbc.webp', ratio: '3 / 2', alt: 'Seven kinds of white blood cells: basophil, eosinophil, macrophage, dendritic cell, B cell, T cell and NK cell',
+    caption: 'Top left: specialists. Top right: phagocytes. Bottom: lymphocytes. Tap a label.',
+    labels: [
+      { x: 15, y: 27, lx: 13, ly: 4, a: 'c', t: 'Basophil', d: 'Specialist with dark granules. Involved in allergies and fighting parasites.' },
+      { x: 35, y: 28, lx: 35, ly: 4, a: 'c', t: 'Eosinophil', d: 'Specialist with red-orange granules. Fights parasites and plays a part in allergies.' },
+      { x: 56, y: 24, lx: 57, ly: 4, a: 'c', t: 'Macrophage', d: 'Big phagocyte that swallows germs whole, then carries news from the innate system to the adaptive system.' },
+      { x: 86, y: 31, lx: 86, ly: 4, a: 'c', t: 'Dendritic cell', d: 'Branchy phagocyte that grabs germs and carries news to the adaptive system (it shows pieces to T cells).' },
+      { x: 66, y: 29, lx: 66, ly: 48, a: 'c', t: 'Phagocytosis', d: '"Cell eating": the macrophage wraps around these bacteria and swallows them.' },
+      { x: 23, y: 71, lx: 23, ly: 95, a: 'c', t: 'B cells', d: 'Lymphocytes of adaptive immunity. They make antibodies (the Y shapes on the surface).' },
+      { x: 49, y: 70, lx: 49, ly: 95, a: 'c', t: 'T cells', d: 'Lymphocytes of adaptive immunity. Their receptors spot infected cells and they direct the response.' },
+      { x: 76, y: 70, lx: 76, ly: 95, a: 'c', t: 'Natural killer (NK) cells', d: 'The odd lymphocytes: they work in BOTH innate and adaptive immunity, killing infected cells.' },
+    ],
+  },
+};

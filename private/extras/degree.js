@@ -26,7 +26,7 @@ function record(C) {
   let n = C.S().notes.find(x => !x.deleted && x.kind === 'coursemap');
   if (!n) { try { const t = localStorage.getItem('degree.preview'); if (t) n = { body: t }; } catch {} } // local preview only
   if (!n) return null;
-  try { const j = JSON.parse(n.body); return { done: new Set(j.done.map(norm)), ip: new Set(j.ip.map(norm)), notes: j.notes || [], updated: j.updated, credits: j.credits }; } catch { return null; }
+  try { const j = JSON.parse(n.body); return { done: new Set(j.done.map(norm)), ip: new Set(j.ip.map(norm)), notes: j.notes || [], updated: j.updated, credits: j.credits, mcbAudit: j.mcbAudit || null }; } catch { return null; }
 }
 
 function row(C, label, title, st) {
@@ -50,7 +50,11 @@ export function renderDegree(C) {
     return row(C, code.replace(/(\D)(\d)/, '$1 $2').replace('|', ' / '), title, tally(status(alts, rec)));
   }))));
 
-  const mcbGroups = MCB.groups.filter(g => g.name !== 'Programming Requirement').map(g => {
+  // Prefer the What-If audit (her real record) over the catalog list when it's saved.
+  const mcbGroups = rec.mcbAudit ? rec.mcbAudit.map(g => card(g.group, null, h('ul', { class: 'dg-list' }, g.items.map(it => {
+    tally(it.status);
+    return h('li', { class: `dg-row ${it.status}` }, h('span', { class: 'dg-ic', text: ICON[it.status] || '·' }), h('span', { class: 'dg-code', text: it.label }), h('span', { class: 'dg-title muted', text: it.detail || '' }));
+  })))) : MCB.groups.filter(g => g.name !== 'Programming Requirement').map(g => {
     // Physics is "option 1 OR option 2"; show both rows but they read as alternatives
     return card(g.name, g.note ? h('span', { class: 'card-meta', text: g.note }) : null, h('ul', { class: 'dg-list' }, g.courses.map(c => {
       const alts = [parts(c.code), ...(c.alt || []).map(parts)];
@@ -61,7 +65,7 @@ export function renderDegree(C) {
 
   // what to aim for next: the next critical-tracking items that aren't done yet
   const nextDS = DS.tracking.flatMap(t => t.items.map(i => ({ i, sem: t.sem }))).filter(x => x.i !== 'ELECTIVE' && status(x.i.split('|').map(c => [norm(c)]), rec) === 'need').slice(0, 6);
-  const mcbTrack = MCB.tracking.flatMap(t => t.items.map(i => ({ i, sem: t.sem }))).filter(x => {
+  const mcbTrack = rec.mcbAudit ? rec.mcbAudit[0].items.filter(i => i.status === 'need').map(i => ({ i: i.label, sem: (i.detail || '').replace('tracking semester ', '') })) : MCB.tracking.flatMap(t => t.items.map(i => ({ i, sem: t.sem }))).filter(x => {
     const alts = x.i.split(/\s+or\s+/).map(a => a.split('/').map(norm));
     return status(alts, rec) === 'need';
   }).slice(0, 4);
