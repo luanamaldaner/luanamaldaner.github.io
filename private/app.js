@@ -1330,9 +1330,13 @@ function internsSorted(list) {
 function todaysInterns() {
   const today = todayStr();
   const all = live('internships');
-  const picked = all.filter(it => it.pick === today && it.status !== 'skipped');
+  // Once today's 3 are shown they stay put: marking one Applied counts it instead of swapping it out.
+  const doneToday = it => it.status === 'applied' && it.statusAt && new Date(it.statusAt).toLocaleDateString('en-CA') === today;
+  const picked = all.filter(it => (it.pick === today || doneToday(it)) && it.status !== 'skipped');
   const rest = internsSorted(all.filter(it => internOpen(it) && !picked.includes(it)));
-  return [...picked, ...rest].slice(0, 3);
+  const list = [...picked, ...rest].slice(0, 3);
+  if (!all.some(it => it.pick === today) && list.length) setTimeout(() => commit(() => list.forEach(it => { if (it.pick !== today) { it.pick = today; touch(it); } })), 0);
+  return list;
 }
 
 function setInternStatus(it, status) {
