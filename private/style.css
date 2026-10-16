@@ -2077,3 +2077,19 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .mb.big .mb-name { font-size: 22px; }
 .mb-hook { margin: 0; font-weight: 500; }
 .mb-why { margin: 0; color: var(--accent); }
+
+/* ---------- printable exam */
+.print-sheet { display: none; }
+@media print {
+  body.printing > *:not(.print-sheet) { display: none !important; }
+  body.printing { background: #fff !important; }
+  body.printing .print-sheet { display: block; color: #000; font: 11pt/1.4 Georgia, serif; }
+  .print-sheet h1 { font-size: 18pt; margin: 0 0 4pt; }
+  .ps-meta { margin: 0 0 12pt; font-size: 10pt; }
+  .ps-qs > li { break-inside: avoid; margin-bottom: 9pt; }
+  .ps-qs p { margin: 0 0 3pt; }
+  .ps-lec { color: #666; font-size: 9pt; }
+  .ps-opts { margin: 0; padding-left: 18pt; }
+  .ps-key { break-before: page; font-size: 9.5pt; }
+  .ps-why { color: #444; }
+}

@@ -348,19 +348,27 @@ function patternsCard(nDays) {
 
 // Leitner boxes, same as the Orgo flashcards: days until a card comes back.
 const INTERVALS = [0, 1, 2, 4, 8, 16];
-const cs = { deck: 'All', current: null, flipped: false, again: new Set() };
+const cs = { deck: '✨ Daily mix', current: null, flipped: false, again: new Set() };
 const rec = id => (C.S().orgo || []).find(x => x.id === `fc:${id}` && !x.deleted);
 
 export function renderCards() {
   refreshDecks();
   const { h, card } = C;
   const today = C.todayStr();
-  const inDeck = c => cs.deck === 'All' || c.deck === cs.deck || (cs.deck === 'All Bio' && c.deck.startsWith('Bio')) || (cs.deck === 'All Prog' && c.deck.startsWith('Prog'));
+  const mix = cs.deck === '✨ Daily mix';
+  const inDeck = c => mix || cs.deck === 'All' || c.deck === cs.deck || (cs.deck === 'All Bio' && c.deck.startsWith('Bio')) || (cs.deck === 'All Prog' && c.deck.startsWith('Prog'));
   const deck = ALL_CARDS.filter(inDeck);
   const due = deck.filter(c => { const r = rec(c.id); return !r || r.due <= today; });
   const reviews = due.filter(c => rec(c.id)).sort((a, b) => rec(a.id).due.localeCompare(rec(b.id).due));
   const fresh = due.filter(c => !rec(c.id)).slice(0, 20); // at most 20 new cards a day
-  const queue = [...reviews, ...fresh];
+  let queue = [...reviews, ...fresh];
+  if (mix) { // one review queue across every subject: deck by deck in turn, 25 cards, mistakes first
+    const byDeck = new Map();
+    for (const c of [...queue.filter(c => c.deck === 'Orgo mistakes'), ...queue.filter(c => c.deck !== 'Orgo mistakes')]) { if (!byDeck.has(c.deck)) byDeck.set(c.deck, []); byDeck.get(c.deck).push(c); }
+    const lists = [...byDeck.values()], out = [];
+    for (let k = 0; out.length < 25 && lists.some(l => l.length); k++) { const l = lists[k % lists.length]; if (l.length) out.push(l.shift()); }
+    queue = out;
+  }
   const ordered = [...queue.filter(c => !cs.again.has(c.id)), ...queue.filter(c => cs.again.has(c.id))];
   if (!ordered.some(c => c.id === cs.current)) { cs.current = ordered[0] ? ordered[0].id : null; cs.flipped = false; }
   const cur = ALL_CARDS.find(c => c.id === cs.current);
@@ -400,10 +408,10 @@ export function renderCards() {
 
   return h('div', { class: 'page' },
     h('header', { class: 'page-head' }, h('h1', { text: 'Cards' }),
-      h('p', { class: 'meta', text: 'Spaced repetition for Bio 2 and Prog 1. "Got it" pushes a card further out (1, 2, 4, 8, 16 days); "Again" brings it back today. Orgo cards live in the Orgo tab.' })),
+      h('p', { class: 'meta', text: 'Daily mix = up to 25 cards from every deck, your Orgo mistakes first. "Got it" pushes a card further out (1, 2, 4, 8, 16 days); "Again" brings it back today.' })),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, card('Study', h('span', { class: 'card-meta', text: `${queue.length} due` }),
-        h('div', { class: 'chips cd-decks' }, ['All', 'All Bio', 'All Prog', ...DECKS].map(chip)),
+        h('div', { class: 'chips cd-decks' }, ['✨ Daily mix', 'All', 'All Bio', 'All Prog', ...DECKS].map(chip)),
         front,
         cur && cs.flipped ? h('div', { class: 'row fc-actions' },
           h('button', { type: 'button', class: 'btn', text: 'Again', onclick: () => answer(false) }),

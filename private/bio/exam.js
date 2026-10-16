@@ -99,7 +99,8 @@ function intro(C, LECTURES, P) {
         h('div', { class: 'row' }, h('button', {
           type: 'button', class: 'btn btn-primary', disabled: !avail,
           onclick: () => { store('exam', newExam(P, LECTURES.filter(l => es.pick.has(l.id)).map(l => l.id), n)); C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); },
-        }, 'Start the exam')))),
+        }, 'Start the exam'),
+        h('button', { type: 'button', class: 'btn', disabled: !avail, onclick: () => printExam(C, LECTURES, P, newExam(P, LECTURES.filter(l => es.pick.has(l.id)).map(l => l.id), n)) }, '🖨️ Print a paper version')))),
     h('aside', { class: 'bio-side' },
       history(C, LECTURES),
       card('Test tips', null, h('ul', { class: 'bullets small' },
@@ -202,4 +203,25 @@ function results(C, LECTURES, P, ex) {
             h('p', { class: 'muted small', text: q.why }));
         })))),
     h('aside', { class: 'bio-side' }, history(C, LECTURES)));
+}
+
+// Paper version: the same kind of exam, printed with an answer key on its own page.
+function printExam(C, LECTURES, P, ex) {
+  const { h } = C;
+  const L = id => LECTURES.find(l => l.id === id);
+  const letters = 'ABCD';
+  const sheet = h('div', { class: 'print-sheet' },
+    h('h1', { text: 'Bio 2 practice exam' }),
+    h('p', { class: 'ps-meta', text: `${ex.ids.length} questions · ${Math.round(ex.ids.length * SEC_PER_Q / 60)} minutes · Name: ______________________` }),
+    h('ol', { class: 'ps-qs' }, ex.ids.map(id => { const q = P.get(id); return h('li', null,
+      h('p', null, q.q, h('span', { class: 'ps-lec', text: ` (L${L(q.lec).n})` })),
+      h('ol', { class: 'ps-opts', type: 'A' }, ex.opts[id].map(o => h('li', { text: o })))); })),
+    h('section', { class: 'ps-key' }, h('h2', { text: 'Answer key' }),
+      h('ol', null, ex.ids.map(id => { const q = P.get(id); return h('li', null, h('strong', { text: `${letters[ex.opts[id].indexOf(q.a)]}. ` }), q.a, h('span', { class: 'ps-why', text: ` · ${q.why}` })); }))));
+  document.querySelector('.print-sheet')?.remove();
+  document.body.append(sheet);
+  document.body.classList.add('printing');
+  const done = () => { document.body.classList.remove('printing'); sheet.remove(); removeEventListener('afterprint', done); };
+  addEventListener('afterprint', done);
+  setTimeout(() => window.print(), 50);
 }

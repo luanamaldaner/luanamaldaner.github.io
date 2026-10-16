@@ -22,8 +22,8 @@ import { renderOrgo } from './orgo/orgo.js?v=12';
 import { renderProg } from './prog/prog.js?v=3';
 import { bossCard } from './extras/boss.js?v=1';
 import { renderLab, microbeCard } from './extras/lab.js?v=1';
-import { renderBio } from './bio/bio.js?v=8';
-import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=6';
+import { renderBio } from './bio/bio.js?v=9';
+import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=7';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
