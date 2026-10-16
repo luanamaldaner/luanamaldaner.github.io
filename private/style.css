@@ -1626,6 +1626,7 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
   /* in the guided lecture, show the whole animation at once (no sideways scrolling) */
   .bio-walk-stage .bio-svg { min-width: 0; }
   .bio-walk-stage .bio-scene { padding: 8px; }
+}
 
 /* ---------- extras: sleep, week, patterns, cards, today I learned ---------- */
 .sl-times { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -1794,3 +1795,26 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
   .prog-score-big { width: 96px; height: 96px; }
   .prog-score-big strong { font-size: 28px; }
 }
+
+/* Biology: per-step question box */
+.bio-q { margin-top: 14px; border-top: 1px dashed var(--line, #e3ddd3); padding-top: 10px; }
+.bio-q summary { cursor: pointer; font-weight: 600; font-size: .92rem; color: var(--ink-2, #555); }
+.bio-q-list { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 10px; }
+.bio-q-list li { background: var(--card-2, #faf7f1); border-radius: 12px; padding: 10px 12px; }
+.bio-q-text, .bio-q-answer, .bio-q-pending { margin: 0 0 4px; font-size: .92rem; line-height: 1.45; }
+.bio-q-answer { color: var(--accent-ink, #2c6a4a); }
+.bio-q-pending { color: var(--muted, #8a8378); font-style: italic; }
+.bio-q-ask { display: flex; gap: 8px; align-items: flex-end; margin-top: 8px; }
+.bio-q-input { flex: 1; min-height: 44px; resize: vertical; border-radius: 10px; border: 1px solid var(--line, #e3ddd3); padding: 8px 10px; font: inherit; background: var(--card, #fff); color: inherit; }
+
+/* Biology: tap-to-explain science words */
+.bio-walk-say .bio-term, .bio-term { display: inline; cursor: help; position: relative; color: inherit; font: inherit; line-height: inherit;
+  background: none !important; border: 0 !important; border-bottom: 1.5px dotted currentColor !important; border-radius: 0 !important;
+  padding: 0 !important; margin: 0 !important; min-height: 0 !important; box-shadow: none !important; text-decoration: none; }
+.bio-walk-say .bio-term:hover::after, .bio-walk-say .bio-term:focus::after {
+  content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+  width: max-content; max-width: min(260px, 70vw); white-space: normal; z-index: 30;
+  background: #2b2a33; color: #fff; font-size: .82rem; line-height: 1.35; font-weight: 500;
+  padding: 7px 10px; border-radius: 9px; box-shadow: 0 6px 18px rgba(0,0,0,.18);
+}
+.bio-term:focus-visible { outline: 2px solid var(--accent, #4b8f6c); outline-offset: 2px; border-radius: 3px; }

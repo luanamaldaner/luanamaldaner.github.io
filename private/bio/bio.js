@@ -12,7 +12,8 @@ import L7 from './l7.js?v=2';
 import L8 from './l8.js?v=2';
 import L9 from './l9.js?v=2';
 import L10 from './l10.js?v=2';
-import WALKS from './walks.js?v=2';
+import WALKS from './walks.js?v=3';
+import GLOSSARY from './glossary.js?v=1';
 
 const LECTURES = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];
 
@@ -302,14 +303,60 @@ function walkPanel(lec) {
       h('button', { type: 'button', class: 'link', text: 'Exit guided lecture', onclick: () => { st.walk = null; document.querySelectorAll('.bio-scene.walk-on').forEach(el => el.classList.remove('walk-on')); C.render(); } })),
     h('div', { class: 'bio-walk-bar' }, h('span', { style: `width:${(100 * (w.i + 1) / n).toFixed(1)}%` })),
     h('h2', { class: 'bio-walk-title', text: step.title }),
-    h('div', { class: 'bio-walk-say' }, (step.say || []).map(t => h('p', { text: t }))),
+    h('div', { class: 'bio-walk-say' }, (() => { const used = new Set(); return (step.say || []).map(t => h('p', null, ...withTerms(t, used))); })()),
     step.scene ? h('div', { class: 'bio-walk-stage' }) : null,
     step.takeaway ? h('p', { class: 'bio-walk-take' }, h('strong', { text: 'Takeaway: ' }), step.takeaway) : null,
     check,
+    questionsBox(lec, w.i, step),
     h('div', { class: 'bio-walk-nav' },
       h('button', { type: 'button', class: 'btn', text: '← Back', disabled: w.i === 0, onclick: () => go(w.i - 1) }),
       dots,
       h('button', { type: 'button', class: 'btn btn-primary', text: w.i + 1 < n ? 'Next →' : 'Finish ✿', onclick: () => go(w.i + 1) })));
+}
+
+
+// ---------------------------------------------------------------- tap-to-explain terms
+// Science words from glossary.js become small buttons; tapping (or hovering) shows a plain meaning.
+const TERM_KEYS = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
+const escRe = k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const TERM_RE = TERM_KEYS.length ? new RegExp('(?<![A-Za-z])(' + TERM_KEYS.map(escRe).join('|') + ')(?![A-Za-z])', 'gi') : null;
+function withTerms(text, used) {
+  if (!TERM_RE) return [text];
+  const out = []; let last = 0;
+  for (const m of text.matchAll(TERM_RE)) {
+    const key = m[0].toLowerCase();
+    if (used.has(key) || !GLOSSARY[key]) continue;
+    used.add(key);
+    if (m.index > last) out.push(text.slice(last, m.index));
+    out.push(C.h('button', { type: 'button', class: 'bio-term', 'data-tip': GLOSSARY[key], 'aria-label': `${m[0]}: ${GLOSSARY[key]}`, text: m[0] }));
+    last = m.index + m[0].length;
+  }
+  out.push(text.slice(last));
+  return out;
+}
+
+// ---------------------------------------------------------------- questions
+// Luana's questions while studying; stored as vault notes (kind 'bioq') so every device syncs them.
+// Claude answers them later (todo.mjs bioq answer), and the answer shows up right here.
+function questionsBox(lec, i, step) {
+  const { h } = C;
+  const S = C.S();
+  const mine = S.notes.filter(n => !n.deleted && n.kind === 'bioq' && n.lec === lec.id && n.step === i)
+    .sort((a, b) => (a.askedAt || 0) - (b.askedAt || 0));
+  const ta = h('textarea', { class: 'bio-q-input', rows: 2, placeholder: 'Confused by something here? Ask it and it’ll get answered right on this step.', 'aria-label': 'Ask a question about this step' });
+  const ask = () => {
+    const q = ta.value.trim();
+    if (!q) return;
+    C.commit(() => { S.notes.push(C.touch({ id: C.uid(), kind: 'bioq', lec: lec.id, step: i, title: `Bio ${lec.n} · ${step.title}`, body: q, answer: '', askedAt: Date.now() })); });
+  };
+  return h('details', { class: 'bio-q', open: mine.length ? '' : null },
+    h('summary', null, `❓ Questions${mine.length ? ` (${mine.length})` : ''}`),
+    mine.length ? h('ul', { class: 'bio-q-list' }, mine.map(n => h('li', null,
+      h('p', { class: 'bio-q-text' }, h('strong', { text: 'You: ' }), n.body),
+      n.answer ? h('p', { class: 'bio-q-answer' }, h('strong', { text: 'Answer: ' }), n.answer)
+        : h('p', { class: 'bio-q-pending', text: 'Waiting for an answer ✿' }),
+      h('button', { type: 'button', class: 'link small', text: 'Remove', onclick: () => C.commit(() => { C.touch(n).deleted = true; }) })))) : null,
+    h('div', { class: 'bio-q-ask' }, ta, h('button', { type: 'button', class: 'btn btn-small btn-primary', text: 'Ask', onclick: ask })));
 }
 
 // ---------------------------------------------------------------- quiz

@@ -20,7 +20,7 @@ import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
 import { renderOrgo } from './orgo/orgo.js?v=9';
 import { renderProg } from './prog/prog.js?v=2';
-import { renderBio } from './bio/bio.js?v=2';
+import { renderBio } from './bio/bio.js?v=3';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard } from './extras/extras.js?v=1';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
@@ -601,7 +601,7 @@ const VIEWS = {
 };
 
 // What the Orgo tab needs from the app (it lives in its own module).
-const ORGO_CTX = { h, card, commit, touch, render: () => render(), S: () => S, todayStr, addDays };
+const ORGO_CTX = { h, card, commit, touch, uid, render: () => render(), S: () => S, todayStr, addDays };
 
 // Sleep, week in review, cards and "today I learned" live in extras/.
 initExtras({
@@ -1873,14 +1873,14 @@ function noteTitle(n) {
 }
 
 function renderNotes() {
-  const notes = live('notes').sort((a, b) => b.updatedAt - a.updatedAt);
+  const notes = live('notes').filter(n => n.kind !== 'bioq').sort((a, b) => b.updatedAt - a.updatedAt);
   if (!notes.find(n => n.id === activeNoteId)) activeNoteId = notes[0] ? notes[0].id : null;
   const active = notes.find(n => n.id === activeNoteId);
 
   const listEl = h('ul', { class: 'note-list' });
   const fillList = (filter = '') => {
     const q = filter.toLowerCase();
-    listEl.replaceChildren(...live('notes').sort((a, b) => b.updatedAt - a.updatedAt)
+    listEl.replaceChildren(...live('notes').filter(n => n.kind !== 'bioq').sort((a, b) => b.updatedAt - a.updatedAt)
       .filter(n => !q || `${n.title}\n${n.body}`.toLowerCase().includes(q))
       .map(n => h('li', null, h('button', {
         type: 'button', class: `note-item${n.id === activeNoteId ? ' active' : ''}`,
