@@ -72,6 +72,14 @@ function addSky() {
     b.className = `charm-bubble b${i}`;
     sky.append(b);
   }
+  // a few soft Aero clouds (cut from the Aero sky painting) drifting at the edges
+  for (let i = 1; i <= 3; i++) {
+    const c = document.createElement('img');
+    c.className = `charm-acloud a${i}`;
+    c.src = IMG(`acloud-${i}.png`);
+    c.alt = '';
+    sky.append(c);
+  }
   const layer = document.querySelector('.deco-shapes');
   if (layer) layer.append(sky); else document.body.prepend(sky);
 }
@@ -177,6 +185,19 @@ function addPageBubbles() {
       y += big ? (phone ? 260 + rnd() * 160 : 380 + rnd() * 260) : 120 + rnd() * 80;
       if (big) side = -side;
       i++;
+    }
+    // a few loose small bubbles scattered in the side margins (not in a line)
+    const n = Math.round(H / (phone ? 900 : 650));
+    for (let k = 0; k < n; k++) {
+      const d = phone ? 26 + rnd() * 18 : 34 + rnd() * 30;
+      const left = rnd() < 0.5;
+      const x = (phone ? 2 + rnd() * 8 : 3 + rnd() * 13);
+      const top = (k + 0.15 + rnd() * 0.7) * (H / n);
+      const b = document.createElement('span');
+      b.className = `charm-pbubble small ${left ? 'L' : 'R'}`;
+      b.style.cssText = `width:${d.toFixed(0)}px;height:${d.toFixed(0)}px;top:${top.toFixed(0)}px;${left ? 'left' : 'right'}:${x.toFixed(1)}%;` +
+        `--fx:${(4 + rnd() * 8).toFixed(0)}px;--fy:${(8 + rnd() * 14).toFixed(0)}px;--fd:${(8 + rnd() * 8).toFixed(1)}s;--fdl:${(-rnd() * 10).toFixed(1)}s`;
+      layer.append(b);
     }
   };
   place();

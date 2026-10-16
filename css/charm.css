@@ -530,3 +530,19 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .deco-float.deco-d
   animation: charm-drift2 var(--fd, 12s) ease-in-out infinite alternate;
   animation-delay: var(--fdl, 0s);
 }
+
+/* ---------- E: a few soft Aero clouds at the edges (simple, no clutter) ---------- */
+.charm-acloud { display: none; position: absolute; pointer-events: none; height: auto; opacity: .9; animation: charm-drift 26s ease-in-out infinite alternate; }
+html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .charm-acloud { display: block; }
+.charm-acloud.a1 { width: 440px; top: 2%; right: -60px; }
+.charm-acloud.a2 { width: 340px; top: 70%; right: 4%; animation-duration: 32s; animation-delay: -8s; }
+.charm-acloud.a3 { width: 130px; top: 16%; left: 20%; opacity: .75; animation-duration: 22s; animation-delay: -4s; }
+@keyframes charm-drift { from { transform: translateX(0); } to { transform: translateX(-28px); } }
+@media (max-width: 720px) {
+  .charm-acloud.a1 { width: 240px; right: -50px; }
+  .charm-acloud.a2 { width: 180px; right: -30px; }
+  .charm-acloud.a3 { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) { .charm-acloud { animation: none; } }
+/* the tiny lined-up dot bubbles are gone; loose small bubbles come from charm.js instead */
+html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .deco-float { display: none !important; }
