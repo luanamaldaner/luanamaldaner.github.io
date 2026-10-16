@@ -22,6 +22,7 @@ import { renderOrgo } from './orgo/orgo.js?v=13';
 import { renderProg } from './prog/prog.js?v=3';
 import { bossCard } from './extras/boss.js?v=2';
 import { renderLab, microbeCard } from './extras/lab.js?v=4';
+import { renderDegree } from './extras/degree.js?v=1';
 import { renderBio } from './bio/bio.js?v=10';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=7';
 
@@ -139,6 +140,7 @@ const ICONS = {
   briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12.5h18"/>',
   tree: '<path d="M12 3l5 6.5h-2.6L18.5 15h-13l4.1-5.5H7z"/><path d="M12 15v6"/>',
   week: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4M7.5 16l2.5-3 2.5 2 3.5-4"/>',
+  degree: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5M22 9v6"/>',
   lab: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>',
   cards: '<rect x="3" y="6" width="13" height="14" rx="2"/><path d="M8 3h10a3 3 0 0 1 3 3v11"/><path d="M7 11h5M7 15h3"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
@@ -618,6 +620,7 @@ const VIEWS = {
   prog: { label: 'Prog 1', icon: 'code', render: () => renderProg(ORGO_CTX) },
   cards: { label: 'Cards', icon: 'cards', render: renderCards },
   lab: { label: 'Study lab', icon: 'lab', render: () => renderLab(ORGO_CTX) },
+  degree: { label: 'Degree map', icon: 'degree', render: () => renderDegree(ORGO_CTX) },
   notes: { label: 'Quick Notes', icon: 'notes', render: renderNotes },
   settings: { label: 'Settings', icon: 'settings', render: renderSettings },
 };
@@ -2042,14 +2045,14 @@ function noteTitle(n) {
 }
 
 function renderNotes() {
-  const notes = live('notes').filter(n => n.kind !== 'bioq' && n.kind !== 'journal').sort((a, b) => b.updatedAt - a.updatedAt);
+  const notes = live('notes').filter(n => n.kind !== 'bioq' && n.kind !== 'journal' && n.kind !== 'coursemap').sort((a, b) => b.updatedAt - a.updatedAt);
   if (!notes.find(n => n.id === activeNoteId)) activeNoteId = notes[0] ? notes[0].id : null;
   const active = notes.find(n => n.id === activeNoteId);
 
   const listEl = h('ul', { class: 'note-list' });
   const fillList = (filter = '') => {
     const q = filter.toLowerCase();
-    listEl.replaceChildren(...live('notes').filter(n => n.kind !== 'bioq' && n.kind !== 'journal').sort((a, b) => b.updatedAt - a.updatedAt)
+    listEl.replaceChildren(...live('notes').filter(n => n.kind !== 'bioq' && n.kind !== 'journal' && n.kind !== 'coursemap').sort((a, b) => b.updatedAt - a.updatedAt)
       .filter(n => !q || `${n.title}\n${n.body}`.toLowerCase().includes(q))
       .map(n => h('li', null, h('button', {
         type: 'button', class: `note-item${n.id === activeNoteId ? ' active' : ''}`,

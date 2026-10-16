@@ -2152,3 +2152,21 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .ml-tube { width: 42px; }
 .ml-tlabel { font-size: 8.5px; letter-spacing: -.02em; }
 .lab-card .bio-walk-dots { display: flex; gap: 6px; }
+.lab-card { --lc: var(--accent); }
+
+/* ---------- degree map */
+.dg-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.dg-summary > div { display: grid; padding: 12px 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.dg-summary strong { font: 600 26px/1.1 var(--serif); color: var(--accent); }
+.dg-summary span { font-size: 12px; color: var(--muted); }
+.dg-h { font-family: var(--serif); margin: 6px 0 -6px; }
+.dg-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.dg-row { display: grid; grid-template-columns: 20px minmax(8em, auto) 1fr; gap: 8px; align-items: baseline; font-size: 13px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+.dg-row:last-child { border-bottom: 0; }
+.dg-ic { font-weight: 700; text-align: center; }
+.dg-row.done .dg-ic { color: var(--accent); }
+.dg-row.ip .dg-ic { color: #c0861e; }
+.dg-row.need .dg-ic { color: var(--muted); }
+.dg-row.done .dg-title { color: var(--muted); }
+.dg-code { font: 600 12px/1.3 var(--mono); }
+.dg-title { color: var(--text); }
