@@ -18,11 +18,11 @@ import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
-import { renderOrgo } from './orgo/orgo.js?v=13';
+import { renderOrgo } from './orgo/orgo.js?v=14';
 import { renderProg } from './prog/prog.js?v=3';
 import { bossCard } from './extras/boss.js?v=3';
 import { renderLab, microbeCard } from './extras/lab.js?v=10';
-import { renderDegree } from './extras/degree.js?v=2';
+import { renderDegree } from './extras/degree.js?v=3';
 import { renderBio } from './bio/bio.js?v=13';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=8';
 

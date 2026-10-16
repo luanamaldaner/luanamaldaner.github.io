@@ -26,7 +26,7 @@ function record(C) {
   let n = C.S().notes.find(x => !x.deleted && x.kind === 'coursemap');
   if (!n) { try { const t = localStorage.getItem('degree.preview'); if (t) n = { body: t }; } catch {} } // local preview only
   if (!n) return null;
-  try { const j = JSON.parse(n.body); return { done: new Set(j.done.map(norm)), ip: new Set(j.ip.map(norm)), notes: j.notes || [], updated: j.updated, credits: j.credits, mcbAudit: j.mcbAudit || null }; } catch { return null; }
+  try { const j = JSON.parse(n.body); return { done: new Set(j.done.map(norm)), ip: new Set(j.ip.map(norm)), notes: j.notes || [], updated: j.updated, credits: j.credits, mcbAudit: j.mcbAudit || null, whatIfs: j.whatIfs || [], whatIfsRun: j.whatIfsRun }; } catch { return null; }
 }
 
 function row(C, label, title, st) {
@@ -70,6 +70,14 @@ export function renderDegree(C) {
     return status(alts, rec) === 'need';
   }).slice(0, 4);
 
+  // other majors / minors she asked to compare (ONE.UF What-If runs)
+  const whatIfs = rec.whatIfs.length ? card('What-if options', h('span', { class: 'card-meta', text: `checked ${rec.whatIfsRun || ''}` }),
+    h('div', { class: 'dg-wi' }, rec.whatIfs.map(w => h('details', { class: 'dg-wi-item' },
+      h('summary', null, h('span', { class: 'dg-wi-name', text: w.name }),
+        h('span', { class: `chip dg-wi-tag${w.audit === 'none' ? ' warn' : ''}`, text: w.audit === 'none' ? 'no audit' : w.credits ? `${w.credits} cr to go` : `${w.need.length} items to go` })),
+      w.need.length ? h('ul', { class: 'bullets small' }, w.need.map(t => h('li', { text: t }))) : null,
+      w.note ? h('p', { class: 'small muted', text: w.note }) : null)))) : null;
+
   return h('div', { class: 'page' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Degree map' }),
       h('p', { class: 'muted small', text: `Data Science + Microbiology & Cell Science · record from your degree audit (${rec.updated}) · ✓ done ◐ in progress ○ still needed` }))),
@@ -83,6 +91,7 @@ export function renderDegree(C) {
         h('h2', { class: 'dg-h', text: 'Data Science' }), ...dsGroups,
         h('h2', { class: 'dg-h', text: 'Microbiology & Cell Science' }), ...mcbGroups),
       h('div', { class: 'col col-narrow' },
+        whatIfs,
         card('Up next (critical tracking)', null,
           h('p', { class: 'small', text: 'Data Science:' }),
           h('ul', { class: 'bullets small' }, nextDS.map(x => h('li', { text: `${x.i.replace('|', ' or ').replace(/([A-Z]{3})(\d)/g, '$1 $2')} · tracking semester ${x.sem}` }))),

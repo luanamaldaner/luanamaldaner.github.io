@@ -2229,3 +2229,27 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .bfig-label.on { background: var(--accent); color: #fff; }
 .bfig-cap { margin-top: 8px; font-size: 13.5px; min-height: 1.4em; }
 @media (max-width: 720px) { .bfig-label { font-size: 10px; padding: 2px 6px; } }
+
+/* ---------- orgo guided lectures */
+.og-chaps { margin-bottom: 12px; }
+.og-rx { margin: 4px 0 12px; padding: 10px; border-radius: 12px; background: color-mix(in srgb, #c0661e 6%, var(--card)); border: 1px solid color-mix(in srgb, #c0661e 25%, var(--line)); }
+.og-rx-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.og-rx-tags { margin: 6px 0 0; text-align: center; }
+.og-dec { margin: 4px 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--card); border: 1px dashed var(--line-strong); }
+.og-dec-in { margin: 0 0 6px; font-weight: 600; }
+.og-dec-out { margin: 6px 0; color: var(--accent); }
+.og-mech { margin: 0 0 10px; }
+.og-toc { padding-left: 18px; display: grid; gap: 4px; margin: 0; max-height: 560px; overflow: auto; }
+.og-toc .link.on { font-weight: 700; }
+
+/* ---------- degree what-ifs */
+.dg-wi { display: grid; gap: 6px; }
+.dg-wi-item { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--card); }
+.dg-wi-item summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; list-style: none; }
+.dg-wi-item summary::-webkit-details-marker { display: none; }
+.dg-wi-name { font-weight: 600; font-size: .92rem; }
+.dg-wi-tag { white-space: nowrap; font-size: .75rem; }
+.dg-wi-tag.warn { background: color-mix(in srgb, #d9822b 18%, transparent); }
+.dg-wi-item ul { margin: 8px 0 4px; }
+.og-toc .link { text-align: left; }
+.og-mech { width: auto; display: inline-flex; }

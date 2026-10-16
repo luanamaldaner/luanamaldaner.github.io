@@ -7,6 +7,7 @@ import { conceptsPage } from './concepts.js?v=2';
 import { problemsPage } from './problems.js?v=2';
 import { cheatSheetPage, mockExamPage } from './exam.js?v=1';
 import { roulettePage } from './roulette.js?v=4';
+import { guidedPage } from './guided.js?v=1';
 import { addMistake } from './mistakes.js?v=1';
 import { addCorrect } from '../extras/packs.js?v=1';
 import {
@@ -16,7 +17,7 @@ import {
 
 let C; // helpers handed over by app.js: h, card, commit, touch, S, todayStr, addDays
 
-const TABS = [['mech', 'Mechanisms'], ['concepts', 'Concepts'], ['decide', 'Which one?'], ['alkenes', 'Alkene reactions'], ['mol', 'Molecules'], ['practice', 'Quiz'], ['roulette', 'Roulette 🎰'], ['keys', 'Daily practice'], ['mock', 'Mock exam'], ['cheat', 'Cheat sheet']];
+const TABS = [['guided', '▶ Guided lectures'], ['mech', 'Mechanisms'], ['concepts', 'Concepts'], ['decide', 'Which one?'], ['alkenes', 'Alkene reactions'], ['mol', 'Molecules'], ['practice', 'Quiz'], ['roulette', 'Roulette 🎰'], ['keys', 'Daily practice'], ['mock', 'Mock exam'], ['cheat', 'Cheat sheet']];
 const MECH_FOR = { SN2: 'sn2', SN1: 'sn1', E2: 'e2', E1: 'e1' };
 
 function saved(key, fallback) { try { return localStorage.getItem(`orgo.${key}`) || fallback; } catch { return fallback; } }
@@ -213,10 +214,10 @@ export function renderOrgo(ctx) {
     type: 'button', role: 'tab', class: `orgo-tab${st.tab === id ? ' on' : ''}`, 'aria-selected': String(st.tab === id),
     onclick: () => { if (st.tab !== id) { st.tab = id; save('tab', id); shownKey = ''; C.render(); } },
   }, label)));
-  const body = { mech: mechPage, concepts: () => conceptsPage(C), decide: decidePage, keys: () => problemsPage(C), mock: () => mockExamPage(C), cheat: () => cheatSheetPage(C), alkenes: alkenePage, mol: molPage, practice: practicePage, roulette: () => roulettePage(C, { SUBSTRATES, REAGENTS, REACTIONS, SM, OUTCOME_LABELS, decide, skeletal, selectMech, MECH_FOR }) }[st.tab] || mechPage;
+  const body = { mech: mechPage, concepts: () => conceptsPage(C), decide: decidePage, keys: () => problemsPage(C), mock: () => mockExamPage(C), cheat: () => cheatSheetPage(C), alkenes: alkenePage, mol: molPage, practice: practicePage, roulette: () => roulettePage(C, { SUBSTRATES, REAGENTS, REACTIONS, SM, OUTCOME_LABELS, decide, skeletal, selectMech, MECH_FOR }), guided: () => guidedPage(C, { REACTIONS, SM, decide, skeletal, selectMech, addCorrect }) }[st.tab] || mechPage;
   const page = h('div', { class: 'page orgo' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Orgo' }),
-      h('p', { class: 'muted small orgo-sub', text: 'Exam 3 · substitution, elimination and alkene reactions' }))),
+      h('p', { class: 'muted small orgo-sub', text: 'Ch 7–8 · substitution, elimination and alkene reactions' }))),
     tabs, body());
   if (st.tab === 'mech' || st.tab === 'mol') queueMicrotask(attachViewer);
   return page;
