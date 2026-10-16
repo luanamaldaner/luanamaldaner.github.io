@@ -14,8 +14,9 @@ import L9 from './l9.js?v=2';
 import L10 from './l10.js?v=2';
 import WALKS from './walks.js?v=3';
 import GLOSSARY from './glossary.js?v=1';
-import { examPage } from './exam.js?v=3';
+import { examPage } from './exam.js?v=4';
 import { mapPage } from './map.js?v=2';
+import { addCorrect } from '../extras/packs.js?v=1';
 
 const LECTURES = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];
 
@@ -444,7 +445,7 @@ function quizCard(lec) {
         let cls = 'q-opt';
         if (answered && o === Q.a) cls += ' right';
         else if (answered && o === q.picked) cls += ' wrong';
-        return h('button', { type: 'button', class: cls, disabled: answered, onclick: () => { q.picked = o; if (o === Q.a) q.right++; C.render(); } }, o);
+        return h('button', { type: 'button', class: cls, disabled: answered, onclick: () => { q.picked = o; if (o === Q.a) { q.right++; addCorrect(); } C.render(); } }, o);
       })),
       answered ? h('div', { class: `q-feedback ${q.picked === Q.a ? 'ok' : 'no'}` },
         h('strong', { text: q.picked === Q.a ? 'Yes ✿' : `Not quite. It's: ${Q.a}` }),

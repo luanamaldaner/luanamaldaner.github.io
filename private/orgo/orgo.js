@@ -6,8 +6,9 @@ import { energyDiagram, skeletal } from './draw.js?v=2';
 import { conceptsPage } from './concepts.js?v=2';
 import { problemsPage } from './problems.js?v=2';
 import { cheatSheetPage, mockExamPage } from './exam.js?v=1';
-import { roulettePage } from './roulette.js?v=3';
+import { roulettePage } from './roulette.js?v=4';
 import { addMistake } from './mistakes.js?v=1';
+import { addCorrect } from '../extras/packs.js?v=1';
 import {
   SM, REACTIONS, SUBSTRATES, CLASS_LABEL, REAGENT_TYPES, REAGENTS, tableCell, outcomeLabel,
   OUTCOME_LABELS, decide, CONCEPTS, CARDS,
@@ -589,7 +590,7 @@ function practicePage() {
         else if (answered && o === q.picked) cls += ' wrong';
         return h('button', {
           type: 'button', class: cls, disabled: answered,
-          onclick: () => { q.picked = o; q.total++; if (o === Q.answer) q.right++; else addMistake(`${Q.specName ? `${Q.specName}${Q.cond ? ` + ${Q.cond}` : ''}: ` : ''}${Q.prompt}`, `${Q.answer}
+          onclick: () => { q.picked = o; q.total++; if (o === Q.answer) { q.right++; addCorrect(); } else addMistake(`${Q.specName ? `${Q.specName}${Q.cond ? ` + ${Q.cond}` : ''}: ` : ''}${Q.prompt}`, `${Q.answer}
 ${Q.explain.slice(0, 2).join(' ')}`); C.render(); },
         }, o);
       })),

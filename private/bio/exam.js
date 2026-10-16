@@ -2,6 +2,8 @@
 // the quick checks from its guided lecture). No feedback until you submit, like the real thing;
 // then a score per lecture and every miss explained. Saved in localStorage so a refresh keeps it.
 
+import { addCorrect } from '../extras/packs.js?v=1';
+
 const COUNTS = [20, 40, 60];
 const SEC_PER_Q = 72; // ~1.2 min per question
 
@@ -61,6 +63,7 @@ function finish(ex, P) {
   if (ex.since) { ex.elapsed += Date.now() - ex.since; ex.since = null; }
   ex.submitted = true; ex.finishedAt = Date.now();
   const sc = score(ex, P);
+  addCorrect(sc.got);
   store('examHistory', [...load('examHistory', []), { at: ex.finishedAt, pct: sc.pct, got: sc.got, max: sc.max, lecs: ex.lecs, per: sc.per }].slice(-10));
   store('examSeen', [...load('examSeen', []), ...ex.ids].slice(-120));
   store('exam', ex);

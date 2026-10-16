@@ -13,6 +13,7 @@ import L9 from '../bio/l9.js?v=2';
 import L10 from '../bio/l10.js?v=2';
 import { SUBSTRATES, REAGENTS, decide, OUTCOME_LABELS } from '../orgo/content.js?v=3';
 import { MOCK_MCQ } from '../prog/extra.js?v=1';
+import { addCorrect } from './packs.js?v=1';
 
 const LECS = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];
 let CONNECTIONS = null;
@@ -74,7 +75,7 @@ export function bossCard(C) {
     h('div', { class: 'boss-opts' }, Q.opts.map(o => {
       let cls = 'q-opt';
       if (mine && o === Q.a) cls += ' right'; else if (mine && o === mine.pick) cls += ' wrong';
-      return h('button', { type: 'button', class: cls, disabled: !!mine, onclick: () => { const l = load(); l[today] = { pick: o, ok: o === Q.a }; save(l); C.render(); } }, o);
+      return h('button', { type: 'button', class: cls, disabled: !!mine, onclick: () => { const l = load(); l[today] = { pick: o, ok: o === Q.a }; save(l); if (o === Q.a) addCorrect(3); C.render(); } }, o);
     })),
     mine ? h('div', { class: `q-feedback ${mine.ok ? 'ok' : 'no'}` },
       h('strong', { text: mine.ok ? 'Boss defeated ✿ Come back tomorrow for the next one.' : 'The boss wins today. Here’s why:' }),

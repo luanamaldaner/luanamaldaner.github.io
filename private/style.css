@@ -2093,3 +2093,23 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
   .ps-key { break-before: page; font-size: 9.5pt; }
   .ps-why { color: #444; }
 }
+.due.start-by { color: #7b4bd8; background: color-mix(in srgb, #7b4bd8 8%, transparent); border-radius: 999px; padding: 0 6px; margin-left: 4px; }
+.due.start-now { color: #c0661e; background: color-mix(in srgb, #e0a03a 15%, transparent); border-radius: 999px; padding: 0 6px; margin-left: 4px; font-weight: 600; }
+
+/* ---------- packs */
+.pk-meter { height: 8px; border-radius: 4px; background: var(--track, var(--line)); overflow: hidden; }
+.pk-meter > span { display: block; height: 100%; background: linear-gradient(90deg, #f2a65a, #e0607a, #8b7cf6); }
+.pk-pull { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 6px; }
+.pk-card { display: grid; justify-items: center; gap: 6px; padding: 16px 8px; border-radius: 16px; border: 2px solid var(--line-strong); background: var(--card); cursor: pointer; text-align: center; animation: pk-flip .6s ease both; color: var(--text); }
+@keyframes pk-flip { from { transform: rotateY(90deg) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+.pk-emoji { font-size: 34px; }
+.pk-name { font: italic 600 13px/1.2 var(--serif); }
+.pk-rar { font-size: 11px; color: var(--muted); }
+.pk-card.r-uncommon { border-color: #3a8fd8; }
+.pk-card.r-rare { border-color: #b388ff; box-shadow: 0 0 0 3px color-mix(in srgb, #b388ff 25%, transparent), 0 6px 18px color-mix(in srgb, #8b7cf6 30%, transparent); }
+.pk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 6px; }
+.pk-mini { height: 36px; border-radius: 9px; display: grid; place-items: center; font-size: 18px; border: 1px solid var(--line); background: var(--card); }
+.pk-mini.locked { color: var(--muted); background: var(--track, var(--line)); font: 600 13px/1 var(--mono); }
+.pk-mini.r-rare { border-color: #b388ff; }
+.pk-mini.r-uncommon { border-color: #3a8fd8; }
+@media (prefers-reduced-motion: reduce) { .pk-card { animation: none; } }

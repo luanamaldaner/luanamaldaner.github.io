@@ -5,12 +5,13 @@ import { CONNECTIONS } from './connections.js?v=1';
 import { PATHWAYS } from '../bio/pathways.js?v=1';
 import { MNEMONICS } from './mnemonics.js?v=1';
 import { MICROBES } from './microbes.js?v=1';
+import { addCorrect, packState, openPack, RARITY, PER_PACK } from './packs.js?v=1';
 
 const ls = (k, fb) => { try { const v = localStorage.getItem(`lab.${k}`); return v === null ? fb : JSON.parse(v); } catch { return fb; } };
 const put = (k, v) => { try { localStorage.setItem(`lab.${k}`, JSON.stringify(v)); } catch {} };
 const shuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
-const TABS = [['conn', '🔗 Connections'], ['path', '🧩 Pathways'], ['mnem', '🧠 Mnemonics'], ['microbe', '🦠 Microbes']];
+const TABS = [['conn', '🔗 Connections'], ['path', '🧩 Pathways'], ['mnem', '🧠 Mnemonics'], ['microbe', '🦠 Microbes'], ['packs', '🎴 Packs']];
 const lab = { tab: ls('tab', 'conn'), conn: null, path: null, mnemHide: false, mnemTopic: 'All', microbe: null };
 
 export function microbeOfDay(today) {
@@ -55,7 +56,7 @@ function connPage(C) {
     h('div', { class: 'q-options lab-opts' }, s.opts.map(o => {
       let cls = 'q-opt';
       if (done && o === Q.a) cls += ' right'; else if (done && o === s.picked) cls += ' wrong';
-      return h('button', { type: 'button', class: cls, disabled: done, onclick: () => { s.picked = o; if (o === Q.a) s.right++; seen.add(s.order[s.i]); put('connSeen', [...seen]); C.render(); } }, o);
+      return h('button', { type: 'button', class: cls, disabled: done, onclick: () => { s.picked = o; if (o === Q.a) { s.right++; addCorrect(); } seen.add(s.order[s.i]); put('connSeen', [...seen]); C.render(); } }, o);
     })),
     done ? h('div', { class: `q-feedback ${s.picked === Q.a ? 'ok' : 'no'}` },
       h('strong', { text: s.picked === Q.a ? 'Yes ✿' : `It's: ${Q.a}` }), h('p', { text: Q.why }),
@@ -128,13 +129,37 @@ function microbePage(C) {
         h('span', { class: 'prog-item-mod', text: m.emoji }), h('span', { class: 'prog-item-title', text: m.name }))))))));
 }
 
+
+let lastPull = null;
+function packsPage(C) {
+  const { h } = C;
+  const p = packState();
+  const owned = p.owned;
+  const have = MICROBES.filter(m => owned[m.name]).length;
+  const pull = lastPull;
+  return h('div', { class: 'grid orgo-grid' },
+    h('div', { class: 'col' },
+      h('section', { class: 'card lab-card pk-shop' },
+        h('p', { class: 'bio-kicker', style: '--lc: var(--accent)', text: 'Collectible packs' }),
+        h('h2', { class: 'lab-title', text: p.ready > 0 ? `${p.ready} pack${p.ready === 1 ? '' : 's'} ready to open 🎁` : 'Earn your next pack' }),
+        h('p', { class: 'small', text: `Every ${PER_PACK} correct answers anywhere (roulette, quizzes, the daily boss, mock exams) earns a pack of 3 microbe cards. ${p.ready > 0 ? '' : `${p.toNext} more to go.`}` }),
+        h('div', { class: 'pk-meter' }, h('span', { style: `width:${(100 * (PER_PACK - p.toNext) / PER_PACK).toFixed(0)}%` })),
+        h('div', { class: 'row' }, h('button', { type: 'button', class: 'btn btn-primary', disabled: p.ready <= 0, text: '🎁 Open a pack', onclick: () => { lastPull = openPack(MICROBES); C.render(); } })),
+        pull ? h('div', { class: 'pk-pull' }, pull.map((x, k) => { const m = MICROBES.find(y => y.name === x.name); return h('button', { type: 'button', class: `pk-card r-${RARITY[m.kind].toLowerCase()}`, style: `animation-delay:${k * 180}ms`, onclick: () => { lab.tab = 'microbe'; lab.microbe = { kind: 'All', open: m.name }; put('tab', 'microbe'); C.render(); } },
+          h('span', { class: 'pk-emoji', text: m.emoji }), h('span', { class: 'pk-name', text: m.name }), h('span', { class: 'pk-rar', text: `${RARITY[m.kind]}${x.isNew ? ' · NEW ✨' : ''}` })); })) : null)),
+    h('div', { class: 'col col-narrow' }, C.card('Collection', h('span', { class: 'card-meta', text: `${have} / ${MICROBES.length}` }),
+      h('div', { class: 'pk-grid' }, MICROBES.map(m => owned[m.name]
+        ? h('span', { class: `pk-mini r-${RARITY[m.kind].toLowerCase()}`, title: `${m.name} ×${owned[m.name]}`, text: m.emoji })
+        : h('span', { class: 'pk-mini locked', title: 'Not found yet', text: '?' }))))));
+}
+
 export function renderLab(C) {
   const { h } = C;
   const tabs = h('div', { class: 'orgo-tabs', role: 'tablist' }, TABS.map(([id, label]) => h('button', {
     type: 'button', role: 'tab', class: `orgo-tab${lab.tab === id ? ' on' : ''}`, 'aria-selected': String(lab.tab === id),
     onclick: () => { lab.tab = id; put('tab', id); C.render(); },
   }, label)));
-  const body = { conn: connPage, path: pathPage, mnem: mnemPage, microbe: microbePage }[lab.tab] || connPage;
+  const body = { conn: connPage, path: pathPage, mnem: mnemPage, microbe: microbePage, packs: packsPage }[lab.tab] || connPage;
   return h('div', { class: 'page' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Study lab' }),
       h('p', { class: 'muted small', text: 'Cross-course questions, pathway puzzles, mnemonics and microbes' }))),

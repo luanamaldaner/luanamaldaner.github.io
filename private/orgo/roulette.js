@@ -4,6 +4,7 @@
 // decide() table and reaction list the rest of the Orgo tab uses.
 
 import { addMistake } from './mistakes.js?v=1';
+import { addCorrect } from '../extras/packs.js?v=1';
 
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SPEED_SEC = 60;
@@ -90,7 +91,7 @@ function answer(C, D, o) {
   { // daily accuracy log, read by the Week page (weak spots, sleep vs scores)
     const day = new Date().toLocaleDateString('en-CA'), log = load('daily', {});
     const d = log[day] || (log[day] = { right: 0, total: 0, sn: [0, 0], alkene: [0, 0] });
-    d.total++; d[R.kind][1]++; if (ok) { d.right++; d[R.kind][0]++; }
+    d.total++; d[R.kind][1]++; if (ok) { d.right++; d[R.kind][0]++; addCorrect(); }
     store('daily', log);
   }
   if (!ok) {

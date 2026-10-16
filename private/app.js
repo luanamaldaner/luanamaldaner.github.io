@@ -18,11 +18,11 @@ import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
-import { renderOrgo } from './orgo/orgo.js?v=12';
+import { renderOrgo } from './orgo/orgo.js?v=13';
 import { renderProg } from './prog/prog.js?v=3';
-import { bossCard } from './extras/boss.js?v=1';
-import { renderLab, microbeCard } from './extras/lab.js?v=1';
-import { renderBio } from './bio/bio.js?v=9';
+import { bossCard } from './extras/boss.js?v=2';
+import { renderLab, microbeCard } from './extras/lab.js?v=2';
+import { renderBio } from './bio/bio.js?v=10';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=7';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
@@ -189,7 +189,24 @@ function dueLabel(t, inGroup = false) {
   else if (diff < 7) text = fmtWeekday(t.due);
   else text = fmtShort(t.due);
   if (t.time) text += ` ${fmtTime(t.time)}`;
+  const lead = leadDays(t.title);
+  if (lead && diff >= 2) {
+    const start = addDays(t.due, -lead);
+    const st = daysBetween(todayStr(), start);
+    if (st <= 0) return [h('span', { class: cls, text }), h('span', { class: 'due start-now', text: 'start now' })];
+    return [h('span', { class: cls, text }), h('span', { class: 'due start-by', text: `start ${st === 1 ? 'tomorrow' : st < 7 ? fmtWeekday(start) : fmtShort(start)}` })];
+  }
   return h('span', { class: cls, text });
+}
+
+// How many days ahead to start, from what kind of work the title sounds like.
+function leadDays(title = '') {
+  const t = title.toLowerCase();
+  if (/\b(final|midterm|exam)\b/.test(t)) return 7;
+  if (/\b(project|paper|essay|presentation|proposal|poster)\b/.test(t)) return 5;
+  if (/\blab (report|notes|write-?up)\b|\breport\b/.test(t)) return 3;
+  if (/\b(homework|hw|problem set|pset|worksheet|assignment)\b/.test(t)) return 2;
+  return 0;
 }
 
 const TAG_COLORS = 6;
