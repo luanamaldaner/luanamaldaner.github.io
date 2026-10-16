@@ -21,6 +21,7 @@ import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?
 import { renderOrgo } from './orgo/orgo.js?v=12';
 import { renderProg } from './prog/prog.js?v=3';
 import { bossCard } from './extras/boss.js?v=1';
+import { renderLab, microbeCard } from './extras/lab.js?v=1';
 import { renderBio } from './bio/bio.js?v=8';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=6';
 
@@ -138,6 +139,7 @@ const ICONS = {
   briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12.5h18"/>',
   tree: '<path d="M12 3l5 6.5h-2.6L18.5 15h-13l4.1-5.5H7z"/><path d="M12 15v6"/>',
   week: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4M7.5 16l2.5-3 2.5 2 3.5-4"/>',
+  lab: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>',
   cards: '<rect x="3" y="6" width="13" height="14" rx="2"/><path d="M8 3h10a3 3 0 0 1 3 3v11"/><path d="M7 11h5M7 15h3"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
 };
@@ -598,6 +600,7 @@ const VIEWS = {
   bio: { label: 'Biology', icon: 'bio', render: () => renderBio(ORGO_CTX) },
   prog: { label: 'Prog 1', icon: 'code', render: () => renderProg(ORGO_CTX) },
   cards: { label: 'Cards', icon: 'cards', render: renderCards },
+  lab: { label: 'Study lab', icon: 'lab', render: () => renderLab(ORGO_CTX) },
   notes: { label: 'Quick Notes', icon: 'notes', render: renderNotes },
   settings: { label: 'Settings', icon: 'settings', render: renderSettings },
 };
@@ -1629,7 +1632,7 @@ function planCard() {
 }
 
 // Study corner: the daily study cards share one tabbed card so Today stays calm.
-const CORNER = [['plan', '📅 Plan', () => planCard()], ['boss', '👾 Boss', () => bossCard(ORGO_CTX)], ['pt', '✍️ Palavras', () => palavrasCard()], ['jr', '📓 Journal', () => journalCard()]];
+const CORNER = [['plan', '📅 Plan', () => planCard()], ['boss', '👾 Boss', () => bossCard(ORGO_CTX)], ['pt', '✍️ Palavras', () => palavrasCard()], ['jr', '📓 Journal', () => journalCard()], ['mb', '🦠 Microbe', () => microbeCard(ORGO_CTX)]];
 function studyCorner() {
   let tab = 'plan';
   try { tab = localStorage.getItem('corner.tab') || 'plan'; } catch {}
