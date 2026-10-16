@@ -2,7 +2,7 @@
 // spaced-repetition cards for Bio + Prog, and a daily "Today I learned".
 // Everything is built from the vault through helpers app.js hands over.
 
-import { ALL_CARDS, DECKS } from './decks.js?v=2';
+import { ALL_CARDS, DECKS, ptToday, ptDay } from './decks.js?v=3';
 import { TIL, tilIndex } from './til.js?v=1';
 
 let C; // { h, s, card, icon, iconBtn, commit, touch, uid, S, live, todayStr, addDays, parse, toStr, fmtShort, fmtWeekday, fmtTime, totalsFor, focusMinutes, taskItems, forestPlot, render, go }
@@ -415,4 +415,19 @@ export function tilCard() {
     h('p', { class: 'til-text', text }),
     h('div', { class: 'til-foot' }, h('span', { class: 'muted small', text: source }),
       h('button', { type: 'button', class: 'link', text: 'Another one', onclick: () => { tilShift++; C.render(); } })));
+}
+
+// ---------------------------------------------------------------- palavras do dia (tudo em português)
+
+export function palavrasCard() {
+  const { h } = C;
+  const words = ptToday(C.todayStr());
+  return h('section', { class: 'card pt-card', lang: 'pt-BR' },
+    h('header', { class: 'card-head' }, h('h2', { text: 'Palavras do dia' }), h('span', { class: 'card-meta', text: `dia ${ptDay(C.todayStr()) + 1}` })),
+    h('ul', { class: 'pt-list' }, words.map(p => h('li', null, h('details', { class: 'pt-word' },
+      h('summary', null, h('strong', { text: p.w }), h('span', { class: 'muted small', text: ` · ${p.c}` })),
+      h('p', { class: 'pt-def', text: p.d }),
+      h('p', { class: 'pt-ex', text: `“${p.ex}”` }),
+      p.s && p.s.length ? h('p', { class: 'muted small', text: `Sinônimos: ${p.s.join(', ')}` }) : null)))),
+    h('p', { class: 'muted small pt-foot' }, 'Toque numa palavra para ver o significado. Elas também entram no baralho ', h('button', { type: 'button', class: 'link small', text: 'Português', onclick: () => C.go('cards') }), ' para revisar.'));
 }

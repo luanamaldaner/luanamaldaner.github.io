@@ -19,9 +19,9 @@ import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
 import { renderOrgo } from './orgo/orgo.js?v=10';
-import { renderProg } from './prog/prog.js?v=2';
+import { renderProg } from './prog/prog.js?v=3';
 import { renderBio } from './bio/bio.js?v=6';
-import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard } from './extras/extras.js?v=2';
+import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard } from './extras/extras.js?v=3';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -688,6 +688,27 @@ function brief() {
   return parts.join(' ') || 'Nothing due today. Enjoy it.';
 }
 
+// The Today header at a glance: a few short pills instead of a paragraph.
+function glance() {
+  const today = todayStr();
+  const todos = openTodos();
+  const overdue = todos.filter(t => t.due && t.due < today).length;
+  const dueToday = todos.filter(t => t.due === today).length;
+  const now = new Date();
+  const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const nextEv = eventsOn(today).filter(e => e.time && e.time >= hm).sort((a, b) => a.time.localeCompare(b.time))[0];
+  const exam = upcomingExams()[0];
+  const next = todos.filter(t => t.due && t.due > today).sort((a, b) => a.due.localeCompare(b.due))[0];
+  const pill = (icon, text, cls = '', title = text) => h('span', { class: `glance-pill ${cls}`, title }, h('span', { class: 'glance-ic', 'aria-hidden': 'true', text: icon }), h('span', { class: 'glance-t', text }));
+  const pills = [];
+  pills.push(dueToday ? pill('📌', `${dueToday} due today`, 'hot') : pill('✿', 'Nothing due today', 'calm'));
+  if (overdue) pills.push(pill('⚠', `${overdue} overdue`, 'warn'));
+  if (nextEv) pills.push(pill('🕐', `${fmtTime(nextEv.time)} · ${nextEv.title}`, ''));
+  if (exam) pills.push(pill('⏳', `${exam.title.replace(/\s*\(.*?\)\s*/g, ' ').trim()} · ${exam.days === 0 ? 'today' : exam.days === 1 ? 'tomorrow' : `${exam.days} days`}`, exam.days <= 3 ? 'warn' : ''));
+  if (next) pills.push(pill('→', `${next.title} · ${fmtShort(next.due)}`, ''));
+  return h('div', { class: 'glance', 'aria-label': 'Today at a glance' }, pills);
+}
+
 function greeting() {
   const hr = new Date().getHours();
   const part = hr < 5 ? 'Sweet dreams' : hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
@@ -702,8 +723,8 @@ function renderToday() {
     h('header', { class: 'page-head today-head' }, h('div', { class: 'today-head-text' },
       h('p', { class: 'greeting', text: greeting() }),
       h('h1', { text: fmtLong(today) }),
-      h('blockquote', { class: 'brief', text: brief() }),
-      h('p', { class: 'meta', text: (() => {
+      glance(),
+      h('p', { class: 'meta sr-only', text: (() => {
         const week = addDays(today, 7);
         const asg = todos.filter(t => isAssignment(t) && t.due && t.due <= week).length;
         const tasks = todos.filter(t => !isAssignment(t)).length;
@@ -713,7 +734,7 @@ function renderToday() {
       })() })), flowerGadget()),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, calendarCard(today), h('div', { class: 'todo-split' }, assignmentsCard(), tasksCard())),
-      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), internsCard(), countdownCard(), caloriesMini(), tilCard())),
+      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), internsCard(), countdownCard(), planCard(), palavrasCard(), caloriesMini(), tilCard())),
     tagList());
 }
 
@@ -1497,6 +1518,56 @@ function countdownCard() {
     h('div', { class: 'cd-body' },
       h('div', { class: 'cd-title', text: x.title }),
       h('div', { class: 'cd-date' }, x.tag ? h('span', { class: 'asg-course', text: x.tag }) : null, fmtLong(x.date)))))));
+}
+
+// Study plan: the next 4 days, two review blocks a day, picked by how close each exam is
+// (closest first; every third day the second block goes to the exam after that so nothing is
+// left for the last minute). Ticks are per device.
+const PLAN_VIEW = { COP3502C: ['prog', 'Prog 1'], CHM2210: ['orgo', 'Orgo'], BSC2011: ['bio', 'Biology'] };
+function planLoad() { try { return JSON.parse(localStorage.getItem('plan.done') || '{}'); } catch { return {}; } }
+function planTick(key) { const d = planLoad(); if (d[key]) delete d[key]; else d[key] = 1; try { localStorage.setItem('plan.done', JSON.stringify(d)); } catch {} render(); }
+
+function studyPlan(nDays = 4) {
+  const today = todayStr(), last = addDays(today, 60);
+  const exams = [];
+  const seen = new Set();
+  for (const e of live('events')) {
+    if (e.date < today || e.date > last || !isExam(e.title)) continue;
+    const k = `${e.title.toLowerCase()}|${e.date}`;
+    if (!seen.has(k)) { seen.add(k); exams.push({ title: e.title, date: e.date, tag: e.tag || '' }); }
+  }
+  exams.sort((a, b) => a.date.localeCompare(b.date));
+  const days = [];
+  for (let i = 0; i < nDays; i++) {
+    const d = addDays(today, i);
+    const ahead = exams.filter(x => x.date >= d).map(x => ({ ...x, left: daysBetween(d, x.date) }));
+    const byTag = [];
+    for (const x of ahead) if (!byTag.some(y => y.tag === x.tag)) byTag.push(x); // nearest exam per course
+    const blocks = [];
+    if (byTag[0]) blocks.push(byTag[0]);
+    const second = i % 3 === 2 && byTag[2] ? byTag[2] : byTag[1];
+    if (second) blocks.push(second);
+    days.push({ date: d, blocks: blocks.map(x => ({ ...x, what: x.left === 0 ? 'Exam day: light review, then go 🍀' : x.left <= 2 ? 'Mock exam, then redo every miss' : x.left <= 7 ? 'Practice problems + weak topics' : 'Flashcards + one guided lecture' })) });
+  }
+  return days;
+}
+
+function planCard() {
+  const days = studyPlan();
+  if (!days.some(d => d.blocks.length)) return null;
+  const done = planLoad();
+  return card('Study plan', h('span', { class: 'card-meta', text: 'next 4 days' }), h('ol', { class: 'plan' }, days.map((d, i) => h('li', { class: `plan-day${i === 0 ? ' today' : ''}` },
+    h('div', { class: 'plan-date', text: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : fmtWeekday(d.date) }),
+    h('div', { class: 'plan-blocks' }, d.blocks.length ? d.blocks.map(b => {
+      const key = `${d.date}|${b.tag}`;
+      const v = PLAN_VIEW[b.tag];
+      return h('div', { class: `plan-block ${tagColor(b.tag)}${done[key] ? ' done' : ''}` },
+        h('button', { type: 'button', class: 'plan-check', 'aria-label': done[key] ? 'Mark not done' : 'Mark done', text: done[key] ? '✓' : '', onclick: () => planTick(key) }),
+        h('div', { class: 'plan-body' },
+          h('div', { class: 'plan-title' }, h('strong', { text: b.tag || b.title }), h('span', { class: 'muted small', text: ` · ${b.left === 0 ? 'exam today' : `${b.left} day${b.left === 1 ? '' : 's'} to go`}` })),
+          h('div', { class: 'small', text: b.what })),
+        v ? h('button', { type: 'button', class: 'link small plan-go', text: `${v[1]} →`, onclick: () => go(v[0]) }) : null);
+    }) : h('span', { class: 'muted small', text: 'Free day ✿' }))))));
 }
 
 // ---------------------------------------------------------------- calories

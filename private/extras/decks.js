@@ -2,6 +2,18 @@
 // Biology tab (bio/l1–l10.js: key words and quiz questions) so they say exactly
 // what the lectures say. Prog cards are written by hand per module.
 
+import { PALAVRAS } from './palavras.js?v=1';
+
+// Palavras do dia: 5 new words a day starting Oct 16, 2026. Only the words already shown join the deck.
+export const PT_START = '2026-10-16';
+export function ptDay(today) { return Math.max(0, Math.round((new Date(today + 'T12:00:00') - new Date(PT_START + 'T12:00:00')) / 864e5)); }
+export function ptToday(today) { const i = (ptDay(today) * 5) % PALAVRAS.length; return PALAVRAS.slice(i, i + 5); }
+const ptBack = p => `${p.c} — ${p.d}
+Ex.: ${p.ex}${p.s && p.s.length ? `
+Sinônimos: ${p.s.join(', ')}` : ''}`;
+const _today = new Date().toLocaleDateString('en-CA');
+export const PT_CARDS = PALAVRAS.slice(0, Math.min(PALAVRAS.length, (ptDay(_today) + 1) * 5)).map(p => ({ id: `pt:${p.w}`, deck: 'Português', front: p.w, back: ptBack(p) }));
+
 export const BIO_CARDS = [
 {"id":"bio:L1:t0","deck":"Bio L1","front":"Choanoflagellate","back":"A protist with one flagellum and a collar of tiny projections; the closest living relative of animals."},
   {"id":"bio:L1:t1","deck":"Bio L1","front":"Choanocyte","back":"A sponge’s collar cell. It beats water through the sponge and traps food."},
@@ -358,5 +370,6 @@ export const PROG_CARDS = P.map(([m, front, back], i) => ({ id: `prog:${m}:${i}`
 export const DECKS = [
   ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `Bio L${n}`),
   ...['M2', 'M3', 'M4', 'M5', 'M7A', 'M7B', 'M8'].map(m => `Prog ${m}`),
+  'Português',
 ];
-export const ALL_CARDS = [...BIO_CARDS, ...PROG_CARDS];
+export const ALL_CARDS = [...BIO_CARDS, ...PROG_CARDS, ...PT_CARDS];

@@ -5,6 +5,10 @@
 import { MODULES, EXAM2, PROBLEMS, PREDICT } from './problems.js?v=2';
 import { TOPICS, MOCK_MCQ, MOCK_CODE, INTERVIEW } from './extra.js?v=1';
 import { makeEditor, codeBlock } from './highlight.js?v=1';
+import { BUGS } from './bugs.js?v=1';
+
+// Practice list: the regular problems plus the debug-the-bug drills (broken starter code).
+const ALL = [...PROBLEMS, ...BUGS.map(b => ({ ...b, isBug: true }))];
 
 let C; // { h, card, render, ... } from app.js
 
@@ -206,17 +210,18 @@ function chip(label, on, onclick, extra = {}) {
 }
 
 function modTest(mod) {
-  if (mod === 'all') return () => true;
-  if (mod === 'exam2') return p => EXAM2.includes(p.module);
-  return p => p.module === mod;
+  if (mod === 'bugs') return p => p.isBug;
+  if (mod === 'all') return p => !p.isBug;
+  if (mod === 'exam2') return p => !p.isBug && EXAM2.includes(p.module);
+  return p => !p.isBug && p.module === mod;
 }
 
 // ---------------------------------------------------------------- practice
 
 function practicePage() {
   const { h, card } = C;
-  const list = PROBLEMS.filter(modTest(st.mod));
-  let p = PROBLEMS.find(x => x.id === st.prob);
+  const list = ALL.filter(modTest(st.mod));
+  let p = ALL.find(x => x.id === st.prob);
   if (!p || !list.includes(p)) p = list[0];
   st.prob = p.id;
   const rec = saved(p.id);
@@ -241,7 +246,8 @@ function practicePage() {
   const mods = h('div', { class: 'chips prog-mods' },
     chip('Exam 2 (M7A–M8)', st.mod === 'exam2', () => setMod('exam2')),
     MODULES.map(([id, label]) => chip(`${id} · ${label}`, st.mod === id, () => setMod(id))),
-    chip('All', st.mod === 'all', () => setMod('all')));
+    chip('All', st.mod === 'all', () => setMod('all')),
+    chip('🐞 Debug the bug', st.mod === 'bugs', () => setMod('bugs')));
 
   const listEl = h('ol', { class: 'prog-list' }, list.map(x => h('li', null, h('button', {
     type: 'button', class: `prog-item${x.id === p.id ? ' on' : ''}${saved(x.id).solved ? ' done' : ''}`,
@@ -278,6 +284,7 @@ function practicePage() {
       h('span', { class: 'muted small', text: `${idx + 1} / ${list.length}` }),
       h('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Next problem', title: 'Next problem', onclick: () => go(1) }, '›')),
     h('p', { class: 'prog-prompt', text: p.prompt }),
+    p.isBug ? h('p', { class: 'prog-bugnote small', text: rec.solved || st.showSol ? `🐞 The bug: ${p.bug}` : '🐞 This code runs (or tries to) but gives the wrong answer. Run it, compare with what it should do, and fix it.' }) : null,
     p.recurse ? h('p', { class: 'muted small', text: `Must be recursive: ${p.recurse}() has to call itself.` }) : null,
     w.editor.el,
     isIO ? h('label', { class: 'prog-stdin-label' }, h('span', { class: 'muted small', text: 'Input (what you\'d type when the program asks)' }), w.stdinEl) : null,
