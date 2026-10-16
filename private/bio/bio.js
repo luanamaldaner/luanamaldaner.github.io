@@ -192,10 +192,10 @@ export function renderBio(ctx) {
   const exam = st.lec === 'EXAM', map = st.lec === 'MAP';
   const lec = LECTURES.find(l => l.id === st.lec) || LECTURES[0];
   const tabs = h('div', { class: 'bio-tabs', role: 'tablist' }, LECTURES.map(l => h('button', {
-    type: 'button', role: 'tab', class: `bio-tab${!exam && !map && l.id === lec.id ? ' on' : ''}`, 'aria-selected': String(!exam && !map && l.id === lec.id),
+    type: 'button', role: 'tab', title: `Lecture ${l.n}: ${l.short}`, 'aria-label': `Lecture ${l.n}: ${l.short}`, class: `bio-tab${!exam && !map && l.id === lec.id ? ' on' : ' compact'}`, 'aria-selected': String(!exam && !map && l.id === lec.id),
     style: `--lc: var(${l.color})`,
     onclick: () => { if (st.lec !== l.id) { st.lec = l.id; save('lec', l.id); C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
-  }, h('span', { class: 'bio-tab-n', text: l.n }), h('span', { text: l.short }), st.done.has(l.id) ? h('span', { class: 'bio-tab-ok', text: '✓' }) : null)),
+  }, h('span', { class: 'bio-tab-n', text: l.n }), !exam && !map && l.id === lec.id ? h('span', { text: l.short }) : null, st.done.has(l.id) ? h('span', { class: 'bio-tab-ok', text: '✓' }) : null)),
   h('button', {
     type: 'button', role: 'tab', class: `bio-tab bio-tab-exam${exam ? ' on' : ''}`, 'aria-selected': String(exam), style: '--lc: var(--accent)',
     onclick: () => { if (!exam) { st.lec = 'EXAM'; save('lec', 'EXAM'); C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } },

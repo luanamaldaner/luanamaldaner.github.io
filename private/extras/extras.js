@@ -315,7 +315,7 @@ function patternsCard(nDays) {
     const [best, m] = [...byHour].sort((a, b) => b[1] - a[1])[0];
     const fmtHr = x => C.fmtTime(`${String(x % 24).padStart(2, '0')}:00`).replace(':00', '');
     rows.push(['Best study hours', `${fmtHr(best)}–${fmtHr(best + 3)}: ${Math.round(m)} of your ${Math.round(sessions.reduce((a, f) => a + f.minutes, 0))} focus minutes (${plural(sessions.length, 'session')}).`]);
-  } else rows.push(['Best study hours', `Needs 5+ focus sessions in the last ${nDays} days (you have ${sessions.length}).`]);
+  }
 
   // sleep vs next-day focus and tasks
   const nights = sleepLog().filter(r => r.date > since && r.date <= today);
@@ -328,7 +328,7 @@ function patternsCard(nDays) {
     const f = xs => Math.round(mean(xs.map(r => C.focusMinutes(r.date))));
     const t = xs => mean(xs.map(r => doneOn(r.date))).toFixed(1);
     rows.push(['Sleep → next day', `After ${target - 0.5}+ h nights (${good.length}): ${f(good)} min focus, ${t(good)} tasks done. After shorter nights (${short.length}): ${f(short)} min, ${t(short)} tasks. Small samples, so treat it as a hint, not proof.`]);
-  } else rows.push(['Sleep → next day', `Needs at least 3 full and 3 short nights logged to compare (you have ${good.length} and ${short.length}).`]);
+  }
 
   // late eating vs sleep: meals logged after 9 PM the evening before
   const lateEve = d => C.live('food').some(f => f.date === d && f.updatedAt && new Date(f.updatedAt).getHours() >= 21 && C.toStr(new Date(f.updatedAt)) === d);
@@ -337,11 +337,12 @@ function patternsCard(nDays) {
     const q = xs => mean(xs.map(r => r.quality || 3)).toFixed(1);
     const hh = xs => fmtH(mean(xs.map(sleepHours)));
     rows.push(['Late eating', `Nights after food logged past 9 PM (${after.length}): ${hh(after)}, rested ${q(after)}/5. Other nights (${notAfter.length}): ${hh(notAfter)}, rested ${q(notAfter)}/5. Based on when meals were logged, which may not be when you ate.`]);
-  } else rows.push(['Late eating', `Needs 3+ nights each with and without late meals logged (you have ${after.length} and ${notAfter.length}).`]);
+  }
 
+  if (!rows.length) return null; // nothing to compare yet: stay out of the way
   return card('Patterns', h('span', { class: 'card-meta', text: `last ${nDays} days` }),
     h('dl', { class: 'pt-list' }, rows.map(([k, v]) => h('div', null, h('dt', { text: k }), h('dd', { text: v })))),
-    h('p', { class: 'muted small', text: 'These just compare your own numbers. More logged days = more trustworthy.' }));
+    h('p', { class: 'muted small', text: 'Your own numbers compared; more logged days = more trustworthy.' }));
 }
 
 // ---------------------------------------------------------------- cards (spaced repetition)
@@ -440,7 +441,7 @@ export function palavrasCard() {
   const words = ptToday(C.todayStr());
   return h('section', { class: 'card pt-card', lang: 'pt-BR' },
     h('header', { class: 'card-head' }, h('h2', { text: 'Palavras do dia' }), h('span', { class: 'card-meta', text: `dia ${ptDay(C.todayStr()) + 1}` })),
-    h('ul', { class: 'pt-list' }, words.map(p => h('li', null, h('details', { class: 'pt-word' },
+    h('ul', { class: 'pd-list' }, words.map(p => h('li', null, h('details', { class: 'pt-word' },
       h('summary', null, h('strong', { text: p.w }), h('span', { class: 'muted small', text: ` · ${p.c}` })),
       h('p', { class: 'pt-def', text: p.d }),
       h('p', { class: 'pt-ex', text: `“${p.ex}”` }),
@@ -514,16 +515,18 @@ const ACH = [
 ];
 const unlocked = s => ACH.filter(a => { const [v, g] = a[3](s); return v >= g; }).length;
 
+let achAll = false;
 export function achievementsCard() {
   const { h, card } = C;
   const s = studyStats();
   const rows = ACH.map(([icon, name, desc, f]) => { const [v, goal] = f(s); return { icon, name, desc, v: Math.min(v, goal), goal, done: v >= goal }; });
   return card('Achievements', h('span', { class: 'card-meta', text: `${rows.filter(r => r.done).length} / ${rows.length}` }),
-    h('ul', { class: 'ach' }, rows.sort((a, b) => b.done - a.done || b.v / b.goal - a.v / a.goal).map(r => h('li', { class: `ach-item${r.done ? ' done' : ''}`, title: r.desc },
+    h('ul', { class: 'ach' }, rows.sort((a, b) => b.done - a.done || b.v / b.goal - a.v / a.goal).filter((r, i) => achAll || r.done || i < 5).map(r => h('li', { class: `ach-item${r.done ? ' done' : ''}`, title: r.desc },
       h('span', { class: 'ach-ic', text: r.icon }),
       h('span', { class: 'ach-text' }, h('span', { class: 'ach-name', text: r.name }), h('span', { class: 'ach-desc', text: r.desc })),
       r.done ? h('span', { class: 'ach-ok', text: '✓' })
-        : h('span', { class: 'ach-prog' }, h('span', { class: 'ach-bar' }, h('span', { style: `width:${(100 * r.v / r.goal).toFixed(0)}%` })), h('span', { class: 'ach-num', text: `${r.v}/${r.goal}` }))))));
+        : h('span', { class: 'ach-prog' }, h('span', { class: 'ach-bar' }, h('span', { style: `width:${(100 * r.v / r.goal).toFixed(0)}%` })), h('span', { class: 'ach-num', text: `${r.v}/${r.goal}` }))))),
+    h('button', { type: 'button', class: 'link small', text: achAll ? 'Show less' : `Show all ${rows.length}`, onclick: () => { achAll = !achAll; C.render(); } }));
 }
 
 /** The weakest topics across tabs, lowest first. */
@@ -547,6 +550,7 @@ function weakSpots() {
 export function weakSpotsCard() {
   const { h, card } = C;
   const ws = weakSpots();
+  if (!ws.length) return null; // nothing scored yet
   return card('Weak-spot radar', h('span', { class: 'card-meta', text: 'study these first' }),
     ws.length ? h('ul', { class: 'ws' }, ws.slice(0, 6).map(w => h('li', { class: `ws-row${w.pct < 60 ? ' weak' : w.pct < 80 ? ' mid' : ''}` },
       h('span', { class: 'ws-area', text: w.area }),
@@ -569,7 +573,7 @@ export function sleepScoresCard() {
   const withSleep = pts.filter(p => sleepBy[p.d] !== undefined).map(p => ({ ...p, hrs: sleepBy[p.d] }));
   const good = withSleep.filter(p => p.hrs >= 7), short = withSleep.filter(p => p.hrs < 7);
   if (good.length < 2 || short.length < 2) {
-    return card('Sleep vs scores', null, h('p', { class: 'empty', text: `Not enough data yet (${withSleep.length} scored day${withSleep.length === 1 ? '' : 's'} with sleep logged). Log your sleep, then take mock exams or do 5+ roulette answers a day, and this shows whether sleep moves your scores.` }));
+    return null; // not enough data yet: hide the card
   }
   const g = Math.round(mean(good.map(p => p.pct))), sh = Math.round(mean(short.map(p => p.pct)));
   const diff = g - sh;

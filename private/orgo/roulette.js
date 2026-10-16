@@ -195,10 +195,7 @@ export function roulettePage(C, D) {
       h('li', { text: `Best streak: ${rs.best}` }),
       h('li', { text: `Speed round, SN/E: ${load('speedBest_sn', 0)} right` }),
       h('li', { text: `Speed round, alkenes: ${load('speedBest_alkene', 0)} right` }))),
-    card('How it works', null, h('ul', { class: 'bullets small' },
-      h('li', { text: 'Spin, then call it. Some spins have a follow-up: which alkene wins, or whether the cation shifts.' }),
-      h('li', { text: 'A wrong part ends the round and resets your streak; the explanation shows why.' }),
-      h('li', { text: `Speed round: as many as you can in ${SPEED_SEC} seconds, no explanations.` }))));
+    null);
 
   return h('div', { class: 'grid orgo-grid' }, h('div', { class: 'col' }, machine, body), side);
 }

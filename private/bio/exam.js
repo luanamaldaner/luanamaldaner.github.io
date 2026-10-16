@@ -106,11 +106,7 @@ function intro(C, LECTURES, P) {
         h('button', { type: 'button', class: 'btn', disabled: !avail, onclick: () => printExam(C, LECTURES, P, newExam(P, LECTURES.filter(l => es.pick.has(l.id)).map(l => l.id), n)) }, '🖨️ Print a paper version')))),
     h('aside', { class: 'bio-side' },
       history(C, LECTURES),
-      card('Test tips', null, h('ul', { class: 'bullets small' },
-        h('li', { text: 'Answer everything: a guess beats a blank.' }),
-        h('li', { text: 'Flag the ones you’re unsure about and come back at the end.' }),
-        h('li', { text: 'Cross out the options you know are wrong first.' }),
-        h('li', { text: 'Retakes pick questions you haven’t seen lately first.' })))));
+      null));
 }
 
 function running(C, LECTURES, P, ex) {

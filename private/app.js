@@ -23,8 +23,8 @@ import { renderProg } from './prog/prog.js?v=3';
 import { bossCard } from './extras/boss.js?v=2';
 import { renderLab, microbeCard } from './extras/lab.js?v=7';
 import { renderDegree } from './extras/degree.js?v=1';
-import { renderBio } from './bio/bio.js?v=10';
-import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=7';
+import { renderBio } from './bio/bio.js?v=11';
+import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=8';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -394,6 +394,7 @@ function renderSetup(offline) {
 async function enter(state, keyInfo, needsSave) {
   S = normalize(state); K = keyInfo;
   if (location.hash.slice(1) in VIEWS) view = location.hash.slice(1);
+  else if (location.hash === '#forest') view = 'week';
   render();
   if (S.github.token || S.push.dashKey) {
     try {
@@ -607,11 +608,22 @@ function startAutoLock() {
 
 // ---------------------------------------------------------------- layout
 
+// The sidebar shows a few groups; pages inside a group get a small tab bar on top.
+const NAV_GROUPS = [
+  ['today', 'Today', 'today', [['today', 'Today'], ['notes', 'Notes']]],
+  ['study', 'Study', 'bio', [['bio', 'Biology'], ['orgo', 'Orgo'], ['prog', 'Prog 1'], ['cards', 'Cards'], ['lab', 'Lab']]],
+  ['focus', 'Focus', 'focus', [['focus', 'Focus']]],
+  ['health', 'Health', 'calories', [['calories', 'Food'], ['sleep', 'Sleep']]],
+  ['week', 'Week', 'week', [['week', 'Week']]],
+  ['career', 'Career', 'briefcase', [['internships', 'Internships'], ['degree', 'Degree map']]],
+];
+const groupOf = v => NAV_GROUPS.find(g => g[3].some(([k]) => k === v)) || NAV_GROUPS[0];
+function lastIn(g) { try { const k = localStorage.getItem(`nav.${g[0]}`); if (k && g[3].some(([x]) => x === k)) return k; } catch {} return g[3][0][0]; }
+
 const VIEWS = {
   today: { label: 'Today', icon: 'today', render: renderToday },
   calories: { label: 'Calories', icon: 'calories', render: renderCalories },
   focus: { label: 'Focus', icon: 'focus', render: renderFocus },
-  forest: { label: 'Forest', icon: 'tree', render: renderForest },
   week: { label: 'Week', icon: 'week', render: renderWeek },
   sleep: { label: 'Sleep', icon: 'moon', render: renderSleep },
   internships: { label: 'Internships', icon: 'briefcase', render: renderInternships },
@@ -638,13 +650,18 @@ function go(v) { view = v; history.replaceState(null, '', `#${v}`); render(); wi
 
 function render() {
   if (!S) return;
+  const cur = groupOf(view);
+  try { localStorage.setItem(`nav.${cur[0]}`, view); } catch {}
   const nav = h('nav', { class: 'nav', 'aria-label': 'Sections' },
-    Object.entries(VIEWS).map(([key, v]) => h('a', {
-      href: `#${key}`, class: `nav-item${view === key ? ' active' : ''}`,
-      'aria-current': view === key ? 'page' : null,
-      onclick: e => { e.preventDefault(); go(key); },
-    }, icon(v.icon), h('span', { text: v.label }),
-    key === 'focus' && focus.mode === 'running' ? h('span', { id: 'focus-nav-badge', class: 'nav-badge', text: fmtClock(focusLeft()) }) : null)));
+    NAV_GROUPS.map(g => h('a', {
+      href: `#${lastIn(g)}`, class: `nav-item${g === cur ? ' active' : ''}`,
+      'aria-current': g === cur ? 'page' : null,
+      onclick: e => { e.preventDefault(); go(g === cur ? g[3][0][0] : lastIn(g)); },
+    }, icon(g[2]), h('span', { text: g[1] }),
+    g[0] === 'focus' && focus.mode === 'running' ? h('span', { id: 'focus-nav-badge', class: 'nav-badge', text: fmtClock(focusLeft()) }) : null)));
+  const subtabs = cur[3].length > 1 ? h('div', { class: 'subtabs', role: 'tablist', 'aria-label': cur[1] }, cur[3].map(([k, label]) => h('button', {
+    type: 'button', role: 'tab', class: `subtab${k === view ? ' on' : ''}`, 'aria-selected': String(k === view), onclick: () => go(k),
+  }, label))) : null;
 
   const side = h('aside', { class: 'side' },
     h('div', { class: 'brand' },
@@ -653,10 +670,11 @@ function render() {
     nav,
     h('div', { class: 'side-foot' },
       themeButton(),
-      h('button', { class: 'nav-item', type: 'button', onclick: lock }, icon('lock'), h('span', { text: 'Lock' })),
+      h('a', { href: '#settings', class: `nav-item nav-small${view === 'settings' ? ' active' : ''}`, onclick: e => { e.preventDefault(); go('settings'); } }, icon('settings'), h('span', { text: 'Settings' })),
+      h('button', { class: 'nav-item nav-small', type: 'button', onclick: lock }, icon('lock'), h('span', { text: 'Lock' })),
       syncBadge()));
 
-  const main = h('main', { class: 'main' }, VIEWS[view].render());
+  const main = h('main', { class: 'main' }, subtabs, VIEWS[view].render());
   root.replaceChildren(h('div', { class: 'layout' }, side, main));
   if (focusAfter) { const el = document.getElementById(focusAfter); focusAfter = null; if (el) el.focus(); }
 }
@@ -759,7 +777,7 @@ function renderToday() {
       })() })), flowerGadget()),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, calendarCard(today), h('div', { class: 'todo-split' }, assignmentsCard(), tasksCard())),
-      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), internsCard(), countdownCard(), studyCorner(), caloriesMini(), tilCard())),
+      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), studyCorner(), internsCard(), caloriesMini())),
     tagList());
 }
 
@@ -1320,11 +1338,7 @@ function renderFocus() {
             h('span', { class: 'muted small', text: `${f.minutes} min` }))))
             : h('p', { class: 'empty', text: 'No sessions yet today ✿' }),
           h('dl', { class: 'stats' }, h('div', null, h('dt', { text: 'Last 7 days' }), h('dd', { text: `${week} min` })))),
-        card('How it works', null, h('ul', { class: 'bullets' },
-          h('li', { text: 'Pick a task and a length, then start. Your flower grows as you go and blooms at the end.' }),
-          h('li', { text: 'Longer sessions grow bigger flowers: a daisy, a tulip at 25 min, a rose at 45, a sunflower at 60.' }),
-          h('li', { text: 'The timer keeps running while you use the rest of the dashboard.' }),
-          h('li', { text: 'Your dashboard won’t auto-lock during a session.' }))))));
+        null)));
 }
 
 // ---------------------------------------------------------------- forest
@@ -1652,7 +1666,7 @@ function planCard() {
 }
 
 // Study corner: the daily study cards share one tabbed card so Today stays calm.
-const CORNER = [['plan', '📅 Plan', () => planCard()], ['boss', '👾 Boss', () => bossCard(ORGO_CTX)], ['pt', '✍️ Palavras', () => palavrasCard()], ['jr', '📓 Journal', () => journalCard()], ['mb', '🦠 Microbe', () => microbeCard(ORGO_CTX)]];
+const CORNER = [['plan', '📅 Plan', () => planCard()], ['boss', '👾 Boss', () => bossCard(ORGO_CTX)], ['pt', '✍️ Palavras', () => palavrasCard()], ['jr', '📓 Journal', () => journalCard()], ['mb', '🦠 Microbe', () => microbeCard(ORGO_CTX)], ['til', '💡 TIL', () => tilCard()]];
 function studyCorner() {
   let tab = 'plan';
   try { tab = localStorage.getItem('corner.tab') || 'plan'; } catch {}

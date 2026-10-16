@@ -85,8 +85,5 @@ export function renderDegree(C) {
           h('p', { class: 'small', text: 'Microbiology:' }),
           h('ul', { class: 'bullets small' }, mcbTrack.map(x => h('li', { text: `${x.i} · tracking semester ${x.sem}` })))),
         rec.notes.length ? card('Other things your audit flags', null, h('ul', { class: 'bullets small' }, rec.notes.map(t => h('li', { text: t })))) : null,
-        card('Important', null, h('ul', { class: 'bullets small' },
-          h('li', { text: 'This is a study aid, not an official audit. Your ONE.UF audit and your advisors have the final word.' }),
-          h('li', { text: `The Microbiology side comes from the ${MCB.year} UF catalog; your audit only lists the Data Science major, so second-major credit sharing isn’t checked here.` }),
-          h('li', { text: 'MCB rules: C or better within two attempts; 2.5 GPA in critical-tracking courses.' }))))));
+        h('p', { class: 'muted small', text: 'Study aid, not an official audit: your ONE.UF audit and advisors have the final word. The Microbiology side comes from the UF catalog.' }))));
 }

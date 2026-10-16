@@ -597,11 +597,7 @@ function mockIntro() {
         }, 'Start the exam')))),
     h('div', { class: 'col col-narrow' },
       historyCard(),
-      card('Exam tips', null, h('ul', { class: 'bullets small' },
-        h('li', { text: 'Do the multiple choice first, then spend what\'s left on the code.' }),
-        h('li', { text: 'For "what does this print?", trace on paper: write every variable\'s value line by line.' }),
-        h('li', { text: 'For recursion, write the base case first. Then trust that the smaller call works.' }),
-        h('li', { text: 'Partial credit counts: a function that handles the normal case still earns points.' })))));
+      null));
 }
 
 function mockRunning(ex) {
