@@ -463,6 +463,10 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .charm-bubbles {
     radial-gradient(circle, rgba(255,255,255,0) 69.2%, rgba(255,255,255,.75) 70.3%, rgba(255,255,255,0) 70.9%),
     conic-gradient(from 210deg, rgba(255,140,220,.28), rgba(140,220,255,.28), rgba(150,255,200,.25), rgba(255,240,150,.25), rgba(255,140,220,.28));
 }
+/* page clouds: scroll with the page, drift slowly like the bubbles */
+.charm-pcloud { position: absolute; height: auto; pointer-events: none; opacity: .92;
+  animation: charm-drift2 var(--fd, 20s) ease-in-out infinite alternate; animation-delay: var(--fdl, 0s); }
+@media (prefers-reduced-motion: reduce) { .charm-pcloud { animation: none; } }
 @keyframes charm-drift2 {
   0% { transform: translate(0, 0); }
   50% { transform: translate(var(--fx, 8px), calc(var(--fy, 14px) * -1)); }
@@ -596,3 +600,5 @@ html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .site-footer, html
 @media (max-width: 720px) {
   html[data-skin="min"]:not([data-theme="dark"])[data-look="e"] .site-footer { padding-bottom: 100px; background-size: 900px auto; }
 }
+
+

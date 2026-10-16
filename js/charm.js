@@ -72,14 +72,6 @@ function addSky() {
     b.className = `charm-bubble b${i}`;
     sky.append(b);
   }
-  // a few soft Aero clouds (cut from the Aero sky painting) drifting at the edges
-  for (let i = 1; i <= 3; i++) {
-    const c = document.createElement('img');
-    c.className = `charm-acloud a${i}`;
-    c.src = IMG(`acloud-${i}.png`);
-    c.alt = '';
-    sky.append(c);
-  }
   const layer = document.querySelector('.deco-shapes');
   if (layer) layer.append(sky); else document.body.prepend(sky);
 }
@@ -167,13 +159,20 @@ function addPageBubbles() {
     // a fixed pseudo-random sequence so the layout is the same on every visit
     let seed = 7;
     const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    // keep every bubble inside the side margins so none sits on top of the content
+    const box = document.querySelector('main .container, .section .container, .container');
+    const cw = box ? box.getBoundingClientRect().width : Math.min(W, 1100);
+    const margin = Math.max(0, (W - cw) / 2) - 12;
     let y = -80, side = 1, i = 0;
     while (y < H - 120) {
       const big = i % 3 !== 2;
       const d = big ? (phone ? 130 + rnd() * 70 : 220 + rnd() * 140) : (phone ? 34 + rnd() * 20 : 46 + rnd() * 40);
       const b = document.createElement('span');
       b.className = `charm-pbubble ${side < 0 ? 'L' : 'R'}`;
-      const peek = big ? d * (0.38 + rnd() * 0.16) : -(W * (0.06 + rnd() * 0.08));
+      let peek = big ? d * (0.38 + rnd() * 0.16) : -(W * (0.06 + rnd() * 0.08));
+      // visible width = d - peek (big ones hang off the edge, smaller ones sit inside the margin)
+      if (big) { const vis = Math.max(28, Math.min(d - peek, margin)); peek = d - vis; }
+      else if (-peek + d > margin) { peek = -Math.max(4, margin - d); }
       b.style.cssText = `width:${d.toFixed(0)}px;height:${d.toFixed(0)}px;top:${y.toFixed(0)}px;${side < 0 ? 'left' : 'right'}:${(-peek).toFixed(0)}px;` +
         `--fx:${(6 + rnd() * 10).toFixed(0)}px;--fy:${(10 + rnd() * 16).toFixed(0)}px;--fd:${(9 + rnd() * 8).toFixed(1)}s;--fdl:${(-rnd() * 10).toFixed(1)}s`;
       // halo: a soft deeper-blue patch behind the bubble, 1.7x its size
@@ -187,12 +186,28 @@ function addPageBubbles() {
       if (big) side = -side;
       i++;
     }
+    // soft Aero clouds that scroll with the page and drift like the bubbles
+    let cy = 40, cside = -1, ci = 0;
+    while (cy < H - 200) {
+      const cw = phone ? 150 + rnd() * 60 : 300 + rnd() * 140;
+      const vis = Math.max(phone ? 70 : 140, Math.min(cw * 0.75, margin + 40));
+      const img = document.createElement('img');
+      img.className = 'charm-pcloud';
+      img.src = IMG(`acloud-${(ci % 3) + 1}.png`); img.alt = '';
+      img.style.cssText = `width:${cw.toFixed(0)}px;top:${cy.toFixed(0)}px;${cside < 0 ? 'left' : 'right'}:${(vis - cw).toFixed(0)}px;` +
+        `--fx:${(18 + rnd() * 22).toFixed(0)}px;--fy:${(6 + rnd() * 8).toFixed(0)}px;--fd:${(16 + rnd() * 10).toFixed(1)}s;--fdl:${(-rnd() * 12).toFixed(1)}s`;
+      layer.append(img);
+      cy += phone ? 520 + rnd() * 260 : 700 + rnd() * 400; cside = -cside; ci++;
+    }
     // a few loose small bubbles scattered in the side margins (not in a line)
     const n = Math.round(H / (phone ? 900 : 650));
     for (let k = 0; k < n; k++) {
       const d = phone ? 26 + rnd() * 18 : 34 + rnd() * 30;
       const left = rnd() < 0.5;
-      const x = (phone ? 2 + rnd() * 8 : 3 + rnd() * 13);
+      let x = (phone ? 2 + rnd() * 8 : 3 + rnd() * 13);
+      const maxX = (margin - d) / W * 100;
+      if (x > maxX) x = Math.max(0.5, maxX);
+      if (margin < d + 4) continue;
       const top = (k + 0.15 + rnd() * 0.7) * (H / n);
       const b = document.createElement('span');
       b.className = `charm-pbubble small ${left ? 'L' : 'R'}`;
@@ -206,6 +221,8 @@ function addPageBubbles() {
   addEventListener('load', place);
   setTimeout(place, 1500);
 }
+
+
 
 export default function initCharm() {
   pickLook();
