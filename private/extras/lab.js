@@ -14,6 +14,10 @@ const put = (k, v) => { try { localStorage.setItem(`lab.${k}`, JSON.stringify(v)
 const shuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
 const TABS = [['conn', '🔗 Connections'], ['path', '🧩 Pathways'], ['mnem', '🧠 Mnemonics'], ['microbe', '🦠 Microbes'], ['micro', '🧫 Micro lab'], ['packs', '🎴 Packs'], ['tycoon', '🔬 Cell Tycoon']];
+// portrait art for each microbe (art/microbes/<slug>.webp)
+const slug = n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const mbImg = (h, m, cls) => h('img', { class: cls, src: `art/microbes/${slug(m.name)}.webp`, alt: m.name, loading: 'lazy' });
+
 const lab = { tab: ls('tab', 'conn'), conn: null, path: null, mnemHide: false, mnemTopic: 'All', microbe: null };
 
 export function microbeOfDay(today) {
@@ -24,7 +28,7 @@ export function microbeOfDay(today) {
 function microbeView(C, m, big = false) {
   const { h } = C;
   return h('div', { class: `mb${big ? ' big' : ''}` },
-    h('div', { class: 'mb-top' }, h('span', { class: 'mb-emoji', text: m.emoji }),
+    h('div', { class: 'mb-top' }, mbImg(h, m, 'mb-art'),
       h('div', null, h('p', { class: 'mb-name', text: m.name }), h('p', { class: 'muted small', text: [m.kind, m.gram, m.shape].filter(Boolean).join(' · ') }))),
     h('p', { class: 'mb-hook', text: m.hook }),
     h('ul', { class: 'bullets small' }, m.facts.map(f => h('li', { text: f }))),
@@ -128,7 +132,7 @@ function microbePage(C) {
     h('div', { class: 'col col-narrow' }, C.card('Library', h('span', { class: 'card-meta', text: `${list.length}` }),
       h('div', { class: 'chips' }, kinds.map(k => h('button', { type: 'button', class: `chip chip-btn${lab.microbe.kind === k ? ' on' : ''}`, text: k, onclick: () => { lab.microbe.kind = k; C.render(); } }))),
       h('ul', { class: 'pw-list' }, list.map(m => h('li', null, h('button', { type: 'button', class: `prog-item${m === cur ? ' on' : ''}`, onclick: () => { lab.microbe.open = m.name; C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
-        h('span', { class: 'prog-item-mod', text: m.emoji }), h('span', { class: 'prog-item-title', text: m.name }))))))));
+        mbImg(h, m, 'mb-thumb'), h('span', { class: 'prog-item-title', text: m.name }))))))));
 }
 
 
@@ -148,10 +152,10 @@ function packsPage(C) {
         h('div', { class: 'pk-meter' }, h('span', { style: `width:${(100 * (PER_PACK - p.toNext) / PER_PACK).toFixed(0)}%` })),
         h('div', { class: 'row' }, h('button', { type: 'button', class: 'btn btn-primary', disabled: p.ready <= 0, text: '🎁 Open a pack', onclick: () => { lastPull = openPack(MICROBES); C.render(); } })),
         pull ? h('div', { class: 'pk-pull' }, pull.map((x, k) => { const m = MICROBES.find(y => y.name === x.name); return h('button', { type: 'button', class: `pk-card r-${RARITY[m.kind].toLowerCase()}`, style: `animation-delay:${k * 180}ms`, onclick: () => { lab.tab = 'microbe'; lab.microbe = { kind: 'All', open: m.name }; put('tab', 'microbe'); C.render(); } },
-          h('span', { class: 'pk-emoji', text: m.emoji }), h('span', { class: 'pk-name', text: m.name }), h('span', { class: 'pk-rar', text: `${RARITY[m.kind]}${x.isNew ? ' · NEW ✨' : ''}` })); })) : null)),
+          mbImg(h, m, 'pk-art'), h('span', { class: 'pk-name', text: m.name }), h('span', { class: 'pk-rar', text: `${RARITY[m.kind]}${x.isNew ? ' · NEW ✨' : ''}` })); })) : null)),
     h('div', { class: 'col col-narrow' }, C.card('Collection', h('span', { class: 'card-meta', text: `${have} / ${MICROBES.length}` }),
       h('div', { class: 'pk-grid' }, MICROBES.map(m => owned[m.name]
-        ? h('span', { class: `pk-mini r-${RARITY[m.kind].toLowerCase()}`, title: `${m.name} ×${owned[m.name]}`, text: m.emoji })
+        ? h('span', { class: `pk-mini r-${RARITY[m.kind].toLowerCase()}`, title: `${m.name} ×${owned[m.name]}` }, mbImg(h, m, 'pk-mini-art'))
         : h('span', { class: 'pk-mini locked', title: 'Not found yet', text: '?' }))))));
 }
 

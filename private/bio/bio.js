@@ -2,16 +2,16 @@
 // and small looping animations, a guided step-by-step walkthrough and a quiz.
 
 import { E, NS } from './kit.js';
-import L1 from './l1.js?v=2';
-import L2 from './l2.js?v=2';
-import L3 from './l3.js?v=2';
-import L4 from './l4.js?v=2';
-import L5 from './l5.js?v=2';
-import L6 from './l6.js?v=2';
-import L7 from './l7.js?v=2';
-import L8 from './l8.js?v=2';
-import L9 from './l9.js?v=2';
-import L10 from './l10.js?v=2';
+import L1 from './l1.js?v=3';
+import L2 from './l2.js?v=3';
+import L3 from './l3.js?v=3';
+import L4 from './l4.js?v=3';
+import L5 from './l5.js?v=3';
+import L6 from './l6.js?v=3';
+import L7 from './l7.js?v=3';
+import L8 from './l8.js?v=3';
+import L9 from './l9.js?v=3';
+import L10 from './l10.js?v=3';
 import WALKS from './walks.js?v=3';
 import GLOSSARY from './glossary.js?v=1';
 import { examPage } from './exam.js?v=4';

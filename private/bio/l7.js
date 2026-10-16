@@ -17,40 +17,53 @@ const GUT_REGIONS = [
   { name: 'Large intestine', a: 490, b: 612, r: 15, speed: 26, procs: ['Motility', 'Absorption'],
     cap: 'Large intestine (colon): soaks up water and salt, gut bacteria make vitamin K, and it stores what’s left (cellulose = bulk).' },
 ];
-const gutY = x => 172 + 30 * gauss(x, 230, 34) + (x > 280 && x < 490 ? 46 * Math.sin((x - 280) / 210 * 3 * Math.PI) * smooth(280, 300, x) * (1 - smooth(470, 490, x)) : 0) - 20 * smooth(500, 600, x);
 const regionOf = x => GUT_REGIONS.find(r => x >= r.a && x < r.b) || GUT_REGIONS[GUT_REGIONS.length - 1];
-const gutR = x => {
-  let r = 0, w = 0;
-  for (const g of GUT_REGIONS) { const k = gauss(x, (g.a + g.b) / 2, (g.b - g.a) / 2.2); r += g.r * k; w += k; }
-  return r / w;
+// the route through the illustrated tract, traced in sprite pixels (264×640), one polyline per region
+const GUT_SPR = { x: 200, y: 5, k: 350 / 640 };
+const sp = ([px, py]) => [GUT_SPR.x + px * GUT_SPR.k, GUT_SPR.y + py * GUT_SPR.k];
+const GUT_PATH = {
+  'Mouth': [[128, 42], [132, 70], [135, 90]],
+  'Esophagus': [[135, 90], [138, 130], [143, 170], [152, 195], [170, 212], [188, 222]],
+  'Stomach': [[188, 222], [205, 240], [215, 265], [205, 290], [180, 300], [150, 305], [120, 302], [100, 312]],
+  'Small intestine': [[100, 312], [92, 335], [110, 352], [140, 362], [160, 375], [120, 395], [80, 405], [130, 420], [200, 420], [180, 445], [90, 440], [70, 465], [140, 470], [200, 480], [160, 500], [100, 505], [60, 490], [30, 470]],
+  'Large intestine': [[30, 470], [22, 420], [28, 370], [60, 350], [120, 362], [180, 355], [230, 345], [240, 380], [238, 440], [235, 500], [210, 520], [160, 520], [140, 545], [140, 590], [140, 625]],
+};
+const GUT_POLY = Object.fromEntries(Object.entries(GUT_PATH).map(([k, pts]) => {
+  const P = pts.map(sp), L = [0];
+  for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+  return [k, { P, L }];
+}));
+const gutPos = x => {
+  const r = regionOf(x), { P, L } = GUT_POLY[r.name];
+  const d = clamp((x - r.a) / (r.b - r.a)) * L[L.length - 1];
+  let i = 1; while (i < L.length - 1 && L[i] < d) i++;
+  const k = (d - L[i - 1]) / ((L[i] - L[i - 1]) || 1);
+  return [lerp(P[i - 1][0], P[i][0], k), lerp(P[i - 1][1], P[i][1], k)];
 };
 
 const gut = {
   id: 'l7-gut', title: 'A trip down the gut', dur: 26,
   build(svg) {
     fx(svg);
-    // painted artwork underneath; drawn shapes stay on top for motion and highlights
-    svg.classList.add('has-art', 'art-l7-gut');
-    E('image', { href: new URL('./art/l7-gut.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
-    E('rect', { x: 0, y: 300, width: 640, height: 60, class: 'b-bloodband' }, g);
-    T(g, 628, 350, 'blood (absorbed nutrients go here)', 'bs', { 'text-anchor': 'end' });
-    const wall = E('path', { class: 'b-gut' }, g);
-    const inner = E('path', { class: 'b-gut-in' }, g);
-    // accessory organs
-    E('ellipse', { cx: 34, cy: 124, rx: 20, ry: 12, class: 'b-gland fxb-breathe' }, g); T(g, 12, 102, 'salivary glands', 'bs');
-    E('path', { d: 'M232,62 C262,40 330,44 344,70 C352,90 318,98 286,96 C260,94 236,84 232,62z', class: 'b-liver fxb-breathe d1' }, g); T(g, 290, 36, 'liver', 'bs b-strong', { 'text-anchor': 'middle' });
-    E('ellipse', { cx: 318, cy: 106, rx: 12, ry: 9, class: 'b-gall fxb-breathe d2' }, g); T(g, 356, 110, 'gallbladder (bile)', 'bs');
-    E('path', { d: 'M318,115 C312,130 300,140 296,150', class: 'b-duct' }, g);
-    E('path', { d: 'M318,262 C350,270 380,262 392,254 C400,248 392,240 380,242 C360,246 336,250 318,262z', class: 'b-pancreas fxb-breathe d3' }, g); T(g, 400, 270, 'pancreas (enzymes + HCO₃⁻)', 'bs');
-    E('path', { d: 'M320,262 C304,246 300,230 298,214', class: 'b-duct' }, g);
+    // illustrated digestive tract: mouth, esophagus, stomach, liver + gallbladder, pancreas, small + large intestine
+    E('image', { href: new URL('./art/sprites/l7-gut-tract.webp', import.meta.url).href, x: GUT_SPR.x, y: GUT_SPR.y, width: 264 * GUT_SPR.k, height: 350, preserveAspectRatio: 'xMidYMid meet' }, g);
+    const lead = (x1, y1, x2, y2) => E('path', { d: `M${x1},${y1} L${x2},${y2}`, class: 'b-leader' }, g);
+    lead(194, 42, 252, 30); T(g, 190, 46, 'salivary glands', 'bs', { 'text-anchor': 'end' });
+    lead(194, 128, 226, 132); T(g, 190, 132, 'liver', 'bs b-strong', { 'text-anchor': 'end' });
+    lead(194, 164, 222, 164); T(g, 190, 168, 'gallbladder (bile)', 'bs', { 'text-anchor': 'end' });
+    lead(352, 182, 312, 182); T(g, 356, 186, 'pancreas (enzymes + HCO₃⁻)', 'bs');
+    const blood = pill(g, 628, 300, 'into the blood →', 'bs b-strong', { 'text-anchor': 'end' });
+    blood.previousSibling.classList.add('rose');
     const drops = { saliva: [], bile: [], panc: [] };
     for (let i = 0; i < 4; i++) {
       drops.saliva.push(E('circle', { r: 3, class: 'p-water' }, g));
       drops.bile.push(E('circle', { r: 3.4, class: 'p-bile' }, g));
       drops.panc.push(E('circle', { r: 3.4, class: 'p-salt' }, g));
     }
-    const labels = GUT_REGIONS.map(r => T(g, (r.a + r.b) / 2, r.name === 'Small intestine' ? 292 : r.name === 'Stomach' ? 262 : r.name === 'Large intestine' ? 118 : 80, r.name, 'bs b-strong b-region', { 'text-anchor': 'middle' }));
+    const LBL = { 'Mouth': [190, 24, 'end'], 'Esophagus': [290, 86, 'start'], 'Stomach': [334, 150, 'start'], 'Small intestine': [356, 250, 'start'], 'Large intestine': [190, 244, 'end'] };
+    lead(194, 20, 256, 26); lead(352, 246, 316, 246); lead(194, 240, 214, 240);
+    const labels = GUT_REGIONS.map(r => T(g, LBL[r.name][0], LBL[r.name][1], r.name, 'bs b-strong b-region', { 'text-anchor': LBL[r.name][2] }));
     const bolus = E('ellipse', { class: 'b-bolus' }, g);
     const nutr = Array.from({ length: 10 }, (_, i) => E('circle', { r: 3, class: i % 2 ? 'p-glu' : 'p-fatdot' }, g));
     const waterOut = Array.from({ length: 5 }, () => E('circle', { r: 3, class: 'p-water' }, g));
@@ -69,44 +82,28 @@ const gut = {
     return (lt, _dt, t) => {
       const xb = xAt(clamp(lt / (this.dur - 1)));
       const reg = regionOf(xb);
-      // tube outline with a peristaltic squeeze just behind the bolus
-      let top = '', bot = '';
-      const pts = [];
-      for (let x = 40; x <= 612; x += 4) {
-        let r = gutR(x);
-        const reg2 = regionOf(x);
-        if (reg2.name === 'Stomach' && reg.name === 'Stomach') r *= 1 + 0.12 * Math.sin(TAU * (t * 0.8 - x / 60));
-        r *= 1 - 0.5 * gauss(x, xb - 20, 10) * (r < 20 ? 1 : 0.4);
-        r += (r < 14 ? 5 : 0) * gauss(x, xb, 9);
-        const y = gutY(x), dy = (gutY(x + 1) - gutY(x - 1)) / 2;
-        const n = Math.hypot(1, dy);
-        pts.push([x - dy / n * r, y + r / n, x + dy / n * r, y - r / n]);
-      }
-      pts.forEach(([x1, y1, x2, y2], i) => { top += `${i ? 'L' : 'M'}${x2.toFixed(1)},${y2.toFixed(1)}`; });
-      for (let i = pts.length - 1; i >= 0; i--) bot += `L${pts[i][0].toFixed(1)},${pts[i][1].toFixed(1)}`;
-      wall.setAttribute('d', `${top}${bot}z`);
-      inner.setAttribute('d', `${top}${bot}z`);
       // bolus → chyme → feces
-      const size = reg.name === 'Mouth' ? 11 : reg.name === 'Esophagus' ? 8 : reg.name === 'Stomach' ? 14 : reg.name === 'Small intestine' ? lerp(8, 5, (xb - 280) / 210) : 7;
-      bolus.setAttribute('cx', xb.toFixed(1)); bolus.setAttribute('cy', gutY(xb).toFixed(1));
+      const size = reg.name === 'Mouth' ? 7 : reg.name === 'Esophagus' ? 5 : reg.name === 'Stomach' ? 9 * (1 + 0.1 * Math.sin(TAU * t * 0.8)) : reg.name === 'Small intestine' ? lerp(5, 3.5, (xb - 280) / 210) : 5;
+      const [bx, by] = gutPos(xb);
+      bolus.setAttribute('cx', bx.toFixed(1)); bolus.setAttribute('cy', by.toFixed(1));
       bolus.setAttribute('rx', (size * 1.2).toFixed(1)); bolus.setAttribute('ry', size.toFixed(1));
       bolus.style.fill = xb < 180 ? 'var(--b-gold)' : xb < 490 ? 'color-mix(in srgb, var(--b-gold) 60%, var(--b-mem))' : 'color-mix(in srgb, var(--b-wall) 70%, #5a3a2a)';
       labels.forEach((l, i) => l.classList.toggle('on', GUT_REGIONS[i] === reg));
       badges.forEach((b, i) => b.classList.toggle('on', reg.procs.includes(PROCS[i])));
       // secretions drip when the bolus passes
       const drip = (arr, a, b, on) => arr.forEach((d, i) => { const u = frac(t * 0.9 + i / arr.length); const [x, y] = flow(a, b, ease(u), i, 0, 1.5, t); at(d, x, y); show(d, on ? env(u, 0.25) : 0); });
-      drip(drops.saliva, [44, 132], [60, gutY(60) - 4], reg.name === 'Mouth');
-      drip(drops.bile, [312, 118], [296, 152], reg.name === 'Small intestine' && xb < 380);
-      drip(drops.panc, [318, 258], [298, 214], reg.name === 'Small intestine' && xb < 380);
+      drip(drops.saliva, sp([96, 44]), sp([124, 52]), reg.name === 'Mouth');
+      drip(drops.bile, sp([48, 290]), sp([96, 326]), reg.name === 'Small intestine' && xb < 330);
+      drip(drops.panc, sp([170, 330]), sp([104, 336]), reg.name === 'Small intestine' && xb < 330);
       nutr.forEach((d, i) => {
         const u = frac(t * 0.6 + i / nutr.length);
-        const x0 = xb + (i % 5 - 2) * 6;
-        at(d, x0 + 3 * Math.sin(u * 6 + i), lerp(gutY(x0), 320, ease(u)));
+        const [x0, y0] = gutPos(clamp(xb + (i % 5 - 2) * 4, 280, 489));
+        at(d, lerp(x0, 560, ease(u)), lerp(y0, 292, ease(u)) + 4 * Math.sin(u * 6 + i));
         show(d, reg.name === 'Small intestine' ? env(u, 0.25) : 0);
       });
       waterOut.forEach((d, i) => {
         const u = frac(t * 0.6 + i / waterOut.length);
-        at(d, xb + (i - 2) * 7 + 3 * Math.sin(u * 6 + i), lerp(gutY(xb), 320, ease(u)));
+        at(d, lerp(bx + (i - 2) * 3, 560, ease(u)), lerp(by, 292, ease(u)) + 4 * Math.sin(u * 6 + i));
         show(d, reg.name === 'Large intestine' ? env(u, 0.25) : 0);
       });
       return reg.cap;
@@ -357,10 +354,14 @@ const bile = {
       const off = r * (k < 3 ? 1.2 : 1.35) * (k === 4 ? 1.25 : 1);
       lv.push(prev.flatMap(d => [{ p: [d.p[0] - dir[0] * off, d.p[1] - dir[1] * off], r }, { p: [d.p[0] + dir[0] * off, d.p[1] + dir[1] * off], r }]));
     }
-    const drops = Array.from({ length: 16 }, () => { const grp = E('g', {}, g); return { grp, fat: E('circle', { r: 1, class: 'b-fatdrop' }, grp), coat: E('circle', { r: 1, class: 'b-coat' }, grp) }; });
+    const spr = f => new URL(`./art/sprites/${f}.webp`, import.meta.url).href;
+    const img = (f, parent) => E('image', { href: spr(f), x: 0, y: 0, width: 1, height: 1, preserveAspectRatio: 'xMidYMid meet' }, parent);
+    const size = (el, r) => { el.setAttribute('x', (-r).toFixed(1)); el.setAttribute('y', (-r).toFixed(1)); el.setAttribute('width', (2 * r).toFixed(1)); el.setAttribute('height', (2 * r).toFixed(1)); };
+    // illustrated fat droplet; the bile-salt-coated version fades in over it (drawn slightly larger so the salt heads stick out)
+    const drops = Array.from({ length: 16 }, () => { const grp = E('g', {}, g); return { grp, fat: img('l7-bile-fat', grp), coat: img('l7-bile-coated', grp) }; });
     const salts = Array.from({ length: 12 }, () => { const grp = E('g', {}, g); E('line', { x1: 0, y1: 0, x2: 14, y2: 0, class: 'b-salttail' }, grp); E('circle', { r: 4.5, class: 'b-salthead' }, grp); return grp; });
     const lip = Array.from({ length: 4 }, () => E('path', { d: 'M0,0 L12,-7 A14,14 0 1 0 12,7 Z', class: 'b-enzyme' }, g));
-    const mic = Array.from({ length: 8 }, () => { const grp = E('g', {}, g); E('circle', { r: 9, class: 'b-coat' }, grp); E('circle', { r: 5, class: 'b-fatdrop' }, grp); return grp; });
+    const mic = Array.from({ length: 8 }, () => { const grp = E('g', {}, g); size(img('l7-bile-micelle', grp), 11); return grp; });
     E('rect', { x: 560, y: 30, width: 70, height: 300, rx: 16, class: 'b-epi' }, g);
     T(g, 595, 350, 'gut wall', 'bs', { 'text-anchor': 'middle' });
     T(g, 40, 30, '● bile salt: one end likes water, the other likes fat', 'bs b-bile-t');
@@ -379,7 +380,7 @@ const bile = {
         void from;
         const r = p.r * (1 - 0.55 * shrink);
         move(d.grp, p.p[0] + 1.5 * Math.sin(lt * 1.3 + i), p.p[1] + 1.5 * Math.cos(lt * 1.1 + i * 2));
-        d.fat.setAttribute('r', r.toFixed(1)); d.coat.setAttribute('r', (r + 3).toFixed(1));
+        size(d.fat, r); size(d.coat, r * 1.1);
         show(d.grp, 1);
         show(d.coat, smooth(1.5, 4.5, lt));
       });

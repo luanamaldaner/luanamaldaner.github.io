@@ -4,6 +4,9 @@ import { E, T, Track, at, move, show, setText, smooth, keys, frac, lerp, gauss, 
 import { polish, fit, pill, pills, breath, scaleAbout, drift, ease, life, flag, beadify } from './fx-a.js';
 
 const DEG = Math.PI / 180;
+const SPR = n => new URL(`./art/sprites/${n}.webp`, import.meta.url).href;
+/** a painted sprite centred on (cx, cy) */
+const sprite = (parent, n, cx, cy, w, h, attrs = {}) => E('image', { href: SPR(n), x: cx - w / 2, y: cy - h / 2, width: w, height: h, preserveAspectRatio: 'xMidYMid meet', ...attrs }, parent);
 const MID = { 'text-anchor': 'middle' };
 
 // ---------------------------------------------------------------- 1. from one cell to a team of cells
@@ -12,9 +15,9 @@ const MID = { 'text-anchor': 'middle' };
 function collarCell(parent) {
   const g = E('g', {}, parent);
   const flag = E('path', { class: 'b-flag' }, g);
-  E('path', { d: 'M-4,-9 L-9,-27 M-2,-10 L-4.5,-28 M0,-10 L0,-28.5 M2,-10 L4.5,-28 M4,-9 L9,-27', class: 'b-collar' }, g);
-  const body = E('ellipse', { cx: 0, cy: 0, rx: 8, ry: 11, class: 'b-choano' }, g);
-  E('circle', { cx: 0, cy: 2, r: 3, class: 'b-choano-n' }, g);
+  // role tint: a soft coloured halo behind the painted cell (hidden until the cells take on jobs)
+  const body = E('ellipse', { cx: 0, cy: -2, rx: 13, ry: 17, class: 'b-choano', opacity: 0 }, g);
+  sprite(g, 'l1-colony-cell', 0, -10, 22, 42); // collar + cell body, collar up
   return { g, flag, body, role: null };
 }
 function flagPath(t, ph, len, amp) {
@@ -77,12 +80,12 @@ const colony = {
           x = lerp(CX, x, k); y = lerp(CY + 10, y, k); sc = lerp(1.7, 1, k); rot = lerp(0, rot, k);
         } else sc = smooth(4 + i * 0.15, 4.9 + i * 0.15, lt);
         const role = step === 2 ? ROLE(i) : step === 3 ? 'feed' : '';
-        if (c.role !== role) { c.role = role; c.body.setAttribute('class', `b-choano ${role}`); }
+        if (c.role !== role) { c.role = role; c.body.setAttribute('class', `b-choano ${role}`); show(c.body, role ? 0.6 : 0); }
         const big = role === 'rep' ? 1.25 : 1;
         move(c.g, x, y + Math.sin(t * 2 + i) * 1.2, Math.max(0.001, sc * big), rot);
         show(c.g, sc > 0.02 ? 1 : 0);
         const swim = role === 'swim';
-        c.flag.setAttribute('d', flagPath(t, i * 1.3, swim ? 50 : 40, swim ? 8 : 4.5));
+        c.flag.setAttribute('d', flagPath(t, i * 1.3, swim ? 60 : 50, swim ? 8 : 4.5));
         show(c.flag, role === 'rep' ? 0.25 : 1);
         const out = rot * DEG - Math.PI / 2;
         tip[i] = [x + Math.cos(out) * 28 * sc * big, y + Math.sin(out) * 28 * sc * big];
@@ -226,8 +229,11 @@ const gastrula = {
     E('circle', { cx: CX, cy: CY, r: RI - 6, class: 'b-archent' }, gut);
     E('rect', { x: CX - 13, y: CY + 20, width: 26, height: 72, class: 'b-archent' }, gut);
     const topHole = E('rect', { x: CX - 9, y: CY - R - 12, width: 18, height: R - RI + 26, class: 'b-archent' }, g);
-    const meso = Array.from({ length: 8 }, () => E('circle', { r: 7.5, class: 'b-germ meso' }, g));
-    const cells = Array.from({ length: N }, () => E('circle', { r: 9.5, class: 'b-germ' }, g));
+    // each cell is a painted sprite; its colour (sprite) shows its germ layer
+    const CELL = { '': SPR('l1-gast-neutral'), ecto: SPR('l1-gast-ecto'), endo: SPR('l1-gast-endo'), meso: SPR('l1-gast-meso') };
+    const cellAt = (c, x, y, r) => { c.setAttribute('x', (x - r).toFixed(1)); c.setAttribute('y', (y - r).toFixed(1)); c.setAttribute('width', (2 * r).toFixed(1)); c.setAttribute('height', (2 * r).toFixed(1)); };
+    const meso = Array.from({ length: 8 }, () => { const c = E('image', { href: CELL.meso, class: 'b-germ-spr', preserveAspectRatio: 'xMidYMid meet' }, g); cellAt(c, 0, 0, 8.5); return c; });
+    const cells = Array.from({ length: N }, () => { const c = E('image', { href: CELL[''], class: 'b-germ-spr', preserveAspectRatio: 'xMidYMid meet' }, g); c.kind = ''; return c; });
     // the outline of the embryo, finely sampled: blastula circle → folded gastrula
     const M = 240;
     const samp = Array.from({ length: M }, (_, m) => {
@@ -275,16 +281,16 @@ const gastrula = {
         let x = lerp(a[0], b[0], f);
         const y = lerp(a[1], b[1], f);
         if (open && y < CY) x += Math.sign(x - CX || (i < N / 2 ? -1 : 1)) * open * 12 * gauss(x - CX, 0, 18);
-        at(c, x, y); c.setAttribute('r', rad.toFixed(1));
+        cellAt(c, x, y, rad * 1.12);
         const outer = samp[f < 0.5 ? m : (m + 1) % M].outer;
-        const cls = lt > 5.6 ? (outer ? 'b-germ ecto' : 'b-germ endo') : 'b-germ';
-        if (c.getAttribute('class') !== cls) c.setAttribute('class', cls);
+        const kind = lt > 5.6 ? (outer ? 'ecto' : 'endo') : '';
+        if (c.kind !== kind) { c.kind = kind; c.setAttribute('href', CELL[kind]); }
       });
       meso.forEach((m, i) => {
         const sg = i % 2 ? 1 : -1, n = i >> 1;
         const km = smooth(6 + n * 0.3, 7.6 + n * 0.3, lt);
         const psi = sg * lerp(0.42, 0.75 + n * 0.55, km), rr = lerp(66, (R + RI) / 2, km);
-        at(m, CX + rr * Math.sin(psi), CY + rr * Math.cos(psi));
+        cellAt(m, CX + rr * Math.sin(psi), CY + rr * Math.cos(psi), 8.5);
         show(m, tri ? smooth(6, 6.5, lt) : 0);
       });
       show(gut, smooth(4.8, 6, lt));
@@ -340,25 +346,16 @@ const symmetry = {
     const COLS = [110, 320, 530];
     // radial: a jellyfish seen from above
     const rad = E('g', {}, g); move(rad, COLS[0], CY);
-    for (let k = 0; k < 8; k++) {
-      const a = k * 45 * DEG;
-      E('line', { x1: 30 * Math.cos(a), y1: 30 * Math.sin(a), x2: 54 * Math.cos(a), y2: 54 * Math.sin(a), class: 'b-tent' }, rad);
-    }
-    E('circle', { r: 34, class: 'b-jelly' }, rad);
-    for (let k = 0; k < 4; k++) E('ellipse', { cx: 17, cy: 0, rx: 8, ry: 5, transform: `rotate(${k * 90})`, class: 'b-gonad' }, rad);
-    E('circle', { r: 5, class: 'b-jelly-m' }, rad);
+    sprite(rad, 'l1-sym-jelly', 0, 0, 112, 112); // moon jelly from above: 4 gonads, radial canals
     // bilateral: a flatworm, head up
     const bil = E('g', {}, g);
-    E('path', { d: 'M0,-60 C22,-60 26,-40 22,-10 C20,20 14,50 0,62 C-14,50 -20,20 -22,-10 C-26,-40 -22,-60 0,-60z', class: 'b-flatworm' }, bil);
-    const cords = E('path', { d: 'M-6,-34 C-9,0 -9,30 -5,52 M6,-34 C9,0 9,30 5,52 M-8,-12 L8,-12 M-9,10 L9,10 M-8,32 L8,32', class: 'b-ncord' }, bil);
-    const brain = [-6, 6].map(x => E('ellipse', { cx: x, cy: -36, rx: 6, ry: 4.5, class: 'b-wbrain' }, bil));
-    [-8, 8].map(x => E('circle', { cx: x, cy: -46, r: 3, class: 'b-eye' }, bil));
+    sprite(bil, 'l1-sym-flatworm', 0, 1, 32, 126); // planarian, dorsal view, head up
+    // nervous system drawn over the painted worm (ladder cords + paired ganglia), kept slim to sit inside the body
+    const cords = E('path', { d: 'M-3.5,-38 C-5.5,0 -5.5,30 -2.5,52 M3.5,-38 C5.5,0 5.5,30 2.5,52 M-4.5,-12 L4.5,-12 M-5,10 L5,10 M-4.5,32 L4.5,32', class: 'b-ncord', style: 'stroke-width:1.4' }, bil);
+    const brain = [-3.6, 3.6].map(x => E('ellipse', { cx: x, cy: -42, rx: 3.8, ry: 3, class: 'b-wbrain' }, bil));
     // asymmetric: a sponge
     const asy = E('g', {}, g); move(asy, COLS[2], CY);
-    E('path', { d: 'M-30,50 C-52,30 -40,-10 -48,-30 C-54,-52 -20,-62 -6,-44 C6,-60 34,-58 30,-30 C28,-14 52,-4 44,22 C38,46 10,40 4,54 C-6,64 -20,60 -30,50z', class: 'b-sponge-blob' }, asy);
-    E('ellipse', { cx: -26, cy: -34, rx: 7, ry: 5, class: 'b-spore' }, asy);
-    E('ellipse', { cx: 14, cy: -38, rx: 5, ry: 4, class: 'b-spore' }, asy);
-    E('circle', { cx: 24, cy: 14, r: 4, class: 'b-spore' }, asy);
+    sprite(asy, 'l1-sym-sponge', 0, 0, 114, 124); // lumpy demosponge: no plane of symmetry
     // mirror lines, ticks, labels
     const mirrors = COLS.map(cx => {
       const mg = E('g', {}, g);
@@ -398,7 +395,7 @@ const symmetry = {
       show(rad, 1 - ph2); show(asy, 1 - ph2);
       move(bil, lerp(COLS[1], 290, ph2), lerp(CY, 185, ph2), lerp(1, 1.45, ph2), ph2 * 3 * Math.sin(t * 2.4));
       brain.forEach(b => b.classList.toggle('on', lt > 11.6));
-      show(cords, 0.35 + 0.65 * ph2);
+      show(cords, 0.25 + 0.65 * ph2);
       show(head, smooth(9.6, 10.4, lt));
       food.forEach((f, i) => {
         const u = frac(t * 0.4 + i / 4);

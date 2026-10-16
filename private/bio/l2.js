@@ -5,6 +5,9 @@ import { polish, fit, pill, pills, breath, scaleAbout, drift, ease, life, flag, 
 
 const MID = { 'text-anchor': 'middle' };
 const END = { 'text-anchor': 'end' };
+const SPR = n => new URL(`./art/sprites/${n}.webp`, import.meta.url).href;
+/** a painted sprite centred on (cx, cy) */
+const sprite = (parent, n, cx, cy, w, h, attrs = {}) => E('image', { href: SPR(n), x: cx - w / 2, y: cy - h / 2, width: w, height: h, preserveAspectRatio: 'xMidYMid meet', ...attrs }, parent);
 
 // ---------------------------------------------------------------- 1. order costs energy
 
@@ -132,9 +135,8 @@ const amino = {
     T(g, 618, 262, 'A: arginine, mostly for growing kids', 'bs', END);
     const bowl = (cx, label, bean) => {
       const grp = E('g', {}, g);
-      if (bean) for (let k = 0; k < 7; k++) E('ellipse', { cx: cx - 30 + k * 10, cy: 280 - (k % 2) * 6, rx: 8, ry: 5, class: 'b-bean' }, grp);
-      else for (let k = 0; k < 12; k++) E('ellipse', { cx: cx - 36 + k * 6.5, cy: 281 - (k % 3) * 4, rx: 4.5, ry: 2.6, transform: `rotate(${(k * 47) % 90 - 45} ${cx - 36 + k * 6.5} ${281 - (k % 3) * 4})`, class: 'b-grain' }, grp);
-      E('path', { d: `M${cx - 52},284 Q${cx},348 ${cx + 52},284 Z`, class: 'b-bowl' }, grp);
+      // painted bowl: kidney + black beans, or rice with corn
+      sprite(grp, bean ? 'l2-amino-beans' : 'l2-amino-grains', cx, 299, 106, 64);
       T(grp, cx, 340, label, 'bs b-strong', MID);
       return grp;
     };
@@ -202,10 +204,10 @@ const amino = {
 // ---------------------------------------------------------------- 3. metabolic rate and body size
 
 const ANIMALS = {
-  mouse: { e: '🐭', name: 'Mouse', mass: '25 g', g: 25, verdict: 'needs lots of food for its size' },
-  cat: { e: '🐈', name: 'Cat', mass: '4 kg', g: 4000, verdict: 'somewhere in between' },
-  human: { e: '🧍', name: 'Human', mass: '70 kg', g: 7e4, verdict: 'needs less food for its size' },
-  elephant: { e: '🐘', name: 'Elephant', mass: '4,000 kg', g: 4e6, verdict: 'needs the least food for its size' },
+  mouse: { e: 'l2-scale-mouse', name: 'Mouse', mass: '25 g', g: 25, verdict: 'needs lots of food for its size' },
+  cat: { e: 'l2-scale-cat', name: 'Cat', mass: '4 kg', g: 4000, verdict: 'somewhere in between' },
+  human: { e: 'l2-scale-human', name: 'Human', mass: '70 kg', g: 7e4, verdict: 'needs less food for its size' },
+  elephant: { e: 'l2-scale-elephant', name: 'Elephant', mass: '4,000 kg', g: 4e6, verdict: 'needs the least food for its size' },
 };
 const perGram = grams => Math.pow(4e6 / grams, 0.25);
 
@@ -214,7 +216,7 @@ const scaling = {
   vars: { animal: 'mouse' },
   build(svg, s, ui) {
     polish(svg);
-    ui.seg('animal', Object.entries(ANIMALS).map(([k, a]) => [k, `${a.e} ${a.name}`]), 'Animal');
+    ui.seg('animal', Object.entries(ANIMALS).map(([k, a]) => [k, a.name]), 'Animal');
     const g = E('g', {}, svg);
     const X = lg => 50 + (lg - 1) / 5.8 * 250, Y = r => 270 - (r - 1) / 20 * 210;
     E('path', { d: 'M46,40 L46,282 L304,282', class: 'b-axis' }, g);
@@ -232,9 +234,12 @@ const scaling = {
     E('rect', { x: 330, y: 14, width: 296, height: 194, rx: 14, class: 'b-panel' }, g);
     const hdr = T(g, 478, 40, '', 'bl b-strong', MID);
     const eg = E('g', {}, g);
-    const emoji = T(eg, 0, 0, '', 'b-emoji', MID);
-    const flame = E('path', { d: 'M0,-30 C10,-18 14,-8 12,2 C10,12 4,16 0,16 C-4,16 -10,12 -12,2 C-14,-8 -8,-14 0,-30z', class: 'b-flame' }, g);
-    const core = E('path', { d: 'M0,-14 C5,-6 7,0 6,5 C5,10 2,12 0,12 C-2,12 -5,10 -6,5 C-7,0 -4,-6 0,-14z', class: 'b-flame-in' }, g);
+    // painted animal, standing on y = 0 of its group (the group scales with body size)
+    const animal = E('image', { x: -36, y: -60, width: 72, height: 60, preserveAspectRatio: 'xMidYMax meet' }, eg);
+    let shown = '';
+    // painted flame, base at y = 16 so it flickers upward from the bottom
+    const flame = E('g', {}, g);
+    E('image', { href: SPR('l2-scale-flame'), x: -16, y: -34, width: 32, height: 50, preserveAspectRatio: 'xMidYMax meet', class: 'b-flame' }, flame);
     T(g, 410, 180, 'body size', 'bs', MID);
     T(g, 548, 180, 'burn per gram', 'bs', MID);
     const verdict = T(g, 478, 200, '', 'bs b-strong', MID);
@@ -268,13 +273,13 @@ const scaling = {
       guide.setAttribute('d', `M46,${cur.y.toFixed(1)} L${cur.x.toFixed(1)},${cur.y.toFixed(1)} L${cur.x.toFixed(1)},282`);
       setText(bigL, `${a.name}: ×${r < 1.05 ? 1 : r < 3 ? r.toFixed(1) : Math.round(r)}`);
       setText(hdr, `${a.name} · ${a.mass}`);
-      setText(emoji, a.e);
+      if (shown !== a.e) { shown = a.e; animal.setAttribute('href', SPR(a.e)); }
       move(eg, 410, 142 + 2 * breath(t, 2.4 + lg * 0.4), (0.6 + 1.25 * (lg - 1.4) / 5.2) * (1 + 0.02 * breath(t, 2.4 + lg * 0.4, 1)));
       sel.setAttribute('r', (8 + 1.2 * breath(t, 1.4)).toFixed(2));
       fl += dt * (2 + r * 0.5);
       const fs = 0.7 + 0.9 * (r - 1) / 19, wob = 1 + 0.12 * Math.sin(fl * TAU) + 0.05 * Math.sin(fl * 17);
       const tf = `translate(548 136) scale(${fs.toFixed(3)} ${(fs * wob).toFixed(3)})`;
-      flame.setAttribute('transform', tf); core.setAttribute('transform', tf);
+      flame.setAttribute('transform', tf);
       setText(verdict, a.verdict);
       const v = 0.5 - 0.5 * Math.cos(TAU * t / 5);
       dots.forEach((dt2, i) => at(dt2, GX(v), GY(MOVES[i][1](v))));
@@ -322,14 +327,16 @@ const regulate = {
     const LINES = [[Tout, 'b-line out', 'b-dot-ink'], [Tgat, 'b-line glu', 'p-glu'], [Tmouse, 'b-line red', 'p-oxy']].map(([f, lc, dc]) => ({ f, path: E('path', { class: lc }, g), pen: E('circle', { r: 5, class: dc }, g) }));
     // the two cards
     const mCard = E('rect', { x: 448, y: 26, width: 180, height: 132, rx: 12, class: 'b-panel' }, g);
-    T(g, 460, 50, '🐭 Mouse', 'bl b-strong');
+    T(g, 460, 50, 'Mouse', 'bl b-strong');
+    sprite(g, 'l2-reg-mouse', 584, 66, 72, 46);
     T(g, 460, 70, 'regulator', 'bs b-strong red-t');
     const mT = T(g, 460, 92, '', 'bs');
     T(g, 460, 114, 'energy it burns', 'bs');
     E('rect', { x: 460, y: 124, width: 156, height: 12, rx: 6, class: 'b-track' }, g);
     const mBar = E('rect', { x: 460, y: 124, width: 0, height: 12, rx: 6, class: 'b-barfill r0' }, g);
     const gCard = E('rect', { x: 448, y: 172, width: 180, height: 134, rx: 12, class: 'b-panel' }, g);
-    T(g, 460, 196, '🐊 Alligator', 'bl b-strong');
+    T(g, 460, 196, 'Alligator', 'bl b-strong');
+    sprite(g, 'l2-reg-alligator', 578, 208, 96, 20);
     T(g, 460, 216, 'conformer', 'bs b-strong b-glu-t');
     const gT = T(g, 460, 238, '', 'bs');
     T(g, 460, 260, 'energy it burns', 'bs');

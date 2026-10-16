@@ -23,6 +23,27 @@ function virus(parent) {
   return g;
 }
 
+// Painted sprites (art/sprites/*.webp) ------------------------------------------
+
+const SPR = f => new URL(`./art/sprites/${f}.webp`, import.meta.url).href;
+function sprite(parent, f, w, h, attrs = {}) {
+  return E('image', { href: SPR(f), x: -w / 2, y: -h / 2, width: w, height: h, preserveAspectRatio: 'xMidYMid meet', ...attrs }, parent);
+}
+// Rod-shaped bacterium, centred on 0,0 (about 48 × 15 at scale 1).
+function bactArt(parent) {
+  const g = E('g', {}, parent);
+  sprite(g, 'l10-complement-bacterium', 48, 15);
+  return g;
+}
+// Macrophage, centred on 0,0; d = diameter. Returns the group plus a "crawl" updater
+// that gives it a slow living wobble in place of the old blob outline.
+function macroArt(parent, d, f = 'l10-inflam-macrophage') {
+  const g = E('g', {}, parent);
+  sprite(g, f, d, d);
+  g.crawl = (x, y, t, s = 1) => g.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(4 * Math.sin(t * 0.7)).toFixed(2)}) scale(${(s * (1 + 0.03 * Math.sin(t * 1.7))).toFixed(3)} ${(s * (1 + 0.03 * Math.cos(t * 1.4))).toFixed(3)})`);
+  return g;
+}
+
 // Wobbly blob outline for macrophages and other cells.
 function blob(r, t, wob = 0.08, seed = 0) {
   let d = '';
@@ -61,10 +82,9 @@ const layers = {
     const defs = Array.from({ length: 6 }, (_, i) => E('circle', { cx: 236 + (i % 2) * 18, cy: 30 + i * 38, r: 3, class: 'p-def' }, g));
     E('rect', { x: 280, y: 0, width: 360, height: 250, class: 'b-tissue-bg' }, g);
     T(g, 600, 22, 'inside the body', 'bs b-strong', { 'text-anchor': 'end' });
-    const mac = E('path', { class: 'b-macro' }, g);
-    const macN = E('circle', { r: 9, class: 'b-macro-n' }, g);
+    const mac = macroArt(g, 92);
     T(g, 470, 236, 'macrophage (phagocyte)', 'bs b-strong', { 'text-anchor': 'middle' });
-    const germs = Array.from({ length: 11 }, () => bacterium(g));
+    const germs = Array.from({ length: 11 }, () => bactArt(g));
     pill(g, 40, 22, 'outside world', 'bs b-strong');
     // timeline
     const TX0 = 40, TX1 = 620, TY = 340;
@@ -77,8 +97,7 @@ const layers = {
     return (lt, _dt, t) => {
       const MX = 470, MY = 150;
       skinG.classList.toggle('fxb-hl', lt < 5); mucus.classList.toggle('fxb-hl', lt >= 5 && lt < 10); mac.classList.toggle('fxb-hl', lt >= 10);
-      mac.setAttribute('d', blob(38, t, 0.07)); mac.setAttribute('transform', `translate(${MX} ${MY})`);
-      at(macN, MX - 8, MY - 4);
+      mac.crawl(MX, MY, t);
       defs.forEach((d, i) => d.setAttribute('cx', (236 + (i % 2) * 18 + 4 * Math.sin(t * 2 + i)).toFixed(1)));
       germs.forEach((gm, i) => {
         const u = frac(lt / 5 + i / germs.length);
@@ -126,20 +145,22 @@ const complement = {
     svg.classList.add('has-art', 'art-l10-complement');
     E('image', { href: new URL('./art/l10-complement.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
-    const CX = 300, CY = 190, RX = 130, RY = 62;
-    E('rect', { x: CX - RX, y: CY - RY, width: RX * 2, height: RY * 2, rx: RY, class: 'b-bact big' }, g);
+    const CX = 300, CY = 190, RX = 218, RY = 68;
+    // painted rod bacterium, sized to cover the flat one in the background
+    E('image', { href: SPR('l10-complement-bacterium'), x: CX - RX, y: CY - RY, width: RX * 2, height: RY * 2, preserveAspectRatio: 'xMidYMid meet' }, g);
     T(g, CX, CY + 5, 'bacterium', 'bl b-strong', { 'text-anchor': 'middle' });
     const blood = E('rect', { x: 440, y: 8, width: 160, height: 62, rx: 14, class: 'b-bloodband' }, g);
     T(g, 520, 40, 'to the blood →', 'bs b-strong', { 'text-anchor': 'middle' });
     T(g, 520, 56, 'inflammation', 'bs b-strong b-acid-t', { 'text-anchor': 'middle' });
     const N = 12;
-    const perim = i => { const a = (i / N) * TAU + 0.2; return [CX + Math.cos(a) * (RX - 10), CY + Math.sin(a) * (RY + 2)]; };
+    // points on the capsule outline (straight sides + round ends)
+    const perim = i => { const a = (i / N) * TAU + 0.2, L = RX - RY - 8; return [CX + L * clamp(Math.cos(a) * 2.5, -1, 1) + Math.cos(a) * (RY - 4), CY + Math.sin(a) * (RY - 2)]; };
     const conv = Array.from({ length: 4 }, () => E('path', { d: 'M0,0 L10,-6 A12,12 0 1 0 10,6 Z', class: 'b-enzyme' }, g));
     const c3 = Array.from({ length: N }, () => { const grp = E('g', {}, g); E('circle', { r: 8, class: 'b-c3' }, grp); T(grp, 0, 3.5, 'C3', 'b-c3-t', { 'text-anchor': 'middle' }); return grp; });
     const c3b = Array.from({ length: N }, () => E('circle', { r: 6, class: 'b-c3b' }, g));
     const c3a = Array.from({ length: N }, () => E('circle', { r: 3.5, class: 'b-c3a' }, g));
     const holes = Array.from({ length: 4 }, (_, i) => E('circle', { cx: CX - 60 + i * 40, cy: CY - 30 + (i % 2) * 50, r: 0, class: 'b-hole' }, g));
-    const mac = E('path', { class: 'b-macro' }, g);
+    const mac = macroArt(g, 96);
     T(g, 40, 22, '● C3b: “eat me” tag', 'bs b-strong b-k-t'); T(g, 40, 38, '● C3a: inflammation signal', 'bs b-strong b-acid-t');
     return (lt, _dt, t) => {
       // more convertases appear as C3b piles up (the cascade amplifies itself)
@@ -157,7 +178,7 @@ const complement = {
       }
       holes.forEach((h, i) => h.setAttribute('r', (6 * smooth(9 + i * 0.3, 10 + i * 0.3, lt)).toFixed(1)));
       const mp = keys(lt, [[10.5, [700, 300]], [13, [CX + 150, CY + 40]]]);
-      mac.setAttribute('d', blob(40, t, 0.08)); mac.setAttribute('transform', `translate(${mp[0]} ${mp[1]})`);
+      mac.crawl(mp[0], mp[1], t);
       blood.classList.toggle('fxb-hl', lt >= 6.5 && lt < 9);
       if (lt < 3) return '① An enzyme called a convertase cuts the complement protein C3 into two pieces';
       if (lt < 6.5) return '② C3b (big piece) sticks to the bacterium and switches on MORE convertase, so the cutting speeds up (a cascade)';
@@ -186,10 +207,14 @@ const inflammation = {
     const vessel = E('rect', { x: -10, rx: 20, width: 660, class: 'b-capillary' }, g);
     T(g, 600, 22, 'blood vessel', 'bs b-strong', { 'text-anchor': 'end' });
     const rbc = Array.from({ length: 12 }, () => E('ellipse', { rx: 8, ry: 5, class: 'p-oxy' }, g));
-    E('path', { d: 'M300,360 L350,250 L360,256 L312,360z', class: 'b-splinter' }, g);
+    // painted splinter laid over the plain stick in the background (soft tissue-coloured patch hides the stick)
+    const smf = E('filter', { id: 'l10inf-mblur', x: -0.5, y: -0.2, width: 2, height: 1.4 }, E('defs', {}, g));
+    E('feGaussianBlur', { stdDeviation: 3 }, smf);
+    E('rect', { x: -14, y: -80, width: 28, height: 168, fill: '#fbd6ba', filter: 'url(#l10inf-mblur)', transform: 'translate(326 315) rotate(28)' }, g);
+    sprite(g, 'l10-inflam-splinter', 17, 156, { transform: 'translate(326 315) rotate(28)' });
     T(g, 368, 318, 'splinter', 'bs b-strong');
-    const bact = Array.from({ length: 6 }, () => bacterium(g));
-    const mac = E('path', { class: 'b-macro' }, g);
+    const bact = Array.from({ length: 6 }, () => bactArt(g));
+    const mac = macroArt(g, 84);
     T(g, 150, 330, 'macrophage', 'bs b-strong', { 'text-anchor': 'middle' });
     const cyto = Array.from({ length: 10 }, () => E('circle', { r: 3.4, class: 'p-hor' }, g));
     const neut = Array.from({ length: 3 }, () => { const grp = E('g', {}, g); E('circle', { r: 13, class: 'b-neut' }, grp); E('path', { d: 'M-6,-2 a3,3 0 1 1 5,2 a3,3 0 1 1 4,4 a3,3 0 1 1 -3,4', class: 'b-neut-n' }, grp); return grp; });
@@ -203,7 +228,7 @@ const inflammation = {
       vessel.classList.toggle('leaky', dil > 0.5);
       rbc.forEach((r, i) => at(r, frac(t * 0.06 + i / 12) * 660 - 10, 70 + (i % 3 - 1) * h * 0.22));
       const MX = 150, MY = 260;
-      mac.setAttribute('d', blob(34, t)); mac.setAttribute('transform', `translate(${MX} ${MY})`);
+      mac.crawl(MX, MY, t);
       bact.forEach((b, i) => {
         const home = [320 + (i % 3) * 34, 220 + Math.floor(i / 3) * 30];
         const eatenAt = 9 + i * 0.5;
@@ -384,15 +409,17 @@ const tcells = {
     ui.seg('cls', [['one', 'Class I → cytotoxic T'], ['two', 'Class II → helper T']], 'MHC class');
     fx(svg);
     const g = E('g', {}, svg);
-    const left = E('path', { class: 'b-cellshape' }, g);
+    const left = E('g', {}, g);
+    const bodyCell = sprite(left, 'l10-tcells-cell', 164, 164);
+    const apcCell = sprite(left, 'l10-inflam-macrophage', 150, 150);
     const leftT = T(g, 150, 330, '', 'bs b-strong', { 'text-anchor': 'middle' });
     const mhc = E('path', { d: 'M-12,-14 L-12,0 Q0,8 12,0 L12,-14', class: 'b-mhc' }, g);
     const pep = E('circle', { r: 5, class: 'b-pep' }, g);
     const viruses = Array.from({ length: 4 }, () => virus(g));
     const tcell = E('g', {}, g);
-    E('circle', { r: 30, class: 'b-tcell' }, tcell);
-    E('circle', { r: 12, class: 'b-tcell-n' }, tcell);
-    E('path', { d: 'M-34,-6 l-8,0 M-34,6 l-8,0', class: 'b-tcr' }, tcell);
+    E('circle', { r: 33, class: 'b-tcell', opacity: 0.5 }, tcell); // colour halo: red = cytotoxic, gold = helper
+    sprite(tcell, 'l10-tcells-tcell', 64, 64);
+    E('path', { d: 'M-31,-6 l-11,0 M-31,6 l-11,0', class: 'b-tcr' }, tcell);
     const tT = T(g, 0, 0, '', 'bs b-strong', { 'text-anchor': 'middle' });
     const bits = Array.from({ length: 8 }, () => E('circle', { r: 6, class: 'b-cellbit' }, g));
     const cyt = Array.from({ length: 8 }, () => E('circle', { r: 3.5, class: 'p-hor' }, g));
@@ -402,12 +429,12 @@ const tcells = {
       const one = s.vars.cls === 'one';
       const CX = 150, CY = 190;
       const dying = one ? smooth(8, 9.5, lt) : 0;
-      left.setAttribute('d', blob(one ? 70 : 64, t, one ? 0.03 + 0.15 * dying : 0.08, 2));
-      left.setAttribute('transform', `translate(${CX} ${CY}) scale(${1 - 0.5 * dying})`);
-      left.setAttribute('class', `b-cellshape ${one ? 'infected' : 'apc'}`);
+      show(bodyCell, one ? 1 : 0); show(apcCell, one ? 0 : 1);
+      const wob = one ? 3 * dying * Math.sin(t * 9) : 2 * Math.sin(t * 0.7);
+      left.setAttribute('transform', `translate(${CX} ${CY}) rotate(${wob.toFixed(2)}) scale(${(1 - 0.5 * dying).toFixed(3)})`);
       show(left, 1 - smooth(9.3, 9.8, lt) * (one ? 1 : 0));
       setText(leftT, one ? 'infected body cell' : 'antigen-presenting cell (macrophage / dendritic)');
-      viruses.forEach((v, i) => { move(v, CX - 30 + (i % 2) * 40 + 2 * Math.sin(t * 1.6 + i), CY - 20 + Math.floor(i / 2) * 36 + 2 * Math.cos(t * 1.3 + i * 2), 0.7, (t * 20 + i * 40) % 360); show(v, one ? 1 - dying : 0); });
+      viruses.forEach((v, i) => { move(v, CX - 18 + (i % 2) * 42 + 2 * Math.sin(t * 1.6 + i), CY - 36 + Math.floor(i / 2) * 32 + 2 * Math.cos(t * 1.3 + i * 2), 0.7, (t * 20 + i * 40) % 360); show(v, one ? 1 - dying : 0); });
       move(mhc, CX + 70, CY, 1, 90); show(mhc, 1 - dying);
       at(pep, CX + 80, CY); show(pep, smooth(1, 2, lt) * (1 - dying));
       const tp = keys(lt, [[2, [700, CY]], [5, [CX + 128, CY]]]);

@@ -1,16 +1,16 @@
 // Daily boss: one exam-level question a day, rotating Bio → Orgo → Prog → cross-course.
 // Same question all day on every device (picked from the date); one try. Streak = days in a row beaten.
 
-import L1 from '../bio/l1.js?v=2';
-import L2 from '../bio/l2.js?v=2';
-import L3 from '../bio/l3.js?v=2';
-import L4 from '../bio/l4.js?v=2';
-import L5 from '../bio/l5.js?v=2';
-import L6 from '../bio/l6.js?v=2';
-import L7 from '../bio/l7.js?v=2';
-import L8 from '../bio/l8.js?v=2';
-import L9 from '../bio/l9.js?v=2';
-import L10 from '../bio/l10.js?v=2';
+import L1 from '../bio/l1.js?v=3';
+import L2 from '../bio/l2.js?v=3';
+import L3 from '../bio/l3.js?v=3';
+import L4 from '../bio/l4.js?v=3';
+import L5 from '../bio/l5.js?v=3';
+import L6 from '../bio/l6.js?v=3';
+import L7 from '../bio/l7.js?v=3';
+import L8 from '../bio/l8.js?v=3';
+import L9 from '../bio/l9.js?v=3';
+import L10 from '../bio/l10.js?v=3';
 import { SUBSTRATES, REAGENTS, decide, OUTCOME_LABELS } from '../orgo/content.js?v=3';
 import { MOCK_MCQ } from '../prog/extra.js?v=1';
 import { addCorrect } from './packs.js?v=1';

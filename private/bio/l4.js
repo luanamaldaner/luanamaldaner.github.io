@@ -300,18 +300,20 @@ const bird = {
       toAnt: 'M240,100 C190,100 130,160 115,240',
       out: 'M115,240 C130,180 196,180 200,140 C200,96 186,74 150,74 L16,74',
     };
-    const sacP = E('g', {}, g); E('ellipse', { rx: 78, ry: 55, class: 'b-sac' }, sacP);
-    const sacA = E('g', {}, g); E('ellipse', { rx: 70, ry: 52, class: 'b-sac' }, sacA);
+    const sacImg = new URL('./art/sprites/l4-bird-sac.webp', import.meta.url).href;
+    const sacP = E('g', {}, g); E('image', { href: sacImg, x: -22, y: -18, width: 100, height: 108, preserveAspectRatio: 'xMidYMid meet' }, sacP);
+    const sacA = E('g', {}, g); E('image', { href: sacImg, x: -22, y: -18, width: 100, height: 108, preserveAspectRatio: 'xMidYMid meet', transform: 'scale(-1 1)' }, sacA);
     E('path', { d: AIR.trachea + ' ' + AIR.bronchus.replace('M200,160 ', ''), class: 'b-airway' }, g);
     E('path', { d: AIR.toLung, class: 'b-airway thin' }, g);
     E('path', { d: AIR.toAnt, class: 'b-airway thin' }, g);
     E('path', { d: 'M115,240 C130,180 196,180 200,140', class: 'b-airway thin' }, g);
+    E('image', { href: new URL('./art/sprites/l4-bird-lung.webp', import.meta.url).href, x: 232, y: 67, width: 216, height: 66, preserveAspectRatio: 'none' }, g);
     const lungR = E('rect', { x: 236, y: 70, width: 208, height: 60, rx: 22, class: 'b-lung' }, g);
     const parab = [84, 100, 116].map(y => E('path', { d: `M252,${y} L428,${y}`, class: 'b-parab' }, g));
     T(g, 18, 62, 'trachea', 'bs b-strong');
     T(g, 340, 62, 'lungs (parabronchi)', 'bs b-strong', MID);
-    T(g, 110, 332, 'anterior air sacs', 'bs b-strong', MID);
-    T(g, 545, 332, 'posterior air sacs', 'bs b-strong', MID);
+    T(g, 160, 302, 'anterior air sacs', 'bs b-strong');
+    T(g, 494, 302, 'posterior air sacs', 'bs b-strong', END);
     T(g, 320, 354, 'One puff of air takes two full breaths to get through', 'bs', MID);
     const badges = PHASES.map((p, i) => {
       const bg = E('g', {}, g);

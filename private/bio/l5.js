@@ -535,12 +535,13 @@ const tuna = {
     svg.classList.add('has-art', 'art-l5-tuna');
     E('image', { href: new URL('./art/l5-tuna.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
-    E('rect', { x: 40, y: 60, width: 120, height: 220, rx: 22, class: 'b-water-bg' }, g);
+    const spr = f => new URL(`./art/sprites/${f}.webp`, import.meta.url).href;
     T(g, 100, 50, 'cold skin side', 'bs', { 'text-anchor': 'middle' });
-    E('rect', { x: 480, y: 60, width: 120, height: 220, rx: 22, class: 'b-muscle-bg' }, g);
     T(g, 540, 50, 'warm red muscle', 'bs', { 'text-anchor': 'middle' });
     const A = 'M150,130 L490,130', V = 'M490,210 L150,210';
     E('path', { d: A, class: 'b-pipe red' }, g); E('path', { d: V, class: 'b-pipe blue' }, g);
+    E('image', { href: spr('l5-tuna-skin'), x: 34, y: 58, width: 132, height: 226, preserveAspectRatio: 'xMidYMid meet' }, g);
+    E('image', { href: spr('l5-tuna-muscle'), x: 474, y: 58, width: 132, height: 226, preserveAspectRatio: 'xMidYMid meet' }, g);
     const aT = T(g, 320, 112, 'artery: blood flowing in → gets warmer', 'bs fx-fade', { 'text-anchor': 'middle' });
     const vT = T(g, 320, 244, '← vein: warm blood flowing out gives its heat away', 'bs fx-fade', { 'text-anchor': 'middle' });
     const ta = new Track(g, A), tv = new Track(g, V);

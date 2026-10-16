@@ -414,16 +414,17 @@ const ans = {
     svg.classList.add('has-art', 'art-l8-ans');
     E('image', { href: new URL('./art/l8-ans.jpg', import.meta.url).href, x: 0, y: 0, width: 640, height: 360, preserveAspectRatio: 'none', class: 'b-art' }, svg);
     const g = E('g', {}, svg);
-    // left: body with CNS and a reflex-style loop
-    E('circle', { cx: 120, cy: 52, r: 30, class: 'b-bodyfig' }, g);
-    E('path', { d: 'M86,92 L154,92 L162,230 L136,230 L132,340 L108,340 L104,230 L78,230z', class: 'b-bodyfig' }, g);
-    E('path', { d: 'M86,96 L40,200 M154,96 L200,200', class: 'b-limb' }, g);
-    E('ellipse', { cx: 120, cy: 48, rx: 20, ry: 16, class: 'b-cns' }, g);
-    E('line', { x1: 120, y1: 64, x2: 120, y2: 226, class: 'b-cord' }, g);
+    const spr = f => new URL(`./art/sprites/${f}.webp`, import.meta.url).href;
+    // soft cream patch that hides the old flat figure painted into the background
+    const mg = E('linearGradient', { id: 'l8ans-mgrad', x1: 0, y1: 0, x2: 0, y2: 1 }, E('defs', {}, g));
+    E('stop', { offset: 0, 'stop-color': '#fbf2e9' }, mg); E('stop', { offset: 1, 'stop-color': '#faede4' }, mg);
+    const mf = E('filter', { id: 'l8ans-mblur', x: -0.2, y: -0.2, width: 1.4, height: 1.4 }, g.firstChild);
+    E('feGaussianBlur', { stdDeviation: 5 }, mf);
+    E('rect', { x: 26, y: 14, width: 190, height: 326, rx: 24, fill: 'url(#l8ans-mgrad)', filter: 'url(#l8ans-mblur)' }, g);
+    // left: body with CNS (brain + spinal cord) and peripheral nerves
+    E('image', { href: spr('l8-ans-body'), x: 40, y: 18, width: 160, height: 328, preserveAspectRatio: 'xMidYMid meet' }, g);
     T(g, 120, 12, 'CNS = brain + spinal cord', 'bs b-strong', { 'text-anchor': 'middle' });
-    E('path', { d: 'M120,140 L176,170 L200,200', class: 'b-nerve' }, g);
-    const aff = new Track(g, 'M200,200 L176,170 L122,140'), eff = new Track(g, 'M122,150 L60,180 L40,200');
-    E('path', { d: 'M122,150 L60,180 L40,200', class: 'b-nerve' }, g);
+    const aff = new Track(g, 'M190,186 L170,160 L122,140'), eff = new Track(g, 'M120,150 L72,164 L50,186');
     const ad = Array.from({ length: 3 }, () => E('circle', { r: 4.5, class: 'p-deoxy' }, g));
     const ed = Array.from({ length: 3 }, () => E('circle', { r: 4.5, class: 'p-oxy' }, g));
     T(g, 206, 222, 'sensory in', 'bs b-strong blue-t');
@@ -432,16 +433,18 @@ const ans = {
     const X = 290;
     E('rect', { x: X, y: 20, width: 335, height: 320, rx: 18, class: 'b-panel' }, g);
     const title = T(g, X + 168, 48, '', 'bl b-strong', { 'text-anchor': 'middle' });
-    const heart = E('path', { d: 'M0,-8 C-4,-18 -20,-16 -20,-4 C-20,8 -6,16 0,22 C6,16 20,8 20,-4 C20,-16 4,-18 0,-8z', class: 'b-heartico' }, g);
+    const heart = E('g', {}, g);
+    E('image', { href: spr('l8-ans-heart'), x: -16, y: -23.5, width: 32, height: 47, preserveAspectRatio: 'xMidYMid meet' }, heart);
     const hrT = T(g, X + 110, 108, '', 'bs b-strong');
-    E('ellipse', { cx: X + 60, cy: 170, rx: 26, ry: 16, class: 'b-eye-w' }, g);
-    E('circle', { cx: X + 60, cy: 170, r: 13, class: 'b-iris' }, g);
-    const pupil = E('circle', { cx: X + 60, cy: 170, r: 6, class: 'b-pupil' }, g);
+    E('image', { href: spr('l8-ans-eye'), x: X + 18, y: 144.8, width: 84, height: 52.1, preserveAspectRatio: 'xMidYMid meet' }, g);
+    const pupil = E('circle', { cx: X + 60, cy: 170, r: 6, class: 'b-pupil', fill: '#151515' }, g);
     const pupT = T(g, X + 110, 175, '', 'bs b-strong');
     const gutP = E('path', { class: 'b-gutline' }, g);
     const gutT = T(g, X + 110, 250, '', 'bs b-strong');
-    const bpT = T(g, X + 110, 312, '', 'bs b-strong');
-    const bp = E('rect', { x: X + 30, y: 300, width: 0, height: 14, rx: 7, class: 'b-bpbar' }, g);
+    const bpT = T(g, X + 110, 306, '', 'bs b-strong');
+    // artery: narrows (vasoconstriction) when sympathetic, relaxes when parasympathetic
+    const vessel = E('image', { href: spr('l8-ans-vessel'), x: X + 22, y: 284, width: 76, height: 40.7, preserveAspectRatio: 'xMidYMid meet' }, g);
+    const bp = E('rect', { x: X + 110, y: 314, width: 0, height: 7, rx: 3.5, class: 'b-bpbar' }, g);
     let beat = 0, gutPh = 0, pr = 7, bw = 48;
     return (lt, dt, t) => {
       const sym = s.vars.mode === 'symp';
@@ -460,8 +463,8 @@ const ans = {
       setText(gutT, sym ? 'digestion slows down' : 'digestion speeds up');
       bw += ((sym ? 66 : 30) - bw) * Math.min(1, (dt || 1) * 4);
       bp.setAttribute('width', bw.toFixed(1));
-      setText(bpT, sym ? '' : '');
-      bp.setAttribute('x', X + 30); bpT.setAttribute('x', X + 110);
+      const vs = 0.78 + 0.22 * (66 - bw) / 36; // thinner vessel = higher pressure
+      vessel.setAttribute('transform', `translate(0 ${(304.4 * (1 - vs)).toFixed(2)}) scale(1 ${vs.toFixed(3)})`);
       setText(bpT, sym ? 'blood pressure ↑' : 'blood pressure ↓');
       ad.forEach((a, i) => { const u = frac(t * 0.4 + i / 3); const [x, y] = aff.pos(u); at(a, x, y); show(a, Math.sin(Math.PI * u)); });
       ed.forEach((a, i) => { const u = frac(t * 0.4 + i / 3 + 0.5); const [x, y] = eff.pos(u); at(a, x, y); show(a, Math.sin(Math.PI * u)); });

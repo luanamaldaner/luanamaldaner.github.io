@@ -6,6 +6,8 @@ import { polish, fit, pill, pills, breath, scaleAbout, drift, ease, life, flag, 
 const MID = { 'text-anchor': 'middle' };
 const END = { 'text-anchor': 'end' };
 /** 0 = cold blue, 1 = hot red */
+const SPR = n => new URL(`./art/sprites/${n}.webp`, import.meta.url).href;
+const sprite = (parent, n, x, y, width, height, extra = {}) => E('image', { href: SPR(n), x, y, width, height, preserveAspectRatio: 'xMidYMid meet', ...extra }, parent);
 const heatCol = k => `hsl(${lerp(215, 2, clamp(k)).toFixed(0)} 75% 58%)`;
 
 // ---------------------------------------------------------------- 1. homeotherm vs poikilotherm
@@ -26,9 +28,9 @@ const zones = {
     E('rect', { x: 16, y: 36, width: 256, height: 12, rx: 6, class: 'b-track' }, g);
     const airBar = E('rect', { x: 16, y: 36, height: 12, rx: 6 }, g);
 
-    const card = (y, emoji, name) => {
+    const card = (y, art, name) => {
       E('rect', { x: 14, y, width: 260, height: 118, rx: 16, class: 'b-colbox' }, g);
-      const em = T(g, 50, y + 76, emoji, 'b-emoji', MID);
+      const em = sprite(g, art, 18, y + 34, 74, 60);
       T(g, 96, y + 26, name, 'bs b-strong');
       const v = T(g, 96, y + 52, '', 'bl b-strong');
       E('rect', { x: 96, y: y + 62, width: 164, height: 10, rx: 5, class: 'b-track' }, g);
@@ -36,8 +38,8 @@ const zones = {
       const note = T(g, 96, y + 98, '', 'bs');
       return { v, bar, note, em };
     };
-    const mouse = card(66, '🐭', 'Mouse (homeotherm)');
-    const liz = card(196, '🦎', 'Lizard (ectotherm)');
+    const mouse = card(66, 'l3-tnz-mouse', 'Mouse (homeotherm)');
+    const liz = card(196, 'l3-tnz-lizard', 'Lizard (ectotherm)');
     const sun = T(g, 256, 226, '☀️', 'b-emoji-s', MID);
 
     // graph: metabolic rate vs air temperature
@@ -134,9 +136,7 @@ const effectors = {
     const fur = E('path', { d: 'M150,40 C214,40 250,120 248,200 C246,282 212,316 150,316 C88,316 54,282 52,200 C50,120 86,40 150,40z', class: 'b-fur' }, g);
     // the person
     const pg = E('g', {}, g);
-    E('path', { d: 'M126,114 L88,196 M174,114 L212,196 M136,206 L126,298 M164,206 L174,298', class: 'b-limb' }, pg);
-    E('rect', { x: 116, y: 100, width: 68, height: 112, rx: 24, class: 'b-bodyfig' }, pg);
-    E('circle', { cx: 150, cy: 74, r: 26, class: 'b-bodyfig' }, pg);
+    sprite(pg, 'l3-effectors-person', 64, 44, 172, 258);
     const inHeat = Array.from({ length: 5 }, () => E('path', { d: 'M0,0 q4,-6 0,-12 q-4,-6 0,-12', class: 'b-heat' }, g));
     const SKIN = [[118, 130], [182, 140], [116, 170], [184, 186], [100, 170], [200, 172], [126, 92], [174, 88], [120, 204], [180, 120]];
     const sweat = SKIN.map(() => E('circle', { r: 4, class: 'p-water' }, g));
@@ -418,8 +418,8 @@ const fox = {
     E('rect', { x: 120, y: 16, width: 260, height: 76, rx: 22, class: 'b-muscle-bg' }, g);
     T(g, 250, 48, 'warm body core', 'bl b-strong', MID);
     T(g, 250, 70, 'about 38 °C', 'bs', MID);
-    T(g, 62, 72, '🦊', 'b-emoji', MID);
-    E('path', { d: 'M214,92 L222,300 C222,318 236,328 280,328 C324,328 338,318 338,300 L346,92z', class: 'b-bodyfig' }, g);
+    sprite(g, 'l3-fox-fox', 6, 6, 108, 108);
+    sprite(g, 'l3-fox-leg', 204, 86, 152, 250, { preserveAspectRatio: 'none' });
     T(g, 212, 320, 'paw', 'bs b-strong', END);
     const A = 'M250,92 L250,292';
     const on = ['M250,292 C250,312 278,312 278,292', 'M278,292 L278,92'];
@@ -527,11 +527,11 @@ const desert = {
     T(g, 184, 346, 'cool burrow (microenvironment)', 'bs b-strong', MID);
     const tr = new Track(g, `M210,188 L210,200 ${tun.slice(9)}`);
     const rat = E('g', {}, g);
-    T(rat, 0, 8, '🐁', 'b-emoji-s', MID);
+    sprite(rat, 'l3-desert-krat', -30, -15, 60, 30);
     const ratL = T(rat, 0, -18, 'kangaroo rat', 'bs b-strong', MID);
-    T(g, 470, 196, '🦌', 'b-emoji-l', MID);
-    T(g, 470, 118, 'Grant’s gazelle', 'bs b-strong', MID);
-    const gzV = T(g, 470, 136, '', 'bs b-strong', MID);
+    sprite(g, 'l3-desert-gazelle', 420, 104, 100, 92);
+    T(g, 470, 78, 'Grant’s gazelle', 'bs b-strong', MID);
+    const gzV = T(g, 470, 96, '', 'bs b-strong', MID);
     const clk = T(g, 14, 26, '', 'bl b-strong');
     // graph
     E('rect', { x: 330, y: 212, width: 298, height: 140, rx: 12, class: 'b-monitor' }, g);

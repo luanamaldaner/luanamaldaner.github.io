@@ -30,7 +30,12 @@ const signals = {
     });
     const dots = [];
     let nc = 0;
-    const cell = (x, y, r = 18, cls = 'b-sigcell') => E('circle', { cx: x, cy: y, r, class: `${cls} fxb-breathe d${nc++ % 4}` }, g);
+    const spr = f => new URL(`./art/sprites/${f}.webp`, import.meta.url).href;
+    // signalling cell = pink, target cell = mint (same colour code as before)
+    const cell = (x, y, r = 18, cls = 'b-sigcell') => {
+      const d = r * 2.3;
+      return E('image', { href: spr(cls.includes(' t') ? 'l9-signals-target' : 'l9-signals-cell'), x: x - d / 2, y: y - d / 2, width: d, height: d, preserveAspectRatio: 'xMidYMid meet', class: `fxb-breathe d${nc++ % 4}` }, g);
+    };
     // autocrine
     { const { x, y } = boxes[0]; cell(x + 98, y + 92, 24); dots.push({ n: 6, path: (u, i) => { const a = i / 6 * TAU; const r = 24 + 26 * Math.sin(Math.PI * u); return [x + 98 + Math.cos(a) * r, y + 92 + Math.sin(a) * r]; } }); }
     // paracrine
@@ -40,12 +45,20 @@ const signals = {
     // endocrine
     { const { x, y } = boxes[2]; cell(x + 30, y + 60, 16); E('rect', { x: x + 14, y: y + 92, width: 170, height: 22, rx: 11, class: 'b-vesselband' }, g); cell(x + 168, y + 60, 16, 'b-sigcell t');
       dots.push({ n: 6, path: u => keys(u, [[0, [x + 30, y + 72]], [0.2, [x + 34, y + 102]], [0.8, [x + 164, y + 104]], [1, [x + 168, y + 74]]]) }); }
-    // neurotransmitter
+    // neurotransmitter: axon terminal (painted) → target cell
     { const { x, y } = boxes[3]; E('path', { d: `M${x + 20},${y + 92} L${x + 80},${y + 92} C${x + 104},${y + 70} ${x + 104},${y + 114} ${x + 80},${y + 92}`, class: 'b-axon thin' }, g);
-      E('circle', { cx: x + 98, cy: y + 92, r: 16, class: 'b-sigcell' }, g); E('rect', { x: x + 124, y: y + 62, width: 40, height: 60, rx: 10, class: 'b-sigcell t' }, g);
+      E('circle', { cx: x + 98, cy: y + 92, r: 16, class: 'b-sigcell' }, g);
+      const mf = E('filter', { id: 'l9sig-mblur', x: -0.3, y: -0.3, width: 1.6, height: 1.6 }, E('defs', {}, g));
+      E('feGaussianBlur', { stdDeviation: 3 }, mf);
+      E('rect', { x: x + 118, y: y + 46, width: 60, height: 92, rx: 14, fill: '#fbfaf6', filter: 'url(#l9sig-mblur)' }, g);
+      cell(x + 144, y + 92, 16, 'b-sigcell t');
       dots.push({ n: 6, path: (u, i) => [lerp(x + 112, x + 126, u), y + 78 + i * 6] }); }
-    // pheromone
-    { const { x, y } = boxes[4]; T(g, x + 36, y + 104, '🦋', 'b-emoji fxb-float', { 'text-anchor': 'middle' }); T(g, x + 162, y + 104, '🦋', 'b-emoji fxb-float d1', { 'text-anchor': 'middle' });
+    // pheromone: one moth's scent reaches another moth's antennae
+    { const { x, y } = boxes[4];
+      [[x + 36, 90, 0], [x + 162, -90, 1]].forEach(([mx, rot, k]) => {
+        const fl = E('g', { class: `fxb-float${k ? ' d1' : ''}` }, g);
+        E('image', { href: spr('l9-signals-moth'), x: -32, y: -18.8, width: 64, height: 37.6, preserveAspectRatio: 'xMidYMid meet', transform: `translate(${mx} ${y + 92}) rotate(${rot})`, style: 'filter: drop-shadow(0 1px 2px rgba(90,70,50,.35))' }, fl);
+      });
       dots.push({ n: 7, path: (u, i) => [lerp(x + 56, x + 142, u), y + 92 + Math.sin(u * 9 + i) * 14] }); }
     dots.forEach(d => { d.els = Array.from({ length: d.n }, () => E('circle', { r: 4, class: 'p-hor' }, g)); });
     return (lt, dt, t) => {

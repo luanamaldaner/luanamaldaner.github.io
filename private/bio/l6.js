@@ -20,14 +20,10 @@ const fish = {
     const seaSalt = Array.from({ length: 40 }, (_, i) => E('circle', { cx: (i * 97) % 630 + 5, cy: (i * 53) % 350 + 5, r: 2.2, class: 'p-salt faint' }, g));
     const CX = 320, CY = 180, RX = 150, RY = 62;
     const fishG = E('g', {}, g);
-    const tail = E('path', { d: `M${CX - RX + 8},${CY} L${CX - RX - 50},${CY - 44} Q${CX - RX - 34},${CY} ${CX - RX - 50},${CY + 44}z`, class: 'b-fish' }, fishG);
-    E('path', { d: `M${CX - RX},${CY} C${CX - 90},${CY - 80} ${CX + 90},${CY - 80} ${CX + RX},${CY} C${CX + 90},${CY + 80} ${CX - 90},${CY + 80} ${CX - RX},${CY}z`, class: 'b-fish' }, fishG);
-    E('path', { d: `M${CX - 70},${CY - 44} C${CX - 30},${CY - 60} ${CX + 30},${CY - 60} ${CX + 70},${CY - 44}`, class: 'fxb-sheen-line' }, fishG);
-    E('circle', { cx: CX + 105, cy: CY - 14, r: 6, class: 'b-eye' }, fishG);
-    E('circle', { cx: CX + 107, cy: CY - 16, r: 1.8, class: 'fxb-glint' }, fishG);
-    const gillGlow = E('path', { d: `M${CX + 70},${CY - 34} q-14,34 0,68`, class: 'fxb-gillglow' }, fishG);
-    E('path', { d: `M${CX + 70},${CY - 34} q-14,34 0,68`, class: 'b-gill' }, fishG);
-    const inside = T(fishG, CX - 20, CY + 5, '', 'bl b-strong', { 'text-anchor': 'middle' });
+    // illustrated freshwater fish (tilapia), facing right; body centre sits near (CX+10, CY)
+    E('image', { href: new URL('./art/sprites/l6-fish-fish.webp', import.meta.url).href, x: CX - 189, y: CY - 96, width: 340, height: 210, preserveAspectRatio: 'xMidYMid meet' }, fishG);
+    const gillGlow = E('path', { d: `M${CX + 78},${CY - 28} q-12,30 0,60`, class: 'fxb-gillglow' }, fishG);
+    const inside = pill(fishG, CX - 10, CY + 8, '', 'bs b-strong', { 'text-anchor': 'middle' });
     const outside = pill(g, 44, 30, '', 'bl b-strong');
     const hormone = pill(g, 598, 30, '', 'bs b-strong b-hor-t', { 'text-anchor': 'end' });
     hormone.previousSibling.classList.add('rose');
@@ -68,12 +64,11 @@ const fish = {
       show(bgS, k);
       seaSalt.forEach((c, i) => { if (k > 0.004) at(c, (i * 97) % 630 + 5 + 3 * Math.sin(t * 0.5 + i), (i * 53) % 350 + 5 + 2 * Math.cos(t * 0.4 + i * 1.3)); show(c, k); });
       show(sets.fresh, 1 - k); show(sets.sea, k);
-      // the fish idles: a slow bob and a lazy tail
-      fishG.setAttribute('transform', `translate(0 ${(2.5 * Math.sin(t * 1.1)).toFixed(2)})`);
-      tail.setAttribute('transform', `rotate(${(5 * Math.sin(t * 2.2)).toFixed(2)} ${CX - RX + 8} ${CY})`);
+      // the fish idles: a slow bob and a gentle sway
+      fishG.setAttribute('transform', `translate(0 ${(2.5 * Math.sin(t * 1.1)).toFixed(2)}) rotate(${(1.2 * Math.sin(t * 0.9)).toFixed(2)} ${CX} ${CY})`);
       const pumpBeat = 0.5 + 0.5 * Math.sin(TAU * t * 0.8);
       show(gillGlow, 0.2 + 0.6 * pumpBeat);
-      setText(inside, k < 0.5 ? 'body is saltier than the water' : 'body is less salty than the sea');
+      pillText(inside, k < 0.5 ? 'body is saltier than the water' : 'body is less salty than the sea');
       pillText(outside, k < 0.5 ? 'Fresh water (hardly any salt)' : 'Seawater (very salty)');
       pillText(hormone, s.vars.mode !== 'salmon' ? '' : k < 0.5 ? 'prolactin: “freshwater mode”' : 'cortisol: “saltwater mode”');
       show(hormone.parentNode, s.vars.mode === 'salmon' ? 1 : 0);
@@ -134,16 +129,17 @@ const nitrogen = {
     fx(svg);
     const g = E('g', {}, svg);
     const COLS = [
-      ['🐟', 'Ammonia', 'NH₃', ['fish and most', 'water animals'], [1, 1, 0.15]],
-      ['🧍', 'Urea', 'CO(NH₂)₂', ['mammals, most', 'land animals'], [0.5, 0.55, 0.55]],
-      ['🐦', 'Uric acid', 'paste, not liquid', ['birds, reptiles,', 'insects'], [0.12, 0.12, 1]],
+      ['fish', 'Ammonia', 'NH₃', ['fish and most', 'water animals'], [1, 1, 0.15]],
+      ['person', 'Urea', 'CO(NH₂)₂', ['mammals, most', 'land animals'], [0.5, 0.55, 0.55]],
+      ['bird', 'Uric acid', 'paste, not liquid', ['birds, reptiles,', 'insects'], [0.12, 0.12, 1]],
     ];
     const ROWS = ['How toxic', 'Water needed', 'Energy cost'];
-    const cols = COLS.map(([emoji, name, f, who, vals], i) => {
+    const cols = COLS.map(([animal, name, f, who, vals], i) => {
       const x = 252 + i * 140;
       const grp = E('g', {}, g);
       const box = E('rect', { x: x - 68, y: 10, width: 136, height: 340, rx: 16, class: 'b-colbox' }, grp);
-      T(grp, x, 52, emoji, `b-emoji fxb-float d${i}`, { 'text-anchor': 'middle' });
+      const icon = E('g', { class: `fxb-float d${i}` }, grp);
+      E('image', { href: new URL(`./art/sprites/l6-nitrogen-${animal}.webp`, import.meta.url).href, x: x - 34, y: 14, width: 68, height: 54, preserveAspectRatio: 'xMidYMid meet' }, icon);
       T(grp, x, 82, name, 'bl b-strong', { 'text-anchor': 'middle' });
       T(grp, x, 100, f, 'bs', { 'text-anchor': 'middle' });
       T(grp, x, 322, who[0], 'bs', { 'text-anchor': 'middle' }); T(grp, x, 337, who[1], 'bs', { 'text-anchor': 'middle' });
