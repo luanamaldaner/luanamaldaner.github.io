@@ -7,7 +7,7 @@ import { MNEMONICS } from './mnemonics.js?v=1';
 import { MICROBES } from './microbes.js?v=1';
 import { addCorrect, packState, openPack, RARITY, PER_PACK } from './packs.js?v=1';
 import { tycoonPage } from './tycoon.js?v=4';
-import { microLabPage } from './microlab.js?v=2';
+import { microLabPage } from './microlab.js?v=4';
 
 const ls = (k, fb) => { try { const v = localStorage.getItem(`lab.${k}`); return v === null ? fb : JSON.parse(v); } catch { return fb; } };
 const put = (k, v) => { try { localStorage.setItem(`lab.${k}`, JSON.stringify(v)); } catch {} };

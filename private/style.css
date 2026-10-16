@@ -2203,3 +2203,6 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .bio-tab.compact { padding: 5px; gap: 0; }
 .wk-forest svg, .wk-forest { max-height: 230px; }
 .wk-forest svg { width: auto; margin: 0 auto; display: block; }
+.ml-field-svg { width: 100%; max-width: 230px; display: block; margin: 0 auto; filter: drop-shadow(0 4px 10px rgba(0,0,0,.15)); }
+.ml-scope-img { width: 100%; max-width: 240px; aspect-ratio: 1; object-fit: cover; border-radius: 50%; display: block; margin: 0 auto; box-shadow: 0 4px 14px rgba(0,0,0,.18); background: #111; }
+.ml-morph .ml-scope-img { max-width: 260px; }
