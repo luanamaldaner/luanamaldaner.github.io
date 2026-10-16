@@ -2113,3 +2113,19 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .pk-mini.r-rare { border-color: #b388ff; }
 .pk-mini.r-uncommon { border-color: #3a8fd8; }
 @media (prefers-reduced-motion: reduce) { .pk-card { animation: none; } }
+
+/* ---------- cell tycoon */
+.ty-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.ty-atp { font-size: 15px; }
+.ty-atp-n { font: 700 22px/1 var(--mono); color: #c0861e; }
+.ty-gain { margin: 0; color: var(--accent); }
+.ty-cell { position: relative; height: 260px; border-radius: 50% / 46%; background: radial-gradient(circle at 45% 40%, color-mix(in srgb, #9ed8c5 45%, var(--card)), color-mix(in srgb, #6fbfa5 30%, var(--card)) 70%); border: 4px solid color-mix(in srgb, #3aa57a 45%, var(--line)); overflow: hidden; }
+.ty-nuc { position: absolute; left: 50%; top: 50%; width: 70px; height: 60px; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle at 40% 40%, #c8b6f0, #8b7cf6); box-shadow: inset 0 0 0 3px rgba(255,255,255,.4); }
+.ty-dot { position: absolute; transform: translate(-50%, -50%); font-size: 16px; animation: ty-float 6s ease-in-out infinite; }
+.ty-dot:nth-child(odd) { animation-duration: 8s; animation-direction: reverse; }
+@keyframes ty-float { 0%, 100% { margin-top: 0; } 50% { margin-top: -6px; } }
+.ty-shop { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ty-item { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; }
+.ty-em { font-size: 20px; text-align: center; }
+.ty-txt { display: grid; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .ty-dot { animation: none; } }

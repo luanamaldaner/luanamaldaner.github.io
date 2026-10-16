@@ -6,12 +6,13 @@ import { PATHWAYS } from '../bio/pathways.js?v=1';
 import { MNEMONICS } from './mnemonics.js?v=1';
 import { MICROBES } from './microbes.js?v=1';
 import { addCorrect, packState, openPack, RARITY, PER_PACK } from './packs.js?v=1';
+import { tycoonPage } from './tycoon.js?v=1';
 
 const ls = (k, fb) => { try { const v = localStorage.getItem(`lab.${k}`); return v === null ? fb : JSON.parse(v); } catch { return fb; } };
 const put = (k, v) => { try { localStorage.setItem(`lab.${k}`, JSON.stringify(v)); } catch {} };
 const shuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
-const TABS = [['conn', '🔗 Connections'], ['path', '🧩 Pathways'], ['mnem', '🧠 Mnemonics'], ['microbe', '🦠 Microbes'], ['packs', '🎴 Packs']];
+const TABS = [['conn', '🔗 Connections'], ['path', '🧩 Pathways'], ['mnem', '🧠 Mnemonics'], ['microbe', '🦠 Microbes'], ['packs', '🎴 Packs'], ['tycoon', '🔬 Cell Tycoon']];
 const lab = { tab: ls('tab', 'conn'), conn: null, path: null, mnemHide: false, mnemTopic: 'All', microbe: null };
 
 export function microbeOfDay(today) {
@@ -159,9 +160,9 @@ export function renderLab(C) {
     type: 'button', role: 'tab', class: `orgo-tab${lab.tab === id ? ' on' : ''}`, 'aria-selected': String(lab.tab === id),
     onclick: () => { lab.tab = id; put('tab', id); C.render(); },
   }, label)));
-  const body = { conn: connPage, path: pathPage, mnem: mnemPage, microbe: microbePage, packs: packsPage }[lab.tab] || connPage;
+  const body = { conn: connPage, path: pathPage, mnem: mnemPage, microbe: microbePage, packs: packsPage, tycoon: tycoonPage }[lab.tab] || connPage;
   return h('div', { class: 'page' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Study lab' }),
-      h('p', { class: 'muted small', text: 'Cross-course questions, pathway puzzles, mnemonics and microbes' }))),
+      h('p', { class: 'muted small', text: 'Cross-course questions, pathway puzzles, mnemonics, microbes and games' }))),
     tabs, body(C));
 }
