@@ -45,7 +45,17 @@ export function tycoonPage(C) {
 
   // the cell drawing grows one organelle icon per level
   const dots = [];
-  ORGANELLES.forEach((o, k) => { for (let i = 0; i < Math.min(8, g.lv[o.id] || 0); i++) { const a = (k * 0.9 + i * 0.78) % (2 * Math.PI), r = 30 + ((k * 13 + i * 17) % 55); dots.push(h('span', { class: 'ty-dot', style: `left:${(50 + r * Math.cos(a) * 0.82).toFixed(1)}%;top:${(50 + r * Math.sin(a) * 0.62).toFixed(1)}%`, text: o.emoji })); } });
+  // organelle art scattered through the cytoplasm of the illustrated cell (positions are stable)
+  const spots = [];
+  for (let y = 30; y <= 72; y += 9) for (let x = 24; x <= 76; x += 7.5) {
+    const jx = x + ((y * 7) % 3) - 1.5, jy = y + ((x * 3) % 4) - 2;
+    if (((jx - 50) / 27) ** 2 + ((jy - 50.5) / 26) ** 2 > 1) continue; // inside the membrane
+    if (((jx - 39) / 15) ** 2 + ((jy - 41) / 21) ** 2 < 1) continue; // keep clear of the nucleus
+    spots.push([jx, jy]);
+  }
+  spots.sort((p, q) => ((p[0] * 13 + p[1] * 7) % 17) - ((q[0] * 13 + q[1] * 7) % 17)); // spread the fill order
+  let si = 0;
+  ORGANELLES.forEach(o => { for (let i = 0; i < Math.min(8, g.lv[o.id] || 0) && si < spots.length; i++, si++) { const [x, y] = spots[si]; dots.push(h('img', { class: 'ty-dot', src: `art/tycoon/${o.id}.webp`, alt: '', style: `left:${x.toFixed(1)}%;top:${y.toFixed(1)}%` })); } });
   const level = ORGANELLES.reduce((a, o) => a + (g.lv[o.id] || 0), 0);
 
   return h('div', { class: 'grid orgo-grid' },
@@ -54,12 +64,12 @@ export function tycoonPage(C) {
         h('div', null, h('p', { class: 'bio-kicker', style: '--lc: var(--accent)', text: `Cell level ${level}` }), h('h2', { class: 'lab-title', text: 'Cell Tycoon' })),
         h('div', { class: 'ty-atp' }, '⚡ ', atpEl, h('span', { class: 'muted small', text: ` ATP · +${perMin(g).toFixed(1)}/min` }))),
       lastGain && (lastGain.idle || lastGain.earned) ? h('p', { class: 'small ty-gain', text: `Welcome back! +${lastGain.earned} ATP from correct answers${lastGain.idle ? `, +${lastGain.idle} while you were away` : ''}.` }) : null,
-      h('div', { class: 'ty-cell', 'aria-hidden': 'true' }, h('span', { class: 'ty-nuc' }), ...dots),
+      h('div', { class: 'ty-cell', 'aria-hidden': 'true' }, ...dots),
       h('p', { class: 'muted small', text: 'Every correct answer anywhere on the dashboard pays 10 ATP. Organelles keep producing for up to 8 hours while you’re away.' }))),
     h('div', { class: 'col col-narrow' }, card('Build', null, h('ul', { class: 'ty-shop' }, ORGANELLES.map(o => {
       const lv = g.lv[o.id] || 0, c = cost(o, lv);
       return h('li', { class: 'ty-item' },
-        h('span', { class: 'ty-em', text: o.emoji }),
+        h('img', { class: 'ty-em', src: `art/tycoon/${o.id}.webp`, alt: '' }),
         h('span', { class: 'ty-txt' }, h('strong', { text: `${o.name}${lv ? ` · lv ${lv}` : ''}` }), h('span', { class: 'muted small', text: lv ? o.fact : `+${o.rate} ATP/min each` })),
         h('button', { type: 'button', class: 'btn btn-small', disabled: g.atp < c, text: `${c.toLocaleString()} ⚡`, onclick: () => { const s = settle().g; if (s.atp < c) return; s.atp -= c; s.lv[o.id] = lv + 1; save(s); lastGain = null; C.render(); } }));
     })))));

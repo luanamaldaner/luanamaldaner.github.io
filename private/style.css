@@ -2176,3 +2176,8 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .ml-qs .q-prompt { margin: 0 0 6px; font-size: 14px; }
 .ml-qs .q-options { margin-bottom: 12px; }
 @media (max-width: 720px) { .ml-morph { grid-template-columns: 1fr; } .ml-scope { max-width: 240px; margin: 0 auto; } }
+/* cell tycoon with generated art */
+.ty-cell { height: auto; aspect-ratio: 3 / 2; border: 0; border-radius: 16px; background: url(art/tycoon/cell.webp) center / cover no-repeat, #f3f9f2; }
+.ty-dot { width: 8%; height: auto; aspect-ratio: 1; font-size: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,.15)); }
+.ty-em { width: 40px; height: 40px; border-radius: 50%; }
+.ty-item { grid-template-columns: 40px 1fr auto; }
