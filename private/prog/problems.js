@@ -889,6 +889,378 @@ for row in range(1, n + 1):
     return 1 + num_digits(n // 10)
 `,
   },
+  // ------------------------------------------------------------ more Exam 2 practice (M7A–M8)
+  {
+    id: 'm7a-even-squares', module: 'M7A', title: 'Even squares (list comprehension)',
+    prompt: 'Write even_squares(nums) that returns a list of the squares of the even numbers in nums, in order. Try to do it in one line with a list comprehension.',
+    starter: py`def even_squares(nums):
+    pass
+`,
+    tests: [{ call: 'even_squares([1, 2, 3, 4])', expected: '[4, 16]' }, { call: 'even_squares([])', expected: '[]' }, { call: 'even_squares([-2, 5, 0])', expected: '[4, 0]' }],
+    hint: '[x * x for x in nums if x % 2 == 0]: the "if" at the end filters, the part before "for" transforms.',
+    solution: py`def even_squares(nums):
+    return [x * x for x in nums if x % 2 == 0]
+`,
+  },
+  {
+    id: 'm7a-hex-to-dec', module: 'M7A', title: 'Hex to decimal by hand',
+    prompt: 'Write hex_to_dec(text) that turns a hex string like "1A" or "ff" into its decimal value, without int(text, 16). Upper- or lowercase digits are allowed.',
+    starter: py`def hex_to_dec(text):
+    pass
+`,
+    tests: [{ call: "hex_to_dec('ff')", expected: '255' }, { call: "hex_to_dec('1A')", expected: '26' }, { call: "hex_to_dec('0')", expected: '0' }, { call: "hex_to_dec('100')", expected: '256' }],
+    hint: 'Keep a running value: for each digit, value = value * 16 + digit. "0123456789abcdef".index(ch.lower()) gives a digit\'s value.',
+    solution: py`def hex_to_dec(text):
+    digits = "0123456789abcdef"
+    value = 0
+    for ch in text:
+        value = value * 16 + digits.index(ch.lower())
+    return value
+`,
+  },
+  {
+    id: 'm7a-bin-add', module: 'M7A', title: 'Add two binary strings',
+    prompt: 'Write bin_add(a, b) that adds two binary strings and returns the sum as a binary string with no leading zeros ("0" for zero). Do it by hand, column by column with a carry, without int(x, 2).',
+    starter: py`def bin_add(a, b):
+    pass
+`,
+    tests: [{ call: "bin_add('1011', '1')", expected: "'1100'" }, { call: "bin_add('0', '0')", expected: "'0'" }, { call: "bin_add('111', '111')", expected: "'1110'" }, { call: "bin_add('100', '11')", expected: "'111'" }],
+    hint: 'Walk both strings from the right. Each column: total = bit_a + bit_b + carry; write total % 2, carry total // 2. Don\'t forget a leftover carry at the end.',
+    solution: py`def bin_add(a, b):
+    i, j = len(a) - 1, len(b) - 1
+    carry = 0
+    out = ""
+    while i >= 0 or j >= 0 or carry:
+        total = carry
+        if i >= 0:
+            total += int(a[i])
+            i -= 1
+        if j >= 0:
+            total += int(b[j])
+            j -= 1
+        out = str(total % 2) + out
+        carry = total // 2
+    out = out.lstrip("0")
+    return out if out else "0"
+`,
+  },
+  {
+    id: 'm7a-chunk', module: 'M7A', title: 'Split a list into chunks',
+    prompt: 'Write chunk(lst, size) that splits lst into lists of length size (the last one may be shorter).',
+    starter: py`def chunk(lst, size):
+    pass
+`,
+    tests: [{ call: 'chunk([1, 2, 3, 4, 5], 2)', expected: '[[1, 2], [3, 4], [5]]' }, { call: 'chunk([], 3)', expected: '[]' }, { call: "chunk(['a', 'b', 'c'], 3)", expected: "[['a', 'b', 'c']]" }],
+    hint: 'range(0, len(lst), size) gives the start of each chunk; slice lst[start:start + size].',
+    solution: py`def chunk(lst, size):
+    return [lst[i:i + size] for i in range(0, len(lst), size)]
+`,
+  },
+  {
+    id: 'm7a-transpose', module: 'M7A', title: 'Transpose a grid',
+    prompt: 'Write transpose(grid) for a rectangular list of lists: rows become columns. [[1, 2, 3], [4, 5, 6]] → [[1, 4], [2, 5], [3, 6]].',
+    starter: py`def transpose(grid):
+    pass
+`,
+    tests: [{ call: 'transpose([[1, 2, 3], [4, 5, 6]])', expected: '[[1, 4], [2, 5], [3, 6]]' }, { call: 'transpose([[7]])', expected: '[[7]]' }, { call: "transpose([['a'], ['b']])", expected: "[['a', 'b']]" }],
+    hint: 'The new row c is [row[c] for row in grid], for each column c in range(len(grid[0])).',
+    solution: py`def transpose(grid):
+    return [[row[c] for row in grid] for c in range(len(grid[0]))]
+`,
+  },
+  {
+    id: 'm7a-dedupe', module: 'M7A', title: 'Remove duplicates, keep order',
+    prompt: 'Write dedupe(lst) that returns a new list without repeats, keeping the first time each value appears. (set() alone loses the order.)',
+    starter: py`def dedupe(lst):
+    pass
+`,
+    tests: [{ call: 'dedupe([3, 1, 3, 2, 1])', expected: '[3, 1, 2]' }, { call: 'dedupe([])', expected: '[]' }, { call: "dedupe(['b', 'b', 'a'])", expected: "['b', 'a']" }],
+    hint: 'Keep a set of values you\'ve already seen and a list for the answer; only append values not in the set yet.',
+    solution: py`def dedupe(lst):
+    seen = set()
+    out = []
+    for x in lst:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
+`,
+  },
+  {
+    id: 'm7a-running', module: 'M7A', title: 'Running total',
+    prompt: 'Write running_total(nums) that returns a list where each spot holds the sum of everything up to and including that spot.',
+    starter: py`def running_total(nums):
+    pass
+`,
+    tests: [{ call: 'running_total([1, 2, 3, 4])', expected: '[1, 3, 6, 10]' }, { call: 'running_total([])', expected: '[]' }, { call: 'running_total([5, -5, 5])', expected: '[5, 0, 5]' }],
+    hint: 'Keep a total variable; after adding each number, append the total.',
+    solution: py`def running_total(nums):
+    out = []
+    total = 0
+    for x in nums:
+        total += x
+        out.append(total)
+    return out
+`,
+  },
+  {
+    id: 'm7b-group-len', module: 'M7B', title: 'Group words by length',
+    prompt: 'Write group_by_len(words) that returns a dict mapping each length to the list of words with that length, in their original order.',
+    starter: py`def group_by_len(words):
+    pass
+`,
+    tests: [{ call: "group_by_len(['hi', 'cat', 'yo', 'dog'])", expected: "{2: ['hi', 'yo'], 3: ['cat', 'dog']}" }, { call: 'group_by_len([])', expected: '{}' }, { call: "group_by_len(['a'])", expected: "{1: ['a']}" }],
+    hint: 'For each word: if len(word) isn\'t a key yet, start it with an empty list, then append. (d.setdefault(key, []).append(word) does both.)',
+    solution: py`def group_by_len(words):
+    groups = {}
+    for w in words:
+        groups.setdefault(len(w), []).append(w)
+    return groups
+`,
+  },
+  {
+    id: 'm7b-most-common', module: 'M7B', title: 'Most common item',
+    prompt: 'Write most_common(lst) that returns the value that appears most often. If there\'s a tie, return the one that appears first in lst.',
+    starter: py`def most_common(lst):
+    pass
+`,
+    tests: [{ call: 'most_common([1, 3, 3, 2, 1, 3])', expected: '3' }, { call: "most_common(['b', 'a', 'a', 'b'])", expected: "'b'" }, { call: 'most_common([7])', expected: '7' }],
+    hint: 'Count with a dict first. Then loop over lst (not the dict) and keep the first value whose count beats the best so far.',
+    solution: py`def most_common(lst):
+    counts = {}
+    for x in lst:
+        counts[x] = counts.get(x, 0) + 1
+    best = lst[0]
+    for x in lst:
+        if counts[x] > counts[best]:
+            best = x
+    return best
+`,
+  },
+  {
+    id: 'm7b-merge-counts', module: 'M7B', title: 'Merge two count dictionaries',
+    prompt: 'Write merge_counts(d1, d2) that returns a NEW dict with every key from both, adding the values when a key is in both. Don\'t change d1 or d2.',
+    starter: py`def merge_counts(d1, d2):
+    pass
+`,
+    tests: [{ call: "merge_counts({'a': 1, 'b': 2}, {'b': 3, 'c': 4})", expected: "{'a': 1, 'b': 5, 'c': 4}" }, { call: 'merge_counts({}, {})', expected: '{}' }, { call: "merge_counts({'x': 1}, {})", expected: "{'x': 1}" }],
+    hint: 'Start with out = dict(d1) (a copy), then for each key, value in d2.items(): out[key] = out.get(key, 0) + value.',
+    solution: py`def merge_counts(d1, d2):
+    out = dict(d1)
+    for key, value in d2.items():
+        out[key] = out.get(key, 0) + value
+    return out
+`,
+  },
+  {
+    id: 'm7b-sym-diff', module: 'M7B', title: 'In exactly one list',
+    prompt: 'Write only_in_one(a, b) that returns a sorted list of values that are in a or in b, but not in both.',
+    starter: py`def only_in_one(a, b):
+    pass
+`,
+    tests: [{ call: 'only_in_one([1, 2, 3], [3, 4])', expected: '[1, 2, 4]' }, { call: 'only_in_one([1, 1], [1])', expected: '[]' }, { call: 'only_in_one([], [5, 2])', expected: '[2, 5]' }],
+    hint: 'Sets have an operator for exactly this: set(a) ^ set(b) (symmetric difference). Then sorted().',
+    solution: py`def only_in_one(a, b):
+    return sorted(set(a) ^ set(b))
+`,
+  },
+  {
+    id: 'm7b-sort-by-value', module: 'M7B', title: 'Rank keys by value',
+    prompt: 'Write rank(scores) that takes a dict name → score and returns the names sorted from highest score to lowest. Ties go alphabetically.',
+    starter: py`def rank(scores):
+    pass
+`,
+    tests: [{ call: "rank({'ana': 90, 'ben': 95, 'cy': 90})", expected: "['ben', 'ana', 'cy']" }, { call: 'rank({})', expected: '[]' }, { call: "rank({'z': 1, 'a': 1})", expected: "['a', 'z']" }],
+    hint: 'sorted(scores, key=lambda name: (-scores[name], name)): negating the score sorts high to low, the name breaks ties.',
+    solution: py`def rank(scores):
+    return sorted(scores, key=lambda name: (-scores[name], name))
+`,
+  },
+  {
+    id: 'm7b-stats', module: 'M7B', title: 'Stats as a tuple',
+    prompt: 'Write stats(nums) that returns a tuple (smallest, largest, mean) for a non-empty list, with the mean rounded to 2 decimal places.',
+    starter: py`def stats(nums):
+    pass
+`,
+    tests: [{ call: 'stats([1, 2, 3, 4])', expected: '(1, 4, 2.5)' }, { call: 'stats([5])', expected: '(5, 5, 5.0)' }, { call: 'stats([1, 2, 2])', expected: '(1, 2, 1.67)' }],
+    hint: 'return (min(nums), max(nums), round(sum(nums) / len(nums), 2)). The parentheses make it a tuple.',
+    solution: py`def stats(nums):
+    return (min(nums), max(nums), round(sum(nums) / len(nums), 2))
+`,
+  },
+  {
+    id: 'm8-sum-digits', module: 'M8', title: 'Sum of digits, recursively', recurse: 'sum_digits',
+    prompt: 'Write sum_digits(n) recursively for n ≥ 0. sum_digits(1234) is 10.',
+    starter: py`def sum_digits(n):
+    pass
+`,
+    tests: [{ call: 'sum_digits(1234)', expected: '10' }, { call: 'sum_digits(0)', expected: '0' }, { call: 'sum_digits(9)', expected: '9' }, { call: 'sum_digits(1001)', expected: '2' }],
+    hint: 'The last digit is n % 10 and the rest is n // 10. Base case: n < 10.',
+    solution: py`def sum_digits(n):
+    if n < 10:
+        return n
+    return n % 10 + sum_digits(n // 10)
+`,
+  },
+  {
+    id: 'm8-countdown', module: 'M8', title: 'Countdown list', recurse: 'countdown',
+    prompt: 'Write countdown(n) recursively, returning [n, n-1, …, 1]. countdown(0) is [].',
+    starter: py`def countdown(n):
+    pass
+`,
+    tests: [{ call: 'countdown(3)', expected: '[3, 2, 1]' }, { call: 'countdown(0)', expected: '[]' }, { call: 'countdown(1)', expected: '[1]' }],
+    hint: 'Base case: n == 0 gives []. Otherwise [n] + countdown(n - 1).',
+    solution: py`def countdown(n):
+    if n == 0:
+        return []
+    return [n] + countdown(n - 1)
+`,
+  },
+  {
+    id: 'm8-max', module: 'M8', title: 'Largest item, recursively', recurse: 'max_rec',
+    prompt: 'Write max_rec(lst) recursively for a non-empty list, without max().',
+    starter: py`def max_rec(lst):
+    pass
+`,
+    tests: [{ call: 'max_rec([3, 9, 2])', expected: '9' }, { call: 'max_rec([-4])', expected: '-4' }, { call: 'max_rec([5, 5, 1, 7])', expected: '7' }],
+    hint: 'One item: it\'s the max. Otherwise find the max of lst[1:], then compare it with lst[0].',
+    solution: py`def max_rec(lst):
+    if len(lst) == 1:
+        return lst[0]
+    rest = max_rec(lst[1:])
+    return lst[0] if lst[0] > rest else rest
+`,
+  },
+  {
+    id: 'm8-is-sorted', module: 'M8', title: 'Is it sorted?', recurse: 'is_sorted',
+    prompt: 'Write is_sorted(lst) recursively: True if every item is ≤ the next one.',
+    starter: py`def is_sorted(lst):
+    pass
+`,
+    tests: [{ call: 'is_sorted([1, 2, 2, 5])', expected: 'True' }, { call: 'is_sorted([3, 1])', expected: 'False' }, { call: 'is_sorted([])', expected: 'True' }, { call: 'is_sorted([1, 3, 2, 4])', expected: 'False' }],
+    hint: 'Lists of length 0 or 1 are sorted. Otherwise lst[0] <= lst[1] and is_sorted(lst[1:]).',
+    solution: py`def is_sorted(lst):
+    if len(lst) <= 1:
+        return True
+    return lst[0] <= lst[1] and is_sorted(lst[1:])
+`,
+  },
+  {
+    id: 'm8-remove-char', module: 'M8', title: 'Remove a character', recurse: 'remove_all',
+    prompt: 'Write remove_all(text, ch) recursively, returning text with every copy of ch removed (no .replace()).',
+    starter: py`def remove_all(text, ch):
+    pass
+`,
+    tests: [{ call: "remove_all('banana', 'a')", expected: "'bnn'" }, { call: "remove_all('', 'x')", expected: "''" }, { call: "remove_all('aaa', 'a')", expected: "''" }],
+    hint: 'Empty text → "". Otherwise keep text[0] only if it isn\'t ch, then add remove_all(text[1:], ch).',
+    solution: py`def remove_all(text, ch):
+    if text == "":
+        return ""
+    first = "" if text[0] == ch else text[0]
+    return first + remove_all(text[1:], ch)
+`,
+  },
+  {
+    id: 'm8-deep-sum', module: 'M8', title: 'Sum a nested list', recurse: 'deep_sum',
+    prompt: 'Write deep_sum(lst) that adds up every number in a list that can contain lists inside lists: [1, [2, [3]], 4] → 10.',
+    starter: py`def deep_sum(lst):
+    pass
+`,
+    tests: [{ call: 'deep_sum([1, [2, [3]], 4])', expected: '10' }, { call: 'deep_sum([])', expected: '0' }, { call: 'deep_sum([[[]], [5], 1])', expected: '6' }],
+    hint: 'Loop over the items: a list adds deep_sum(item), a number adds itself.',
+    solution: py`def deep_sum(lst):
+    total = 0
+    for item in lst:
+        if isinstance(item, list):
+            total += deep_sum(item)
+        else:
+            total += item
+    return total
+`,
+  },
+  {
+    id: 'm8-bin-strings', module: 'M8', title: 'All binary strings', recurse: 'bin_strings',
+    prompt: 'Write bin_strings(n) recursively, returning every binary string of length n in sorted order. bin_strings(2) is ["00", "01", "10", "11"]; bin_strings(0) is [""].',
+    starter: py`def bin_strings(n):
+    pass
+`,
+    tests: [{ call: 'bin_strings(2)', expected: "['00', '01', '10', '11']" }, { call: 'bin_strings(0)', expected: "['']" }, { call: 'len(bin_strings(5))', expected: '32' }, { call: 'bin_strings(3)[5]', expected: "'101'" }],
+    hint: 'Take every string of length n − 1 and put "0" in front of each, then "1" in front of each.',
+    solution: py`def bin_strings(n):
+    if n == 0:
+        return [""]
+    shorter = bin_strings(n - 1)
+    return ["0" + s for s in shorter] + ["1" + s for s in shorter]
+`,
+  },
+  {
+    id: 'm8-perms', module: 'M8', title: 'Permutations', recurse: 'perms',
+    prompt: 'Write perms(text) recursively, returning a sorted list of every ordering of the letters in text (all letters are different). perms("abc") has 6 strings.',
+    starter: py`def perms(text):
+    pass
+`,
+    tests: [{ call: "perms('ab')", expected: "['ab', 'ba']" }, { call: "perms('abc')", expected: "['abc', 'acb', 'bac', 'bca', 'cab', 'cba']" }, { call: "perms('')", expected: "['']" }, { call: "len(perms('abcd'))", expected: '24' }],
+    hint: 'For each position i, pick text[i] to go first, then put it in front of every permutation of the other letters (text[:i] + text[i+1:]).',
+    solution: py`def perms(text):
+    if len(text) <= 1:
+        return [text]
+    out = []
+    for i in range(len(text)):
+        rest = text[:i] + text[i + 1:]
+        for p in perms(rest):
+            out.append(text[i] + p)
+    return sorted(out)
+`,
+  },
+  {
+    id: 'm8-paths', module: 'M8', title: 'Count grid paths', recurse: 'paths',
+    prompt: 'Starting at the top-left of a grid, you may only move right or down. Write paths(r, c) recursively: the number of different routes to the cell r rows down and c columns right. paths(2, 2) is 6.',
+    starter: py`def paths(r, c):
+    pass
+`,
+    tests: [{ call: 'paths(2, 2)', expected: '6' }, { call: 'paths(0, 5)', expected: '1' }, { call: 'paths(1, 1)', expected: '2' }, { call: 'paths(3, 2)', expected: '10' }],
+    hint: 'If r == 0 or c == 0 there\'s only one route (a straight line). Otherwise the last move came from above or from the left: paths(r - 1, c) + paths(r, c - 1).',
+    solution: py`def paths(r, c):
+    if r == 0 or c == 0:
+        return 1
+    return paths(r - 1, c) + paths(r, c - 1)
+`,
+  },
+  {
+    id: 'm8-hanoi', module: 'M8', title: 'Towers of Hanoi', recurse: 'hanoi',
+    prompt: 'Write hanoi(n, src, dst, spare) that returns the list of moves (from, to) that moves n disks from src to dst. hanoi(1, "A", "C", "B") is [("A", "C")].',
+    starter: py`def hanoi(n, src, dst, spare):
+    pass
+`,
+    tests: [
+      { call: "hanoi(1, 'A', 'C', 'B')", expected: "[('A', 'C')]" },
+      { call: "hanoi(2, 'A', 'C', 'B')", expected: "[('A', 'B'), ('A', 'C'), ('B', 'C')]" },
+      { call: "len(hanoi(5, 'A', 'C', 'B'))", expected: '31' },
+      { call: "hanoi(0, 'A', 'C', 'B')", expected: '[]' },
+    ],
+    hint: 'Move the top n − 1 disks out of the way (src → spare), move the biggest disk (src → dst), then move the n − 1 disks back on top (spare → dst).',
+    solution: py`def hanoi(n, src, dst, spare):
+    if n == 0:
+        return []
+    return hanoi(n - 1, src, spare, dst) + [(src, dst)] + hanoi(n - 1, spare, dst, src)
+`,
+  },
+  {
+    id: 'm8-pascal', module: 'M8', title: "Pascal's triangle row", recurse: 'pascal_row',
+    prompt: "Write pascal_row(n) recursively, returning row n of Pascal's triangle (row 0 is [1], row 3 is [1, 3, 3, 1]).",
+    starter: py`def pascal_row(n):
+    pass
+`,
+    tests: [{ call: 'pascal_row(0)', expected: '[1]' }, { call: 'pascal_row(3)', expected: '[1, 3, 3, 1]' }, { call: 'pascal_row(5)', expected: '[1, 5, 10, 10, 5, 1]' }],
+    hint: 'Get the row above with pascal_row(n - 1). Each inside number is the sum of the two numbers above it; put 1 at both ends.',
+    solution: py`def pascal_row(n):
+    if n == 0:
+        return [1]
+    above = pascal_row(n - 1)
+    middle = [above[i] + above[i + 1] for i in range(len(above) - 1)]
+    return [1] + middle + [1]
+`,
+  },
 ];
 
 // "What does this print?" Exact output (print's own newlines count as line breaks).

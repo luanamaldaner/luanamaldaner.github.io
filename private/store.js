@@ -18,7 +18,7 @@ const LS_VAULT = 'pv.vault';
 const LS_SHA = 'pv.sha';
 const LS_REV = 'pv.rev';
 export const VAULT_URL = 'https://dash-helper.qwsfzueh.workers.dev/vault';
-const COLLECTIONS = ['todos', 'events', 'notes', 'food', 'weight', 'days', 'focus', 'internships', 'orgo'];
+const COLLECTIONS = ['todos', 'events', 'notes', 'food', 'weight', 'days', 'focus', 'internships', 'orgo', 'sleep'];
 const OBJECTS = ['settings', 'github', 'canvas', 'push', 'inbox'];
 const TOMBSTONE_DAYS = 45;
 
@@ -26,7 +26,7 @@ export function emptyState() {
   const now = Date.now();
   return {
     v: 1,
-    todos: [], events: [], notes: [], food: [], weight: [], days: [], focus: [], internships: [], orgo: [],
+    todos: [], events: [], notes: [], food: [], weight: [], days: [], focus: [], internships: [], orgo: [], sleep: [],
     settings: {
       name: '',
       goals: { cal: 2000, protein: 150, carbs: 200, fat: 60, sugar: 50, fiber: 28, water: 8 },

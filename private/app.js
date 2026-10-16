@@ -8,7 +8,7 @@ import { createKey, unlock, open, strength, MIN_LENGTH, MIN_BITS } from './crypt
 import {
   REPO, emptyState, normalize, merge, uid, readLocal, readRemote, save, pull,
   checkToken, rekey, forgetLocal,
-} from './store.js?v=3';
+} from './store.js?v=4';
 import {
   CANVAS_WEB, FEED_RE, fetchFeed, pushSupported, needsHomeScreen,
   currentSubscription, subscribe, unsubscribe, sendSchedule, testPush, shrinkPhoto, estimateMeal,
@@ -18,9 +18,10 @@ import { newInboxKeys, openItem } from './inbox.js';
 import { parseQuick } from './quickadd.js';
 import { parseFoodText, CHAT_PROMPT } from './foodparse.js';
 import { SPECIES, plantForTag, plant, plantIcon, forestPlot } from './plants.js?v=2';
-import { renderOrgo } from './orgo/orgo.js?v=8';
-import { renderProg } from './prog/prog.js?v=1';
+import { renderOrgo } from './orgo/orgo.js?v=9';
+import { renderProg } from './prog/prog.js?v=2';
 import { renderBio } from './bio/bio.js?v=2';
+import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard } from './extras/extras.js?v=1';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -135,6 +136,8 @@ const ICONS = {
   focus: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/>',
   briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12.5h18"/>',
   tree: '<path d="M12 3l5 6.5h-2.6L18.5 15h-13l4.1-5.5H7z"/><path d="M12 15v6"/>',
+  week: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4M7.5 16l2.5-3 2.5 2 3.5-4"/>',
+  cards: '<rect x="3" y="6" width="13" height="14" rx="2"/><path d="M8 3h10a3 3 0 0 1 3 3v11"/><path d="M7 11h5M7 15h3"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
 };
 function icon(name, cls = 'icon') {
@@ -586,16 +589,25 @@ const VIEWS = {
   calories: { label: 'Calories', icon: 'calories', render: renderCalories },
   focus: { label: 'Focus', icon: 'focus', render: renderFocus },
   forest: { label: 'Forest', icon: 'tree', render: renderForest },
+  week: { label: 'Week', icon: 'week', render: renderWeek },
+  sleep: { label: 'Sleep', icon: 'moon', render: renderSleep },
   internships: { label: 'Internships', icon: 'briefcase', render: renderInternships },
   orgo: { label: 'Orgo', icon: 'orgo', render: () => renderOrgo(ORGO_CTX) },
   bio: { label: 'Biology', icon: 'bio', render: () => renderBio(ORGO_CTX) },
   prog: { label: 'Prog 1', icon: 'code', render: () => renderProg(ORGO_CTX) },
+  cards: { label: 'Cards', icon: 'cards', render: renderCards },
   notes: { label: 'Quick Notes', icon: 'notes', render: renderNotes },
   settings: { label: 'Settings', icon: 'settings', render: renderSettings },
 };
 
 // What the Orgo tab needs from the app (it lives in its own module).
 const ORGO_CTX = { h, card, commit, touch, render: () => render(), S: () => S, todayStr, addDays };
+
+// Sleep, week in review, cards and "today I learned" live in extras/.
+initExtras({
+  h, s, card, icon, iconBtn, commit, touch, uid, S: () => S, live, todayStr, addDays, parse, toStr,
+  fmtShort, fmtWeekday, fmtTime, totalsFor, focusMinutes, taskItems, forestPlot, render: () => render(), go,
+});
 
 function go(v) { view = v; history.replaceState(null, '', `#${v}`); render(); window.scrollTo(0, 0); }
 
@@ -701,7 +713,7 @@ function renderToday() {
       })() })), flowerGadget()),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, calendarCard(today), h('div', { class: 'todo-split' }, assignmentsCard(), tasksCard())),
-      h('div', { class: 'col col-narrow' }, internsCard(), countdownCard(), caloriesMini())),
+      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), internsCard(), countdownCard(), caloriesMini(), tilCard())),
     tagList());
 }
 

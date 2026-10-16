@@ -436,6 +436,283 @@ function h2(t) {
   return f;
 }
 
+// ---------------------------------------------------------------- shared: water and proton hand-offs
+
+/**
+ * Deprotonation of an oxonium O (bonded to `heavy`) by a second water, over
+ * t0..t1. Returns nothing; adds the transferring H (`${id}HA`), the second
+ * water and the curved arrows. `hDirs` are the oxonium's two H directions.
+ */
+function deprotonate(f, t, id, Oid, O, hDirs, t0, t1) {
+  const dA = hDirs[0];
+  const dOO = keys(t, [[t0 - 0.14, 4.6], [t0, 2.9], [t0 + 0.03, 2.6]]) + keys(t, [[t1 + 0.02, 0], [1, 3.0]]);
+  const wOp = Math.min(ease(t, t0 - 0.14, t0 - 0.06), 1 - 0.75 * ease(t, t1 + 0.04, t1 + 0.1));
+  const hA = t < t1 ? keys(t, [[t0 + 0.03, 0.97], [t1, 1.6]]) : dOO - 0.97;
+  const HA = f.atom(`${id}HA`, 'H', at(O, dA, hA));
+  f.atom(`${id}HB`, 'H', at(O, hDirs[1], 0.96));
+  f.bond(Oid, `${id}HB`);
+  breaking(f, Oid, `${id}HA`, t, t0 + 0.03, t1);
+  const O2 = f.atom(`${id}W`, 'O', at(O, dA, dOO));
+  const e1 = perpTo(Z, dA);
+  [90, 270].forEach((phi, i) => addH(f, `${id}Wh${i}`, O2, polar(dA, e1, 70, phi), `${id}W`, 0.96));
+  f.fade([`${id}W`, `${id}Wh0`, `${id}Wh1`, ...(t > t1 ? [`${id}HA`] : [])], wOp);
+  forming(f, `${id}W`, `${id}HA`, t, t0 + 0.03, t1);
+  f.charge(`${id}qO`, Oid, '+', window01(t, t0 - 0.12, t1 + 0.01));
+  f.charge(`${id}qW`, `${id}W`, '+', window01(t, t1 + 0.02, 1.1));
+  f.arrow(`${id}dp1`, add(at(O2, dA, -0.35), [0, 0.4, 0]), add(HA, [0, 0.22, 0]), [0, 0.6, 0], { opacity: window01(t, t0 - 0.06, t0 + 0.02) });
+  f.arrow(`${id}dp2`, mid(O, HA), add(O, [0, -0.3, 0]), [0, -0.6, 0], { opacity: window01(t, t0 - 0.05, t0 + 0.02) });
+}
+
+// ---------------------------------------------------------------- halohydrin (Br2, H2O)
+
+function halohydrin(t) {
+  const f = new Frame();
+  const m1 = keys(t, [[0.2, 0], [0.32, -0.45], [0.5, -0.45], [0.72, 1]]);
+  const m2 = keys(t, [[0.2, 0], [0.32, -0.45], [0.6, -0.45], [0.72, -1]]);
+  const { C1, C2, out1, out2 } = ring(f, { half: keys(t, [[0.2, 0.67], [0.36, 0.77]]), m1, m2 });
+  f.bond('C1', 'C2', keys(t, [[0.18, 2], [0.3, 1]]));
+  const M = mid(C1, C2);
+  const bridge = at(M, Y, keys(t, [[0, 6], [0.18, 2.7], [0.3, 1.86]]));
+  const Ba = f.atom('Ba', 'Br', lerp(bridge, at(C2, sDir(out2, 1), 1.94), ease(t, 0.6, 0.72)));
+  // Br⁻ is released and drifts away: water, the solvent, is the one that attacks
+  const Bb = f.atom('Bb', 'Br', t < 0.38
+    ? at(Ba, Y, keys(t, [[0.18, 2.28], [0.3, 2.9], [0.38, 4.4]]))
+    : keys(t, [[0.38, at(at(M, Y, 1.86), Y, 4.4)], [0.5, add(M, [3.6, 4.6, -1.2])], [1, add(M, [4.6, 5.2, -1.8])]]));
+  f.fade(['Bb'], 1 - 0.75 * ease(t, 0.42, 0.52));
+  breaking(f, 'Ba', 'Bb', t, 0.27, 0.36);
+  if (t > 0.18 && t < 0.3) f.bond('C1', 'Ba', 1, { partial: true });
+  else if (t >= 0.3 && t <= 0.6) f.bond('C1', 'Ba');
+  else if (t > 0.6 && t < 0.7) f.bond('C1', 'Ba', 1, { partial: true });
+  forming(f, 'C2', 'Ba', t, 0.18, 0.3);
+
+  // water comes in under C1 (the more substituted carbon) and opens the ring
+  const bot1 = sDir(out1, -1);
+  const O = f.atom('O', 'O', keys(t, [[0.36, add(C1, [-1.6, -3.6, 1.6])], [0.5, at(C1, bot1, 3.0)], [0.6, at(C1, bot1, 2.4)], [0.72, at(C1, bot1, 1.43)]]));
+  const wIn = ease(t, 0.34, 0.46);
+  forming(f, 'C1', 'O', t, 0.6, 0.7);
+  const hd = tetra(neg(bot1), out1).slice(1);
+  if (t < 0.74) {
+    // water's H's point away from C1 until it bonds, then fold into the oxonium shape
+    const away = norm(sub(O, C1));
+    const init = [polar(away, out1, 52, 90), polar(away, out1, 52, 270)];
+    const gap = (u, v) => Math.hypot(u[0] - v[0], u[1] - v[1], u[2] - v[2]);
+    const goal = gap(init[0], hd[0]) + gap(init[1], hd[1]) <= gap(init[0], hd[1]) + gap(init[1], hd[0]) ? hd : [hd[1], hd[0]];
+    [0, 1].forEach(i => {
+      f.atom(`Wh${i}`, 'H', at(O, norm(lerp(init[i], goal[i], ease(t, 0.62, 0.74))), 0.96));
+      f.bond('O', `Wh${i}`);
+    });
+    f.fade(['O', 'Wh0', 'Wh1'], wIn);
+  } else deprotonate(f, t, 'd', 'O', O, hd, 0.8, 0.88);
+
+  f.charge('dA', 'Ba', 'δ+', window01(t, 0.04, 0.18));
+  f.charge('dB', 'Bb', 'δ−', window01(t, 0.04, 0.18));
+  f.charge('qA', 'Ba', '+', window01(t, 0.3, 0.64));
+  f.charge('qB', 'Bb', '−', window01(t, 0.34, 1.1));
+  f.charge('d1', 'C1', 'δ+', window01(t, 0.4, 0.6));
+  piLobes(f, C1, C2, window01(t, 0, 0.22) * 0.75);
+
+  f.arrow('a1', add(M, [0, 0.5, 0]), add(Ba, [0, -0.3, 0.1]), [0, 0.2, 0.8], { opacity: window01(t, 0.06, 0.24) });
+  f.arrow('a2', mid(Ba, Bb), add(Bb, [0.32, 0, 0]), [0.7, 0, 0], { opacity: window01(t, 0.08, 0.24) });
+  f.arrow('a3', add(O, [0.3, 0.35, 0.2]), add(C1, [0, -0.55, 0]), [0.2, 0, 0.7], { opacity: window01(t, 0.54, 0.68) });
+  f.arrow('a4', mid(C1, Ba), add(Ba, [-0.3, 0.1, 0]), [-0.5, 0.1, 0.3], { opacity: window01(t, 0.55, 0.68) });
+
+  f.caption('1-methylcyclopentene + Br₂ in water', 1 - ease(t, 0.12, 0.18));
+  f.caption('Bromonium ion: Br bridges both carbons, top face blocked', window01(t, 0.3, 0.46));
+  f.caption('Water (the solvent) opens it from below at the more substituted C', window01(t, 0.48, 0.72));
+  f.caption('Oxonium ion: another water takes the extra H⁺', window01(t, 0.74, 0.88));
+  f.caption('trans-2-bromo-1-methylcyclopentan-1-ol (+ enantiomer) · OH on the more substituted C, anti', ease(t, 0.9, 0.95));
+  return f;
+}
+
+// ---------------------------------------------------------------- oxymercuration–demercuration
+
+function oxymerc(t) {
+  const f = new Frame();
+  const m1 = keys(t, [[0.18, 0], [0.3, -0.45], [0.36, -0.45], [0.54, 1]]);
+  const m2 = keys(t, [[0.18, 0], [0.3, -0.45], [0.42, -0.45], [0.54, -1]]);
+  const { C1, C2, out1, out2 } = ring(f, { half: keys(t, [[0.18, 0.67], [0.32, 0.77]]), m1, m2 });
+  f.bond('C1', 'C2', keys(t, [[0.16, 2], [0.28, 1]]));
+  const M = mid(C1, C2);
+  const top2 = sDir(out2, 1);
+  // ⁺HgOAc: a bridge over both carbons, then it settles on C2
+  const bridge = at(M, Y, keys(t, [[0, 6.5], [0.16, 3.0], [0.28, 2.15]]));
+  const showHg = 1 - ease(t, 0.72, 0.8);
+  const Hg = add(lerp(bridge, at(C2, top2, 2.08), ease(t, 0.42, 0.54)), mul(norm(add(top2, X)), 2.6 * ease(t, 0.7, 0.8)));
+  const up = norm(lerp(Y, top2, ease(t, 0.42, 0.54)));
+  if (showHg > 0.01) {
+    f.atom('Hg', 'Hg', Hg, { opacity: showHg });
+    const Oa = f.atom('Oa', 'O', at(Hg, up, 2.05), { opacity: showHg });
+    f.bond('Hg', 'Oa', 1, { opacity: showHg });
+    const Cac = f.atom('Cac', 'C', at(Oa, polar(up, Z, 60, 0), 1.3), { opacity: showHg });
+    f.bond('Oa', 'Cac', 1, { opacity: showHg });
+    const back = norm(sub(Oa, Cac));
+    f.atom('Ob', 'O', at(Cac, polar(back, Z, 120, 90), 1.22), { opacity: showHg });
+    f.bond('Cac', 'Ob', 2, { opacity: showHg });
+    addGroup(f, 'CH3', 'Mac', 'Cac', Cac, polar(back, Z, 120, 270), back);
+    f.fade(['Mac', 'Mach0', 'Mach1', 'Mach2'], showHg);
+    if (t > 0.16 && t < 0.28) f.bond('C1', 'Hg', 1, { partial: true, opacity: showHg });
+    else if (t >= 0.28 && t <= 0.42) f.bond('C1', 'Hg', 1, { opacity: showHg });
+    else if (t > 0.42 && t < 0.52) f.bond('C1', 'Hg', 1, { partial: true, opacity: showHg });
+    forming(f, 'C2', 'Hg', t, 0.16, 0.28, { opacity: showHg });
+    f.charge('qHg', 'Hg', '+', window01(t, 0.04, 0.5) * showHg);
+  }
+  // NaBH₄ swaps the mercury for H (same carbon)
+  const showH = ease(t, 0.79, 0.85);
+  if (showH > 0.01) {
+    f.atom('Hn', 'H', at(C2, top2, keys(t, [[0.79, 2.6], [0.88, 1.09]])), { opacity: showH });
+    forming(f, 'C2', 'Hn', t, 0.8, 0.87, { opacity: showH });
+  }
+
+  const bot1 = sDir(out1, -1);
+  const O = f.atom('O', 'O', keys(t, [[0.26, add(C1, [-1.6, -3.6, 1.6])], [0.36, at(C1, bot1, 3.0)], [0.44, at(C1, bot1, 2.5)], [0.54, at(C1, bot1, 1.43)]]));
+  forming(f, 'C1', 'O', t, 0.44, 0.52);
+  const hd = tetra(neg(bot1), out1).slice(1);
+  if (t < 0.56) {
+    const away = norm(sub(O, C1));
+    const init = [polar(away, out1, 52, 90), polar(away, out1, 52, 270)];
+    const gap = (u, v) => Math.hypot(u[0] - v[0], u[1] - v[1], u[2] - v[2]);
+    const goal = gap(init[0], hd[0]) + gap(init[1], hd[1]) <= gap(init[0], hd[1]) + gap(init[1], hd[0]) ? hd : [hd[1], hd[0]];
+    [0, 1].forEach(i => { f.atom(`Wh${i}`, 'H', at(O, norm(lerp(init[i], goal[i], ease(t, 0.46, 0.56))), 0.96)); f.bond('O', `Wh${i}`); });
+    f.fade(['O', 'Wh0', 'Wh1'], ease(t, 0.24, 0.34));
+  } else deprotonate(f, t, 'd', 'O', O, hd, 0.6, 0.68);
+
+  f.charge('d1', 'C1', 'δ+', window01(t, 0.3, 0.44));
+  piLobes(f, C1, C2, window01(t, 0, 0.2) * 0.75);
+  f.arrow('a1', add(M, [0, 0.5, 0]), add(Hg, [0, -0.4, 0.1]), [0, 0.2, 0.8], { opacity: window01(t, 0.05, 0.2) });
+  f.arrow('a3', add(O, [0.3, 0.35, 0.2]), add(C1, [0, -0.55, 0]), [0.2, 0, 0.7], { opacity: window01(t, 0.38, 0.5) });
+  f.arrow('a4', mid(C1, Hg), add(Hg, [-0.3, 0.1, 0]), [-0.5, 0.1, 0.3], { opacity: window01(t, 0.38, 0.5) });
+
+  f.caption('1-methylcyclopentene + Hg(OAc)₂ in water', 1 - ease(t, 0.1, 0.16));
+  f.caption('Mercurinium ion: Hg bridges both carbons, so no free carbocation', window01(t, 0.18, 0.34));
+  f.caption('Water attacks the more substituted C, from the face opposite Hg', window01(t, 0.36, 0.56));
+  f.caption('A second water removes H⁺ from the oxonium', window01(t, 0.58, 0.7));
+  f.caption('NaBH₄ replaces HgOAc with H', window01(t, 0.72, 0.88));
+  f.caption('1-methylcyclopentan-1-ol · Markovnikov, no rearrangement', ease(t, 0.9, 0.95));
+  return f;
+}
+
+// ---------------------------------------------------------------- acid-catalysed hydration
+
+function hydration(t) {
+  const f = new Frame();
+  const k2 = ease(t, 0.2, 0.34), k1 = ease(t, 0.56, 0.68);
+  const { C1, C2, out1, out2 } = ring(f, { half: keys(t, [[0.2, 0.67], [0.36, 0.77]]), m1: -k1, m2: -k2 });
+  f.bond('C1', 'C2', keys(t, [[0.18, 2], [0.32, 1]]));
+  const top1 = sDir(out1, 1), top2 = sDir(out2, 1);
+  // H₃O⁺ hands its proton to C2
+  const Ha = f.atom('Ha', 'H', at(C2, norm(lerp(Y, top2, k2)), keys(t, [[0, 6], [0.16, 2.3], [0.26, 1.5], [0.34, 1.09]])));
+  const Ow = f.atom('Ow', 'O', t < 0.42 ? at(Ha, Y, keys(t, [[0.16, 0.98], [0.26, 1.55], [0.42, 3.2]])) : keys(t, [[0.42, at(at(C2, top2, 1.09), Y, 3.2)], [1, add(C2, [3.2, 4.6, -2])]]));
+  [0, 1].forEach(i => addH(f, `Owh${i}`, Ow, polar(Y, X, 70, i ? 120 : 240), 'Ow', 0.96));
+  breaking(f, 'Ow', 'Ha', t, 0.2, 0.3);
+  forming(f, 'C2', 'Ha', t, 0.2, 0.32);
+  f.fade(['Ow', 'Owh0', 'Owh1'], 1 - 0.78 * ease(t, 0.4, 0.5));
+
+  // another water attacks the flat 3° carbocation at C1
+  const O = f.atom('O', 'O', keys(t, [[0.36, add(C1, [-1.8, 3.6, 1.6])], [0.48, at(C1, top1, 3.0)], [0.56, at(C1, norm(lerp(Y, top1, 0.5)), 2.3)], [0.66, at(C1, top1, 1.43)]]));
+  forming(f, 'C1', 'O', t, 0.56, 0.64);
+  const hd = tetra(neg(top1), out1).slice(1);
+  if (t < 0.7) {
+    const toC = norm(sub(C1, O));
+    const w = tetra(toC, out1);
+    [0, 1].forEach(i => { f.atom(`Wh${i}`, 'H', at(O, norm(lerp(w[i + 1], hd[i], ease(t, 0.6, 0.7))), 0.96)); f.bond('O', `Wh${i}`); });
+    f.fade(['O', 'Wh0', 'Wh1'], ease(t, 0.34, 0.44));
+  } else deprotonate(f, t, 'd', 'O', O, hd, 0.76, 0.84);
+
+  f.charge('qH', 'Ow', '+', window01(t, 0, 0.26));
+  f.charge('q1', 'C1', '+', window01(t, 0.33, 0.62));
+  piLobes(f, C1, C2, window01(t, 0, 0.22) * 0.75);
+  f.lobe('p1', C1, Y, { kind: 'p', color: 'empty', size: 0.95, opacity: window01(t, 0.32, 0.62) });
+
+  f.arrow('a1', add(mid(C1, C2), [0, 0.5, 0]), add(Ha, [-0.15, -0.15, 0]), [-0.3, 0.4, 0.5], { opacity: window01(t, 0.06, 0.24) });
+  f.arrow('a2', mid(Ha, Ow), add(Ow, [0.32, 0, 0]), [0.6, 0, 0], { opacity: window01(t, 0.08, 0.24) });
+  f.arrow('a3', add(O, [0.3, -0.35, 0]), add(C1, [0, 0.6, 0]), [-0.4, 0.2, 0.5], { opacity: window01(t, 0.48, 0.62) });
+
+  f.caption('1-methylcyclopentene + H₃O⁺ (water, cat. H₂SO₄)', 1 - ease(t, 0.12, 0.18));
+  f.caption('The π bond takes H⁺; H goes to C2 so the + lands on C1 (3°)', window01(t, 0.2, 0.32));
+  f.caption('3° carbocation: flat, empty p orbital. Shifts could happen here', window01(t, 0.34, 0.5));
+  f.caption('Water attacks the carbocation', window01(t, 0.52, 0.68));
+  f.caption('Oxonium ion: water takes H⁺ back, so the acid is regenerated', window01(t, 0.72, 0.86));
+  f.caption('1-methylcyclopentan-1-ol · Markovnikov', ease(t, 0.9, 0.95));
+  return f;
+}
+
+// ---------------------------------------------------------------- HBr with a 1,2-methyl shift
+
+function methylShift(t) {
+  const f = new Frame();
+  // C2 starts sp² (alkene, then 2° cation) with its p orbital along X; it
+  // turns sp³ when the methyl arrives from the +X side.
+  const C2 = f.atom('C2', 'C', O0);
+  const th2 = keys(t, [[0.44, 90], [0.62, TET]]);
+  const C3 = f.atom('C3', 'C', at(C2, polar(X, Y, th2, 90), 1.54));
+  f.bond('C2', 'C3');
+  addH(f, 'H2', C2, polar(X, Y, th2, 330), 'C2');
+  // C1: =CH₂ that becomes CH₃ when the proton arrives along +X
+  const dC1 = polar(X, Y, th2, 210);
+  const C1 = f.atom('C1', 'C', at(C2, dC1, keys(t, [[0.12, 1.34], [0.28, 1.5]])));
+  f.bond('C2', 'C1', keys(t, [[0.12, 2], [0.26, 1]]));
+  // its two H's fold back (sp² → sp³) as the proton arrives along +X
+  const toC2 = norm(sub(C2, C1)), e1c = perpTo(toC2, X);
+  const th1 = keys(t, [[0.14, 90], [0.3, TET]]);
+  // after protonation the new CH₃ turns 60° (staggered), which keeps its H's
+  // clear of the methyl that will arrive on C2 from the +X side
+  const spin = keys(t, [[0.34, 0], [0.44, 60]]);
+  const away1 = neg(toC2), e1m = perpTo(X, away1);
+  const blend = ease(t, 0.27, 0.34);
+  const methylDir = phi => polar(away1, e1m, 180 - TET, phi + spin);
+  addH(f, 'H1a', C1, norm(lerp(polar(X, e1c, th1, 120), methylDir(120), blend)), 'C1');
+  addH(f, 'H1b', C1, norm(lerp(polar(X, e1c, th1, 240), methylDir(240), blend)), 'C1');
+  const Hp = f.atom('Hp', 'H', at(C1, norm(lerp(X, methylDir(0), blend)), keys(t, [[0, 6], [0.12, 1.6], [0.26, 1.09]])));
+  forming(f, 'C1', 'Hp', t, 0.12, 0.24);
+
+  // C3: two methyls stay, the third (aligned with C2's empty p orbital) migrates
+  const back = norm(sub(C2, C3)), r = perpTo(X, back);
+  const th3 = keys(t, [[0.42, TET], [0.6, 120], [0.72, 120], [0.84, TET]]);
+  addGroup(f, 'CH3', 'Ma', 'C3', C3, polar(back, r, th3, keys(t, [[0.42, 120], [0.6, 90], [0.72, 90], [0.84, 120]])), back);
+  addGroup(f, 'CH3', 'Mb', 'C3', C3, polar(back, r, th3, keys(t, [[0.42, 240], [0.6, 270], [0.72, 270], [0.84, 240]])), back);
+  const S0 = at(C3, polar(back, r, TET, 0), 1.54);
+  const E0 = at(C2, X, 1.54);
+  const Mid = add(mid(C2, C3), mul(X, 1.55));
+  const ctrl = sub(mul(Mid, 2), mul(add(S0, E0), 0.5));
+  const k = ease(t, 0.42, 0.62);
+  const Mm = f.atom('Mm', 'C', bez(S0, ctrl, E0, k));
+  // the migrating methyl keeps its H's pointing away from the bond it slides along
+  const away = norm(sub(Mm, mid(C2, C3)));
+  tetra(neg(away), Z).forEach((u, i) => addH(f, `Mmh${i}`, Mm, u, 'Mm'));
+  breaking(f, 'C3', 'Mm', t, 0.46, 0.58);
+  forming(f, 'C2', 'Mm', t, 0.46, 0.58);
+
+  // Br: on H at first, released as Br⁻, then attacks C3 where the methyl left
+  const Br = f.atom('Br', 'Br', t < 0.3
+    ? at(Hp, X, keys(t, [[0.12, 1.41], [0.2, 1.9], [0.3, 3.2]]))
+    : keys(t, [[0.3, at(at(C1, X, 1.09), X, 3.2)], [0.5, add(C2, [4.2, -1.2, 2.6])], [0.68, add(C3, [3.4, 0.6, 2.2])], [0.76, at(C3, r, 2.6)], [0.84, at(C3, polar(back, r, TET, 0), 1.94)]]));
+  breaking(f, 'Hp', 'Br', t, 0.16, 0.26);
+  forming(f, 'C3', 'Br', t, 0.76, 0.84);
+
+  f.charge('dH', 'Hp', 'δ+', window01(t, 0, 0.1));
+  f.charge('dBr', 'Br', 'δ−', window01(t, 0, 0.1));
+  f.charge('q2', 'C2', '+', window01(t, 0.26, 0.5));
+  f.charge('q3', 'C3', '+', window01(t, 0.54, 0.8));
+  f.charge('qBr', 'Br', '−', window01(t, 0.27, 0.78));
+  f.lobe('pi2', C2, X, { kind: 'p', color: 'filled', size: 0.75, opacity: window01(t, 0, 0.14) * 0.75 });
+  f.lobe('pi1', C1, X, { kind: 'p', color: 'filled', size: 0.75, opacity: window01(t, 0, 0.14) * 0.75 });
+  f.lobe('p2', C2, X, { kind: 'p', color: 'empty', size: 0.9, opacity: window01(t, 0.26, 0.5) * (1 - ease(t, 0.44, 0.56)) });
+  f.lobe('p3', C3, r, { kind: 'p', color: 'empty', size: 0.9, opacity: window01(t, 0.54, 0.78) });
+
+  f.arrow('a1', add(mid(C1, C2), [0.5, 0.2, 0]), add(Hp, [-0.15, -0.2, 0]), [0.2, -0.5, 0.3], { opacity: window01(t, 0.04, 0.16) });
+  f.arrow('a2', mid(Hp, Br), add(Br, [0, 0.32, 0]), [0, 0.6, 0], { opacity: window01(t, 0.05, 0.16) });
+  f.arrow('a3', mid(C3, Mm), add(C2, [0.55, 0.15, 0]), [0.7, 0, 0.1], { opacity: window01(t, 0.32, 0.46) });
+  f.arrow('a4', add(Br, [-0.3, 0.2, 0]), add(C3, [0.55, 0, 0]), [0, 0.6, 0.4], { opacity: window01(t, 0.66, 0.78) });
+
+  f.caption('3,3-dimethylbut-1-ene + HBr', 1 - ease(t, 0.08, 0.14));
+  f.caption('Protonation puts H on C1 (more H’s) → 2° carbocation on C2', window01(t, 0.16, 0.32));
+  f.caption('A methyl on the next carbon lines up with the empty p orbital…', window01(t, 0.34, 0.44));
+  f.caption('1,2-methyl shift: CH₃ moves over with its bonding electrons', window01(t, 0.46, 0.6), 'ts');
+  f.caption('Now a 3° carbocation, more stable', window01(t, 0.62, 0.72));
+  f.caption('2-bromo-2,3-dimethylbutane · the rearranged product is the major one', ease(t, 0.88, 0.93));
+  return f;
+}
+
 // ---------------------------------------------------------------- catalogue
 
 export const MECHS = [
@@ -541,6 +818,62 @@ export const MECHS = [
       [0.78, 1, 'Product', 'trans-2-Methylcyclopentan-1-ol (+ enantiomer). OH sits on the less substituted carbon (anti-Markovnikov), and H and OH were added syn, which puts OH trans to the methyl.'],
     ],
     facts: ['Anti-Markovnikov: OH on the less substituted C', 'Syn addition of H and OH', 'Concerted, no carbocation: no rearrangements', 'Reagents: 1) BH₃·THF  2) H₂O₂, NaOH'],
+  },
+  {
+    id: 'mshift', group: 'Carbocations', title: 'Methyl shift', sub: 'HBr with a rearrangement',
+    frame: methylShift, duration: 17, fit: 4.4, center: [0.6, 0.6, 0], view: [18, -30],
+    energy: [[0, 30, 'start', 'alkene + HBr'], [0.18, 80, 'ts'], [0.36, 58, 'int', '2° R⁺'], [0.52, 68, 'ts'], [0.68, 42, 'int', '3° R⁺'], [0.8, 52, 'ts'], [1, 10, 'end', 'R–Br']],
+    steps: [
+      [0, 0.14, 'Start', '3,3-Dimethylbut-1-ene and HBr. The π bond is the nucleophile; the H of HBr is δ+.'],
+      [0.14, 0.32, 'Protonation (slow step)', 'The π electrons grab H⁺. Markovnikov: H goes to C1 (the CH₂ end), so the positive charge lands on C2. But C2 is only secondary.'],
+      [0.32, 0.46, 'A 2° carbocation next to a quaternary carbon', 'C3 next door carries three methyls. The C–CH₃ bond that lines up with C2’s empty p orbital can slide over.'],
+      [0.46, 0.62, '1,2-Methyl shift', 'The methyl moves to C2 together with its two bonding electrons (as CH₃:⁻). The arrow starts at the C–CH₃ bond. C2 is now neutral and C3 becomes the cation.'],
+      [0.62, 0.76, 'A 3° carbocation', 'The + now sits on C3, which has three carbons around it: more hyperconjugation, more stable. This is why the shift happens.'],
+      [0.76, 1, 'Br⁻ attacks', 'Bromide adds to the 3° cation. Major product: 2-bromo-2,3-dimethylbutane, a different skeleton from the starting alkene. The unrearranged 3-bromo-2,2-dimethylbutane is only minor.'],
+    ],
+    facts: ['Shifts go to a more stable cation: 2° → 3° (or to a resonance-stabilized one)', '1,2-hydride or 1,2-methyl (“methide”) shifts', 'The group moves with its pair of electrons', 'Look for a 2° cation next to a 3° or quaternary carbon', 'Also in SN1/E1 (e.g. 3-methyl-2-butanol + HBr) and acid hydration', 'Ring expansion: a cation next to a cyclobutane can expand to a cyclopentane'],
+  },
+  {
+    id: 'hydration', group: 'Alkene additions', title: 'Acid hydration', sub: 'H₃O⁺, Markovnikov',
+    frame: hydration, duration: 17, fit: 4.3, center: [0, 0.6, 0.3], view: [20, -30],
+    energy: [[0, 30, 'start', 'alkene + H₃O⁺'], [0.26, 82, 'ts'], [0.44, 56, 'int', 'R⁺'], [0.6, 64, 'ts'], [0.72, 38, 'int', 'R–OH₂⁺'], [0.8, 46, 'ts'], [1, 14, 'end', 'R–OH']],
+    steps: [
+      [0, 0.18, 'Start', '1-Methylcyclopentene in water with a little H₂SO₄. The real acid is H₃O⁺.'],
+      [0.18, 0.34, 'Protonation (slow step)', 'The π bond takes H⁺ from H₃O⁺. H goes to C2 so the + lands on C1, the 3° carbon (Markovnikov).'],
+      [0.34, 0.5, 'Carbocation', 'Flat and sp² with an empty p orbital. Because a free carbocation forms, hydride or methyl shifts can happen with other alkenes.'],
+      [0.5, 0.7, 'Water attacks', 'Water is the nucleophile (it is the solvent, so it is everywhere). Either face works.'],
+      [0.7, 0.88, 'Deprotonation', 'The oxonium ion loses H⁺ to water, giving back H₃O⁺. The acid is a catalyst: used, then regenerated.'],
+      [0.88, 1, 'Product', '1-Methylcyclopentan-1-ol: OH on the more substituted carbon.'],
+    ],
+    facts: ['Markovnikov: OH on the more substituted C', 'Carbocation intermediate: rearrangements possible', 'Acid is catalytic (H₃O⁺ is regenerated)', 'Not stereospecific', 'Reversible: heat + acid runs it backward (E1 dehydration)', 'To avoid rearrangements use oxymercuration instead'],
+  },
+  {
+    id: 'oxymerc', group: 'Alkene additions', title: 'Oxymercuration', sub: 'Markovnikov, no rearrangement',
+    frame: oxymerc, duration: 18, fit: 4.6, center: [0, 1.0, 0.3], view: [20, -30],
+    energy: [[0, 34, 'start', 'alkene + ⁺HgOAc'], [0.22, 70, 'ts'], [0.34, 48, 'int', 'mercurinium'], [0.48, 60, 'ts'], [0.6, 36, 'int', ''], [0.66, 42, 'ts'], [0.76, 30, 'int', 'R–HgOAc'], [1, 6, 'end', 'R–OH']],
+    steps: [
+      [0, 0.16, 'Start', 'Hg(OAc)₂ loses one acetate to give ⁺HgOAc, a strong electrophile. The alkene’s π bond attacks it.'],
+      [0.16, 0.34, 'Mercurinium ion', 'Hg bridges both carbons, like a bromonium. There is no free carbocation, so nothing can rearrange.'],
+      [0.34, 0.56, 'Water opens it', 'Water attacks the more substituted carbon, which carries more δ+, from the face opposite Hg. That is Markovnikov placement of OH.'],
+      [0.56, 0.72, 'Deprotonation', 'A second water removes H⁺ from the oxonium, leaving a neutral alcohol still holding HgOAc.'],
+      [0.72, 0.9, 'Demercuration', 'NaBH₄ replaces HgOAc with H. This step isn’t stereospecific, so you only need to track where the OH went.'],
+      [0.9, 1, 'Product', '1-Methylcyclopentan-1-ol: same product as acid hydration here, but with guaranteed no rearrangement.'],
+    ],
+    facts: ['Reagents: 1) Hg(OAc)₂, H₂O  2) NaBH₄', 'Markovnikov: OH on the more substituted C', 'Mercurinium bridge: no rearrangements', 'Overall not stereospecific (the H from NaBH₄ adds either way)', 'Use it when acid hydration would rearrange'],
+  },
+  {
+    id: 'halohydrin', group: 'Alkene additions', title: 'Halohydrin', sub: 'Br₂ in water, anti',
+    frame: halohydrin, duration: 18, fit: 4.4, center: [0, 0.4, 0.3], view: [18, -30],
+    energy: [[0, 30, 'start', 'alkene + Br₂'], [0.26, 78, 'ts'], [0.44, 50, 'int', 'bromonium'], [0.64, 62, 'ts'], [0.76, 30, 'int', 'R–OH₂⁺'], [0.84, 38, 'ts'], [1, 10, 'end', 'halohydrin']],
+    steps: [
+      [0, 0.18, 'Br₂ approaches', 'Same start as Br₂ addition: the π electrons push into Br–Br and the near Br becomes δ+.'],
+      [0.18, 0.38, 'Bromonium ion', 'One Br bridges both carbons (+ on Br) and Br⁻ is released. The top face is now blocked.'],
+      [0.38, 0.6, 'Water wins', 'Water is the solvent, so it vastly outnumbers Br⁻ and is the one that attacks. The bromonium’s C1 side (more substituted) carries more δ+, so water goes there.'],
+      [0.6, 0.74, 'Backside opening', 'Water attacks C1 from below, opposite the Br bridge (SN2-like). C1’s methyl flips up as the ring opens.'],
+      [0.74, 0.9, 'Deprotonation', 'Another water takes the extra H⁺ off the oxonium.'],
+      [0.9, 1, 'Product', 'trans-2-Bromo-1-methylcyclopentan-1-ol (+ enantiomer): OH on the more substituted C, Br on the other, anti.'],
+    ],
+    facts: ['Br₂ (or Cl₂) in H₂O: OH and X add anti', 'OH ends up on the more substituted C', 'Bromonium intermediate: no rearrangements', 'In ROH instead of water you get an ether (OR instead of OH)', 'Racemic when two new stereocenters form'],
   },
   {
     id: 'h2', group: 'Alkene additions', title: 'Hydrogenation', sub: 'H₂ on a metal surface, syn',

@@ -55,12 +55,12 @@ export const REACTIONS = [
   },
   {
     id: 'hydration', reagents: ['H₃O⁺', '(H₂O, cat. H₂SO₄)'], adds: 'H and OH', regio: 'Markovnikov', stereo: 'Not stereospecific', via: 'Carbocation', rearr: true,
-    product: cyclopentane({ subs: [[0, 122, ''], [0, 58, 'OH', 1, true]] }), name: '1-methylcyclopentan-1-ol',
+    product: cyclopentane({ subs: [[0, 122, ''], [0, 58, 'OH', 1, true]] }), name: '1-methylcyclopentan-1-ol', mech: 'hydration',
     note: 'Acid-catalysed: protonate, water attacks the carbocation, then deprotonate. Watch for shifts.',
   },
   {
     id: 'oxymerc', reagents: ['1) Hg(OAc)₂, H₂O', '2) NaBH₄'], adds: 'H and OH', regio: 'Markovnikov', stereo: 'Not stereospecific', via: 'Mercurinium ion',
-    product: cyclopentane({ subs: [[0, 122, ''], [0, 58, 'OH', 1, true]] }), name: '1-methylcyclopentan-1-ol',
+    product: cyclopentane({ subs: [[0, 122, ''], [0, 58, 'OH', 1, true]] }), name: '1-methylcyclopentan-1-ol', mech: 'oxymerc',
     note: 'Same product as acid hydration, but no carbocation, so no rearrangements.',
   },
   {
@@ -80,7 +80,7 @@ export const REACTIONS = [
   },
   {
     id: 'halohydrin', reagents: ['Br₂, H₂O'], adds: 'OH and X', regio: 'OH → more substituted C', stereo: 'Anti', via: 'Bromonium ion',
-    product: cyclopentane({ subs: [[0, 122, ''], [0, 58, 'OH', 'w', true], [1, 18, 'Br', 'h', true]] }), name: 'trans-2-bromo-1-methylcyclopentan-1-ol', racemic: true,
+    product: cyclopentane({ subs: [[0, 122, ''], [0, 58, 'OH', 'w', true], [1, 18, 'Br', 'h', true]] }), name: 'trans-2-bromo-1-methylcyclopentan-1-ol', racemic: true, mech: 'halohydrin',
     note: 'Water outnumbers Br⁻, so water opens the bromonium at the more substituted carbon (it carries more δ+).',
   },
   {

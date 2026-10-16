@@ -1,18 +1,19 @@
 // The Orgo tab: 3D mechanisms, the SN1/SN2/E1/E2 decider, alkene reactions,
 // a 3D molecule explorer, and practice (quiz + flashcards).
 
-import { MECHS, mechById } from './mechanisms.js?v=2';
+import { MECHS, mechById } from './mechanisms.js?v=3';
 import { energyDiagram, skeletal } from './draw.js?v=2';
 import { conceptsPage } from './concepts.js?v=2';
 import { problemsPage } from './problems.js?v=2';
+import { cheatSheetPage, mockExamPage } from './exam.js?v=1';
 import {
   SM, REACTIONS, SUBSTRATES, CLASS_LABEL, REAGENT_TYPES, REAGENTS, tableCell, outcomeLabel,
   OUTCOME_LABELS, decide, CONCEPTS, CARDS,
-} from './content.js?v=2';
+} from './content.js?v=3';
 
 let C; // helpers handed over by app.js: h, card, commit, touch, S, todayStr, addDays
 
-const TABS = [['mech', 'Mechanisms'], ['concepts', 'Concepts'], ['decide', 'Which one?'], ['alkenes', 'Alkene reactions'], ['mol', 'Molecules'], ['practice', 'Quiz'], ['keys', 'Daily practice']];
+const TABS = [['mech', 'Mechanisms'], ['concepts', 'Concepts'], ['decide', 'Which one?'], ['alkenes', 'Alkene reactions'], ['mol', 'Molecules'], ['practice', 'Quiz'], ['keys', 'Daily practice'], ['mock', 'Mock exam'], ['cheat', 'Cheat sheet']];
 const MECH_FOR = { SN2: 'sn2', SN1: 'sn1', E2: 'e2', E1: 'e1' };
 
 function saved(key, fallback) { try { return localStorage.getItem(`orgo.${key}`) || fallback; } catch { return fallback; } }
@@ -209,7 +210,7 @@ export function renderOrgo(ctx) {
     type: 'button', role: 'tab', class: `orgo-tab${st.tab === id ? ' on' : ''}`, 'aria-selected': String(st.tab === id),
     onclick: () => { if (st.tab !== id) { st.tab = id; save('tab', id); shownKey = ''; C.render(); } },
   }, label)));
-  const body = { mech: mechPage, concepts: () => conceptsPage(C), decide: decidePage, keys: () => problemsPage(C), alkenes: alkenePage, mol: molPage, practice: practicePage }[st.tab] || mechPage;
+  const body = { mech: mechPage, concepts: () => conceptsPage(C), decide: decidePage, keys: () => problemsPage(C), mock: () => mockExamPage(C), cheat: () => cheatSheetPage(C), alkenes: alkenePage, mol: molPage, practice: practicePage }[st.tab] || mechPage;
   const page = h('div', { class: 'page orgo' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Orgo' }),
       h('p', { class: 'muted small orgo-sub', text: 'Exam 3 · substitution, elimination and alkene reactions' }))),
