@@ -1786,18 +1786,6 @@ function weightText(ws) {
   return `${base} · ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)} vs last wk`;
 }
 
-function recentFoods() {
-  const since = addDays(todayStr(), -30);
-  const byName = new Map();
-  for (const f of live('food')) {
-    if (f.date < since) continue;
-    const k = f.name.toLowerCase();
-    const prev = byName.get(k);
-    byName.set(k, { f: !prev || f.updatedAt > prev.f.updatedAt ? f : prev.f, n: (prev ? prev.n : 0) + 1 });
-  }
-  return [...byName.values()].sort((a, b) => b.n - a.n).slice(0, 10).map(x => x.f);
-}
-
 function addFood(src, day) {
   S.food.push(touch({
     id: uid(), date: day, name: src.name,
@@ -1809,29 +1797,6 @@ function renderCalories() {
   const day = calDay;
   const t = totalsFor(day);
   const entries = live('food').filter(f => f.date === day).sort((a, b) => a.updatedAt - b.updatedAt);
-  const recents = recentFoods();
-
-  const name = h('input', { id: 'food-name', placeholder: 'Food', list: 'foods', required: true, autocomplete: 'off', 'aria-label': 'Food' });
-  const nums = Object.fromEntries(NUTRIENTS.map(m => [m.key, h('input', {
-    type: 'number', min: '0', step: 'any', inputmode: 'decimal', placeholder: m.key === 'cal' ? 'cal' : `${m.label.toLowerCase()} g`, 'aria-label': m.label,
-  })]));
-  name.addEventListener('change', () => {
-    const match = recents.find(f => f.name.toLowerCase() === name.value.trim().toLowerCase());
-    if (match) NUTRIENTS.forEach(m => { if (!nums[m.key].value) nums[m.key].value = match[m.key] || ''; });
-  });
-  const form = h('form', {
-    class: 'food-form',
-    onsubmit: ev => {
-      ev.preventDefault();
-      if (!name.value.trim()) return;
-      commit(() => {
-        addFood({ name: name.value.trim(), ...Object.fromEntries(NUTRIENTS.map(m => [m.key, nums[m.key].value])) }, day);
-        focusAfter = 'food-name';
-      });
-    },
-  }, name, h('div', { class: 'row macros' }, MACROS.map(m => nums[m.key])), h('div', { class: 'row macros' }, EXTRAS.map(m => nums[m.key])),
-  h('button', { class: 'btn btn-primary', type: 'submit', text: 'Log food' }),
-  h('datalist', { id: 'foods' }, recents.map(f => h('option', { value: f.name }))));
 
   const isToday = day === todayStr();
   const nav = h('div', { class: 'day-nav' },
@@ -1863,13 +1828,6 @@ function renderCalories() {
     h('header', { class: 'page-head' }, h('h1', { text: 'Calories' }), nav),
     h('div', { class: 'grid' },
       h('div', { class: 'col' },
-        card('Log', null, form,
-          recents.length ? h('div', { class: 'quick' },
-            h('div', { class: 'subhead', text: 'Quick add' }),
-            h('div', { class: 'chips' }, recents.map(f => h('button', {
-              type: 'button', class: 'chip chip-btn', title: `${f.cal} cal · ${macroLine(f)}`,
-              onclick: () => commit(() => addFood(f, day)),
-            }, icon('plus', 'icon icon-xs'), f.name)))) : null),
         card(isToday ? 'Eaten today' : `Eaten ${fmtShort(day)}`, h('span', { class: 'card-meta', text: `${Math.round(t.cal).toLocaleString()} cal` }),
           entries.length ? h('ul', { class: 'food-list' }, entries.map(f => h('li', null,
             h('span', { class: 'food-name', text: f.name }),
