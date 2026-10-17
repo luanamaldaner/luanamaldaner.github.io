@@ -777,7 +777,7 @@ function renderToday() {
       })() })), flowerGadget()),
     h('div', { class: 'grid' },
       h('div', { class: 'col' }, calendarCard(today), h('div', { class: 'todo-split' }, assignmentsCard(), tasksCard())),
-      h('div', { class: 'col col-narrow' }, sleepCard(), weekCard(), studyCorner(), internsCard(), caloriesMini())),
+      h('div', { class: 'col col-narrow' }, internsCard(), sleepCard(), weekCard(), studyCorner(), caloriesMini())),
     tagList());
 }
 
@@ -1666,10 +1666,10 @@ function planCard() {
 }
 
 // Study corner: the daily study cards share one tabbed card so Today stays calm.
-const CORNER = [['plan', '📅 Plan', () => planCard()], ['boss', '👾 Boss', () => bossCard(ORGO_CTX)], ['pt', '✍️ Palavras', () => palavrasCard()], ['jr', '📓 Journal', () => journalCard()], ['mb', '🦠 Microbe', () => microbeCard(ORGO_CTX)], ['til', '💡 TIL', () => tilCard()]];
+const CORNER = [['boss', '👾 Boss', () => bossCard(ORGO_CTX)], ['pt', '✍️ Palavras', () => palavrasCard()], ['jr', '📓 Journal', () => journalCard()], ['mb', '🦠 Microbe', () => microbeCard(ORGO_CTX)], ['til', '💡 TIL', () => tilCard()]];
 function studyCorner() {
-  let tab = 'plan';
-  try { tab = localStorage.getItem('corner.tab') || 'plan'; } catch {}
+  let tab = 'boss';
+  try { tab = localStorage.getItem('corner.tab') || 'boss'; } catch {}
   const items = CORNER.map(([id, label, make]) => ({ id, label, el: make() })).filter(x => x.el);
   if (!items.length) return null;
   const cur = items.find(x => x.id === tab) || items[0];
