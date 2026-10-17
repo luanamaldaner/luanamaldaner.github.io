@@ -74,7 +74,7 @@ function niceStep(x) {
   return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p;
 }
 
-function barChart(days, values, { target = null, max = null, unit = '', fmt = v => String(v), axis = v => String(v), labelEvery = 1, color = 'var(--accent)', aria = '' }) {
+export function barChart(days, values, { target = null, max = null, unit = '', fmt = v => String(v), axis = v => String(v), labelEvery = 1, color = 'var(--accent)', aria = '' }) {
   const s = C.s;
   const W = 340, H = 150, L = 34, B = 128, T = 10;
   const peak = Math.max(max || 0, target || 0, ...values.map(v => v || 0), 1);

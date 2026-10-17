@@ -24,7 +24,7 @@ import { bossCard } from './extras/boss.js?v=3';
 import { renderLab, microbeCard } from './extras/lab.js?v=10';
 import { renderDegree } from './extras/degree.js?v=3';
 import { renderBio } from './bio/bio.js?v=13';
-import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard } from './extras/extras.js?v=8';
+import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard, barChart } from './extras/extras.js?v=9';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 
@@ -34,6 +34,7 @@ let S = null;          // decrypted state (memory only)
 let K = null;          // AES key info (non-extractable key)
 let view = 'today';
 let calDay = todayStr();
+let calSpan = 7;
 let activeNoteId = null;
 const showDone = new Set(); // which lists show their finished items
 let openLater = false;      // assignments beyond this week stay hidden until asked
@@ -1862,8 +1863,6 @@ function renderCalories() {
     h('header', { class: 'page-head' }, h('h1', { text: 'Calories' }), nav),
     h('div', { class: 'grid' },
       h('div', { class: 'col' },
-        mealCard(day),
-        chatFoodCard(day),
         card('Log', null, form,
           recents.length ? h('div', { class: 'quick' },
             h('div', { class: 'subhead', text: 'Quick add' }),
@@ -1879,6 +1878,7 @@ function renderCalories() {
             iconBtn('x', 'Remove', () => commit(() => { touch(f).deleted = true; }), 'row-action'))))
             : h('p', { class: 'empty', text: 'Nothing logged yet.' }))),
       h('div', { class: 'col col-narrow' },
+        calWeekCard(g.cal),
         card('Progress', null,
           h('div', { class: 'rings-big' }, rings(t, 168)),
           legend(t),
@@ -1894,6 +1894,19 @@ function renderCalories() {
           h('div', null, h('dt', { text: 'Last 30 days' }), h('dd', { text: fmtAvg(avgCalories(todayStr(), 30)) })),
           h('div', null, h('dt', { text: 'Sugar, last 7 days' }), h('dd', { text: fmtGrams(avgNutrient('sugar', todayStr(), 7)) })),
           h('div', null, h('dt', { text: 'Fiber, last 7 days' }), h('dd', { text: fmtGrams(avgNutrient('fiber', todayStr(), 7)) })))))));
+}
+
+// Calories per day over the last 7 or 30 days, with the daily goal as a dashed line (same chart as Sleep).
+function calWeekCard(goal) {
+  const today = todayStr();
+  const days = Array.from({ length: calSpan }, (_, i) => addDays(today, i - calSpan + 1));
+  const cals = days.map(d => Math.round(totalsFor(d).cal));
+  const logged = cals.filter(Boolean);
+  const span = n => h('button', { type: 'button', class: `chip chip-btn${calSpan === n ? ' on' : ''}`, text: `${n} days`, onclick: () => { calSpan = n; render(); } });
+  return card('Calories by day', h('div', { class: 'chips' }, span(7), span(30)),
+    logged.length ? barChart(days, cals, { target: goal, fmt: v => v.toLocaleString(), unit: ' cal', axis: v => (v >= 1000 ? `${v / 1000}k` : String(v)), labelEvery: calSpan > 7 ? 5 : 1, aria: `Calories over the last ${calSpan} days` })
+      : h('p', { class: 'empty', text: 'Nothing logged in this range yet.' }),
+    logged.length ? h('p', { class: 'muted small', text: `Dashed line = your ${Number(goal).toLocaleString()} cal goal. Avg ${Math.round(logged.reduce((a, b) => a + b, 0) / logged.length).toLocaleString()} cal on ${logged.length} logged day${logged.length === 1 ? '' : 's'}.` }) : null);
 }
 
 function mealCard(day) {
