@@ -27,6 +27,7 @@ function saved(key, fallback) { try { const v = localStorage.getItem(`bio.${key}
 function save(key, v) { try { localStorage.setItem(`bio.${key}`, v); } catch {} }
 function savedSet(key) { try { return new Set(JSON.parse(localStorage.getItem(`bio.${key}`) || '[]')); } catch { return new Set(); } }
 function saveSet(key, s) { save(key, JSON.stringify([...s])); }
+function savedObj(key) { try { const o = JSON.parse(localStorage.getItem(`bio.${key}`) || '{}'); return o && typeof o === 'object' ? o : {}; } catch { return {}; } }
 
 const st = {
   lec: saved('lec', 'L5'),
@@ -34,7 +35,14 @@ const st = {
   done: savedSet('done'),         // lectures marked as made up
   quiz: {},                        // lecture id -> { i, picked, right, order }
   walk: null,                      // { lec, i, picked } while a guided walkthrough is open
+  walkAt: savedObj('walkat'),     // lecture id -> step index where the guided lecture was left off
 };
+
+// remember the step to resume from; the first step and the finish screen clear it
+function saveWalkAt(lid, i, n) {
+  if (i > 0 && i < n) st.walkAt[lid] = i; else delete st.walkAt[lid];
+  save('walkat', JSON.stringify(st.walkAt));
+}
 
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -206,7 +214,7 @@ export function renderBio(ctx) {
     onclick: () => { if (!map) { st.lec = 'MAP'; save('lec', 'MAP'); C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
   }, h('span', { class: 'bio-tab-n', text: '✦' }), h('span', { text: 'Concept map' })));
   if (exam || map) {
-    const jump = (lid, i) => { st.lec = lid; save('lec', lid); st.walk = { lec: lid, i, picked: null }; C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    const jump = (lid, i) => { st.lec = lid; save('lec', lid); st.walk = { lec: lid, i, picked: null }; saveWalkAt(lid, i, WALKS[lid].length); C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     return h('div', { class: 'page bio' },
       h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'Biology' }), h('p', { class: 'muted small bio-head-sub', text: exam ? 'Bio 2 · mock exam' : 'Bio 2 · concept map' }))),
       tabs, exam ? examPage(C, LECTURES, WALKS) : mapPage(C, LECTURES, WALKS, jump));
@@ -233,10 +241,7 @@ export function renderBio(ctx) {
         type: 'button', class: `btn btn-small${isDone ? '' : ' btn-primary'}`,
         onclick: () => { if (isDone) st.done.delete(lec.id); else st.done.add(lec.id); saveSet('done', st.done); C.render(); },
       }, isDone ? 'Made up ✓ (undo)' : 'Mark as made up')),
-    WALKS[lec.id] ? h('button', {
-      type: 'button', class: 'bio-start',
-      onclick: () => { st.walk = { lec: lec.id, i: 0, picked: null }; C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); },
-    }, h('span', { class: 'bio-start-play', text: '▶' }), h('span', null, h('strong', { text: 'Start the guided lecture' }), h('span', { class: 'muted small', text: ` · ${WALKS[lec.id].length} short steps, about ${Math.max(5, Math.round(WALKS[lec.id].length * 1.5))} min` }))) : null,
+    WALKS[lec.id] ? startWalk(lec) : null,
     h('h3', { class: 'bio-sub-h', text: 'The whole lecture in one minute' }),
     h('ul', { class: 'bio-minute' }, lec.minute.map(t => h('li', { text: t }))),
     h('div', { class: 'bio-prog' }, h('span', { class: 'bio-prog-track' }, prog), progText),
@@ -264,6 +269,21 @@ export function renderBio(ctx) {
 
 // ---------------------------------------------------------------- guided walkthrough
 
+function startWalk(lec) {
+  const { h } = C;
+  const steps = WALKS[lec.id], n = steps.length;
+  const at = st.walkAt[lec.id];
+  const open = i => { st.walk = { lec: lec.id, i, picked: null }; saveWalkAt(lec.id, i, n); C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  if (!(at > 0 && at < n)) {
+    return h('button', { type: 'button', class: 'bio-start', onclick: () => open(0) },
+      h('span', { class: 'bio-start-play', text: '▶' }), h('span', null, h('strong', { text: 'Start the guided lecture' }), h('span', { class: 'muted small', text: ` · ${n} short steps, about ${Math.max(5, Math.round(n * 1.5))} min` })));
+  }
+  return h('div', { class: 'bio-start-wrap' },
+    h('button', { type: 'button', class: 'bio-start', onclick: () => open(at) },
+      h('span', { class: 'bio-start-play', text: '▶' }), h('span', null, h('strong', { text: 'Continue the guided lecture' }), h('span', { class: 'muted small', text: ` · step ${at + 1} of ${n}: ${steps[at].title}` }))),
+    h('button', { type: 'button', class: 'link small bio-start-over', text: 'Start over from step 1', onclick: () => open(0) }));
+}
+
 // Each step: { title, say: [paragraphs], scene?: id, from?: seconds, vars?: {...},
 //              takeaway?: string, check?: { q, a, o: [..3], why } }
 function focusStep(lec, scroll = true) {
@@ -287,7 +307,7 @@ function walkPanel(lec) {
   const w = st.walk;
   const step = steps[w.i];
   const n = steps.length;
-  const go = i => { w.i = Math.max(0, Math.min(n, i)); w.picked = null; C.render(); queueMicrotask(() => focusStep(lec)); };
+  const go = i => { w.i = Math.max(0, Math.min(n, i)); w.picked = null; saveWalkAt(lec.id, w.i, n); C.render(); queueMicrotask(() => focusStep(lec)); };
   if (w.i >= n) {
     return h('section', { class: 'card bio-walk done', style: `--lc: var(${lec.color})` },
       h('p', { class: 'bio-kicker', text: `Lecture ${lec.n} · guided lecture` }),

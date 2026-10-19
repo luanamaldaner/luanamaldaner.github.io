@@ -1595,6 +1595,7 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .bio-start { display: flex; align-items: center; gap: 12px; width: 100%; margin: 14px 0 4px; padding: 12px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--lc) 45%, var(--line)); background: color-mix(in srgb, var(--lc) 10%, var(--card)); color: var(--text); cursor: pointer; text-align: left; font: inherit; transition: transform .2s, box-shadow .2s; }
 .bio-start:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
 .bio-start-play { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--lc); color: #fff; font-size: 13px; flex: none; }
+.bio-start-over { display: block; margin: 0 0 4px auto; }
 .bio-walk { border-top: 4px solid var(--lc); display: grid; gap: 10px; position: sticky; top: 10px; z-index: 5; max-height: calc(100vh - 20px); overflow: auto; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
 .bio-walk.done { position: static; }
 .bio-walk-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
