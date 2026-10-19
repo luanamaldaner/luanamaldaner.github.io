@@ -16,6 +16,7 @@ export default [
       'Gene sequences (comparing DNA) show that all animals come from one common ancestor. A group made of one ancestor plus all of its descendants is called monophyletic (“one family line”). Picture one big family tree with a single great-great-grandparent at the root.',
     ],
     takeaway: 'Animals are many-celled eaters (heterotrophs) that digest food inside, and they’re monophyletic (all from one common ancestor).',
+    remember: 'Word roots: hetero = other, troph = feeding, so heterotrophs feed on others. Mono = one, phyl = family line, so monophyletic = one family line (one ancestor plus all its descendants).',
     check: {
       q: 'Gene sequences show all animals share one common ancestor. That makes animals…',
       a: 'Monophyletic',
@@ -75,6 +76,7 @@ export default [
     from: 0,
     vars: { layers: 'tri', fate: 'proto' },
     takeaway: 'Gastrulation folds the hollow ball inward to make germ layers; triploblasts have ectoderm (outside), mesoderm (middle) and endoderm (inside).',
+    remember: 'Gastr- means stomach (like “gastric”): gastrulation is when the ball dents in to start the gut. Then peel the layers outside → in: ecto = outside, meso = middle, endo = inside.',
   },
   {
     title: 'Two layers or three?',
@@ -86,6 +88,7 @@ export default [
     from: 2.5,
     vars: { layers: 'di', fate: 'proto' },
     takeaway: 'Diploblastic = ectoderm + endoderm only. Triploblastic adds mesoderm in the middle.',
+    remember: 'Count like diploid and triploid: di = 2 layers, tri = 3. The extra layer triploblasts get is meso- (“middle”), so it has to sit between ecto and endo.',
     check: {
       q: 'Which germ layer do triploblastic animals have that diploblastic animals don’t?',
       a: 'Mesoderm',
@@ -103,6 +106,7 @@ export default [
     from: 10,
     vars: { layers: 'tri', fate: 'deut' },
     takeaway: 'Protostome: blastopore → mouth. Deuterostome: blastopore → anus (mouth comes second).',
+    remember: 'Proto = first (like a prototype), stome = mouth: protostome = “mouth first”. Deutero = second (Deuteronomy is the “second law”), so in deuterostomes the mouth comes second and the blastopore becomes the anus.',
     check: {
       q: 'In deuterostomes, the blastopore becomes the…',
       a: 'Anus',
@@ -119,6 +123,7 @@ export default [
     scene: 'l1-sym',
     from: 0,
     takeaway: 'Radial = arranged around a center; bilateral = one mirror line (left/right); asymmetrical = no match at all (sponges, placozoans).',
+    remember: 'Radial comes from radius: parts point out from a center like pizza slices. Bi-lateral = two sides. No symmetry at all? Sponges and Placozoans, the “Shapeless Pair” (S-P).',
     check: {
       q: 'Which animals have no line of symmetry at all?',
       a: 'Sponges and placozoans',
@@ -146,6 +151,7 @@ export default [
     from: 0,
     vars: { plan: 'acoel' },
     takeaway: 'Acoelomate = no cavity; pseudocoel = mesoderm on the body-wall side only; coelom = mesoderm on both sides.',
+    remember: 'A- = without, pseudo = fake, coel = cavity. Picture mesoderm “hugging” the cavity: a true coelom gets a full hug (both sides), a pseudocoel only a half hug (body-wall side), and acoelomates have no cavity to hug.',
     check: {
       q: 'A fluid-filled cavity lined with mesoderm on both the gut side and the body-wall side is a…',
       a: 'Coelom',
@@ -171,6 +177,7 @@ export default [
       'Appendages are parts sticking out of the body. They help animals move, and also include antennae, claws, mouthparts and reproductive organs. Nervous systems: ctenophores and cnidarians have a nerve net (nerves spread out like a mesh, with no brain), while bilaterians have a central nervous system (a brain and main nerve cords) that runs the muscles and handles sensory info.',
     ],
     takeaway: 'Segmentation and appendages allow specialization; bilaterians have a central nervous system, cnidarians and ctenophores a nerve net.',
+    remember: 'The five body-plan features in order: “Some Cats Sit And Nap” = Symmetry, Cavity, Segmentation, Appendages, Nervous system. Nerve net = a fishnet with no knot in the middle (no brain).',
     check: {
       q: 'Cnidarians and ctenophores have what kind of nervous system?',
       a: 'A diffuse nerve net',
@@ -185,6 +192,7 @@ export default [
       'Sponges: no separate germ layers, no true organs, and hard little support needles called spicules (made of silica, basically glass, in glass sponges and demosponges; made of calcium carbonate, like chalk, in calcareous sponges). Ctenophores (comb jellies): radial, diploblastic, and swim using cilia (tiny hairs) on eight comb rows called ctenes. Placozoans: super simple, only 4 cell types, diploblastic, with a swimming stage and a stuck-to-surfaces stage.',
     ],
     takeaway: 'Sponges, ctenophores, placozoans and cnidarians are the non-bilaterians.',
+    remember: 'Spicules match the sponge’s name: glass sponges use glass (silica), calcareous sponges use calcium carbonate (chalk). Cteno = comb, which is why ctenophores are comb jellies with comb rows (ctenes).',
     check: {
       q: 'Glass sponges and demosponges have spicules made of…',
       a: 'Silicon dioxide (silica)',
@@ -199,6 +207,7 @@ export default [
       'Their life cycle has a polyp stage that is sessile (stuck in one place, like an anemone) and a medusa stage that swims (like a jellyfish). To catch big prey, they fire nematocysts: tiny harpoons loaded with venom.',
     ],
     takeaway: 'Cnidarians: diploblastic, polyp + medusa stages, a gastrovascular cavity, and venomous nematocysts.',
+    remember: 'Polyp = Pinned in Place (sessile, like an anemone); Medusa = Moves (swims), with tentacles trailing like Medusa’s snake hair. Nematocysts = tiny harpoons.',
   },
   {
     title: 'Putting it together',

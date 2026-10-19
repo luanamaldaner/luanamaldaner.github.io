@@ -14,6 +14,7 @@ export default [
       'Direction matters. Afferent neurons carry signals TOWARD the CNS (sensory neurons, from sense organs like skin and eyes). Efferent neurons carry signals AWAY from the CNS (motor neurons, which tell muscles to contract). Memory trick: Afferent Arrives, Efferent Exits.',
     ],
     takeaway: 'CNS = brain + spinal cord; afferent = toward the CNS, efferent = away from it.',
+    remember: 'Afferent Arrives, Efferent Exits. Pair it with SAME: Sensory = Afferent, Motor = Efferent.',
     check: {
       q: 'A neuron carrying touch information from your finger to your spinal cord is…',
       a: 'Afferent (sensory)',
@@ -29,6 +30,7 @@ export default [
       'Dendrites (short branches, like antennas) carry signals toward the cell body. The cell body (with the nucleus and organelles) adds up all the incoming signals. The axon (a long cable) carries the action potential away, sometimes very far. The axon terminals at the end meet the next cell at a synapse (the meeting point). The sending cell is presynaptic (“before the synapse”); the receiving cell is postsynaptic (“after the synapse”).',
     ],
     takeaway: 'Dendrites → cell body → axon → axon terminals → synapse.',
+    remember: '“Dogs Chase After Tails”: Dendrites → Cell body → Axon → Terminals. Dendrites bring signals in; the Axon carries them Away.',
     check: {
       q: 'Which part of a neuron carries action potentials AWAY from the cell body?',
       a: 'Axon',
@@ -44,6 +46,7 @@ export default [
       'Watch the wrapped-up axon here. Oligodendrocytes (in the brain and spinal cord) and Schwann cells (in the PNS) wrap axons in myelin, a fatty insulating layer, like the plastic coating on a wire. Myelin makes signals travel faster, and it looks white, which is why those areas are called white matter.',
     ],
     takeaway: 'Oligodendrocytes = myelin in the CNS, Schwann cells = myelin in the PNS; myelin makes signals faster.',
+    remember: 'COPS: CNS = Oligodendrocytes, PNS = Schwann cells. Both wrap axons in myelin, the insulation on the wire.',
     check: {
       q: 'Which cells make myelin in the brain and spinal cord?',
       a: 'Oligodendrocytes',
@@ -59,6 +62,7 @@ export default [
       'Reason #1 is the Na⁺/K⁺ pump (also called Na⁺-K⁺ ATPase). Watch it: it spends energy (ATP) to throw 3 sodium (Na⁺) out for every 2 potassium (K⁺) it brings in. That leaves more + charge outside. It also sets up the concentration gradients (lots of Na⁺ outside, lots of K⁺ inside) that the neuron uses later.',
     ],
     takeaway: 'The Na⁺/K⁺ pump uses ATP to move 3 Na⁺ out and 2 K⁺ in.',
+    remember: 'Salty sea outside, potassium kept inside: the pump throws 3 Na⁺ out and brings 2 K⁺ in. More + goes out than comes in, so the outside ends up more positive.',
   },
   {
     title: 'Resting potential: K⁺ leaks out',
@@ -82,6 +86,7 @@ export default [
       'Opening channels changes the voltage. If Na⁺ rushes in, the inside gets less negative; that’s depolarized. If the inside gets more negative than rest, that’s hyperpolarized.',
     ],
     takeaway: 'Channels open by voltage, stretch or ligand; Na⁺ in = depolarize, more negative = hyperpolarize.',
+    remember: 'Hyper = “extra”: hyperpolarized is extra polarized, more negative than rest. De = “undo”: depolarized is less polarized, inside less negative. Ligand = a key that sticks to its lock.',
     check: {
       q: 'A channel that opens when a neurotransmitter sticks to it is…',
       a: 'Ligand-gated',
@@ -106,6 +111,7 @@ export default [
       'Then the Na⁺ channels shut and lock, K⁺ channels open, K⁺ rushes out, and the voltage falls back down (repolarization, “getting negative again”). K⁺ channels are slow to close, so the voltage briefly dips below rest (hyperpolarization). Every spike is the same size: all or none, like a light switch, never halfway.',
     ],
     takeaway: 'Threshold → Na⁺ in (depolarize) → K⁺ out (repolarize) → brief dip (hyperpolarize).',
+    remember: 'Na⁺ flips the switch ON (rushes in, voltage shoots up); K⁺ flips it OFF (rushes out, voltage falls). K⁺ doors close late, so it overshoots below rest.',
     check: {
       q: 'What mainly causes repolarization?',
       a: 'K⁺ flowing out of the cell',
@@ -130,6 +136,7 @@ export default [
       'With myelin, the current zips along under the insulation and only the bare gaps, called nodes of Ranvier, fire. The signal hops node to node. That’s saltatory conduction (from the Latin for “jump”). It’s why myelin, from step 4, makes signals so much faster.',
     ],
     takeaway: 'Myelin → saltatory conduction: the signal jumps between nodes of Ranvier, much faster.',
+    remember: 'Saltatory comes from Latin saltus, “a leap” (the same root as somersault): the signal leaps from bare node to bare node instead of crawling along every bit of membrane.',
     check: {
       q: 'Saltatory conduction happens because…',
       a: 'Myelin insulates the axon so only the nodes of Ranvier fire',
@@ -159,6 +166,7 @@ export default [
       'The output side splits in two. The somatic nervous system controls skeletal muscle, the muscles you move on purpose (voluntary). The autonomic nervous system (ANS) runs everything automatic, like smooth muscle (in guts and vessels) and cardiac muscle (heart). The vertebrate ANS has three parts: enteric (nerves in the gut wall), sympathetic and parasympathetic.',
     ],
     takeaway: 'Somatic = voluntary skeletal muscle; autonomic = automatic (enteric, sympathetic, parasympathetic).',
+    remember: 'Soma = “body”: somatic moves your body on purpose. Autonomic = autopilot. The ANS has ESP: Enteric, Sympathetic, Parasympathetic.',
     check: {
       q: 'Which system controls cardiac and smooth muscle?',
       a: 'Autonomic nervous system',
@@ -174,6 +182,7 @@ export default [
       'Now flip the toggle to Parasympathetic: the opposite, “rest and digest.” The heart slows, blood pressure drops, and digestion speeds up. Think of lying on the couch after a big dinner.',
     ],
     takeaway: 'Sympathetic gets you ready for emergencies and slows digestion; parasympathetic slows the heart and boosts digestion.',
+    remember: 'Sympathetic = Stress, Parasympathetic = Peace (couch after dinner). From your list, parasympathetic = SLUDD: Salivation, Lacrimation, Urination, Digestion, Defecation.',
     check: {
       q: 'You are relaxing after a big meal. Which division is in charge?',
       a: 'Parasympathetic',

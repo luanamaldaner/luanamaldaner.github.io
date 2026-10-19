@@ -29,6 +29,7 @@ export default [
       'Neurotransmitters cross the synaptic cleft (the tiny gap between neurons), though the signal that releases them may have come from far away. Pheromones leave the body completely and affect other animals of the same species, like a scent message.',
     ],
     takeaway: 'Autocrine = self, paracrine = neighbors, endocrine = blood, neurotransmitter = synapse, pheromone = other animals.',
+    remember: 'Read the prefixes: AUTO = self (like an autograph), PARA = beside (like parallel), ENDO = within (secreted inside you, into the blood). Pheromones go farthest of all: out of your body to another animal.',
     check: {
       q: 'A chemical that affects the very same cell that released it is…',
       a: 'Autocrine',
@@ -57,6 +58,7 @@ export default [
       'Steroid hormones (like aldosterone, cortisol, testosterone and estradiol) are made from cholesterol and are lipid-soluble (they dissolve in fat). So they slip right through the membrane, and their receptors are inside the cell. Amine hormones (made from a single amino acid) include epinephrine (adrenaline) and thyroxine (T4, a thyroid hormone).',
     ],
     takeaway: 'Peptides: water-soluble, receptors on the surface. Steroids: from cholesterol, fat-soluble, receptors inside.',
+    remember: 'Like dissolves like: steroids are made from cholesterol (a fat), so they slip through the fatty membrane to receptors inside. Water-soluble peptides can’t get in, so they ring the doorbell (a surface receptor).',
     check: {
       q: 'Which hormone is a steroid?',
       a: 'Cortisol',
@@ -95,6 +97,7 @@ export default [
       'Timing differs too. Peptide and amine hormones are made ahead of time and stored, so they can be released quickly. Steroids are usually made only when needed, so they start slowly. Half-life is how long it takes for half of a hormone to be cleared from the blood.',
     ],
     takeaway: 'Fewer receptors = less sensitive. Peptides are stored and fast; steroids are made when needed.',
+    remember: 'Peptides are fast food: made ahead and stored, ready to serve in seconds. Steroids are cooked to order: made only when needed, so they show up late.',
     check: {
       q: 'A cell loses many of its receptors for a hormone. What happens?',
       a: 'It becomes less sensitive to that hormone',
@@ -109,6 +112,7 @@ export default [
       'It has two very different halves. The posterior (back) pituitary is really part of the brain: its hormones are made by hypothalamus neurons and released from their axon ends. The anterior (front) pituitary is a true gland: its own cells make tropic hormones (hormones that tell other glands what to do).',
     ],
     takeaway: 'The hypothalamus bosses the pituitary; posterior = brain tissue, anterior = real gland.',
+    remember: 'A for Anterior = A real gland (makes its own hormones). P for Posterior = Part of the brain (just releases hormones that hypothalamus neurons made).',
   },
   {
     title: 'Posterior pituitary: ADH and oxytocin',
@@ -118,6 +122,7 @@ export default [
       'Two peptide hormones go this way. ADH (antidiuretic hormone, also called vasopressin) controls how much water the kidneys get rid of (remember it from the kidney lecture). Oxytocin causes the uterus to contract during birth and makes milk flow from the breasts.',
     ],
     takeaway: 'ADH and oxytocin are MADE in the hypothalamus and RELEASED from the posterior pituitary.',
+    remember: 'Pee and Push: ADH controls pee (how much water the kidneys get rid of); oxytocin pushes (uterus contractions at birth, milk flow). Both are made in the hypothalamus, released from the posterior pituitary.',
     check: {
       q: 'Which hormones are released from the posterior pituitary?',
       a: 'ADH and oxytocin',
@@ -132,6 +137,7 @@ export default [
       'The anterior pituitary also makes growth hormone (GH, which helps many tissues grow), prolactin (milk production in mammals), and MSH (named for its effect on skin-color cells in amphibians).',
     ],
     takeaway: 'Anterior pituitary: ACTH, TSH, LH, FSH (tropic) plus GH, prolactin, MSH.',
+    remember: 'FLAT PEG: FSH, LH, ACTH, TSH are the tropic ones (they boss other glands); Prolactin, Endorphins and GH act directly. Just add MSH, which this lecture also lists.',
     check: {
       q: 'Which hormone controls the thyroid gland?',
       a: 'TSH',
@@ -147,6 +153,7 @@ export default [
       'These notes are releasing hormones (RH, “make more”) or inhibiting hormones (IH, “make less”). GHRH releases growth hormone, TRH releases TSH, and somatostatin blocks growth hormone release.',
     ],
     takeaway: 'Hypothalamus → releasing/inhibiting hormones → portal vessels → anterior pituitary.',
+    remember: 'The names give the job: GHRH = GH-Releasing Hormone, TRH releases TSH. Somato-STAT-in keeps body (“soma”) growth STATic by blocking GH. RH = “make more,” IH = “make less.”',
   },
   {
     title: 'The stress axis and negative feedback',
@@ -156,6 +163,7 @@ export default [
       'Cortisol makes energy available: it raises blood sugar by making new glucose (gluconeogenesis), frees up stored fat and breaks proteins down into amino acids. Then watch the brakes: high cortisol tells the hypothalamus and pituitary to slow down. That’s negative feedback (the result turns off its own cause), like a thermostat turning off the heat once the room is warm.',
     ],
     takeaway: 'HPA axis: CRH → ACTH → cortisol, and cortisol shuts the chain off.',
+    remember: 'Stress spells C-A-C: CRH → ACTH → Cortisol (“Can’t Always Cope”). ACTH = AdrenoCorticoTropic Hormone, so its name tells you its target: the ADRENAL CORTEX.',
     check: {
       q: 'In the HPA axis, what does ACTH stimulate?',
       a: 'The adrenal cortex to release cortisol',
@@ -171,6 +179,7 @@ export default [
       'Thyroid hormones raise metabolism (how fast the body burns energy) and heat production, support growth (especially brain and spinal cord development) and boost the sympathetic “fight or flight” response. Watch high T3/T4 feed back to quiet the top of the chain.',
     ],
     takeaway: 'TRH → TSH → T3/T4, with negative feedback from T3/T4.',
+    remember: 'The thyroid axis is all T’s: TRH → TSH → T3/T4, the same three-step shape as C-A-C for stress. Thyroid = thermostat: it turns up metabolism and heat.',
   },
   {
     title: 'What if feedback breaks?',

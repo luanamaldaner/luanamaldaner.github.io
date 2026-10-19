@@ -58,6 +58,7 @@ export default [
       'Animals can turn some molecules into others (fats can be turned into carbohydrates, for example). But some have to be eaten already made. Those are essential nutrients: the body needs them but can’t make them. Careful: “essential” means “must come from food”, not “most important”.',
     ],
     takeaway: 'Essential nutrients are needed but can’t be made by the body, so they must come from food.',
+    remember: 'Essential starts with E for Eat: an essential nutrient is one you must Eat ready-made, because your body can’t make it. It says nothing about which nutrients matter most.',
   },
   {
     title: 'Essential amino acids: beans + grains',
@@ -68,6 +69,7 @@ export default [
     scene: 'l2-amino',
     from: 0,
     takeaway: 'Beans + grains together provide all the essential amino acids.',
+    remember: 'Grains are ILL without beans (low in Isoleucine and Lysine); beans need TiMe with grains (low in Tryptophan and Methionine). Each fills the other’s gaps.',
     check: {
       q: 'Why do beans and grains together give all the essential amino acids?',
       a: 'Each one has the ones the other is short on',
@@ -82,6 +84,7 @@ export default [
       'Essential vitamins: vitamin A (for vision), vitamin K (for blood clotting) and more. Essential minerals are elements you need besides carbon, oxygen, hydrogen and nitrogen: calcium and phosphorus for bones, iodine for thyroid hormones, and iron to make hemoglobin (the O₂-carrying protein in blood).',
     ],
     takeaway: 'Omega-3/6 fatty acids, vitamins (A, K…) and minerals (Ca, P, I, Fe) are also essential.',
+    remember: 'Vitamin K is for “Koagulation” (German for clotting, where the K comes from). Iodine → thyroId hormones; iron → hemoglobin; calcium + phosphorus → bones. Omega is the last Greek letter, so omega-3 counts from the chain’s last end.',
     check: {
       q: 'Iodine is an essential mineral because it’s needed to make…',
       a: 'Thyroid hormones',
@@ -97,6 +100,7 @@ export default [
       'Food comes as lipids (fats), carbohydrates (sugars and starches) and proteins. If you eat more energy than you need, the extra is usually stored as fat, which packs a lot of energy into a small space.',
     ],
     takeaway: 'A food-label Calorie is a kilocalorie = 1000 calories; extra energy is stored mostly as fat.',
+    remember: 'Capital C = the big one: 1 food Calorie = 1 kilocalorie = 1000 little calories. Joules are smaller pieces: about 4 joules make 1 calorie (1 J = 0.239 cal).',
     check: {
       q: 'A snack label says 200 Calories. How many calories (small c) is that?',
       a: '200,000',
@@ -114,6 +118,7 @@ export default [
     from: 0,
     vars: { animal: 'mouse' },
     takeaway: 'BMR per gram goes down as body size goes up, so small mammals need more food per gram.',
+    remember: 'Small engines run hot: a mouse is a tiny engine revving fast, so per gram it burns (and must eat) far more than an elephant.',
     check: {
       q: 'Per gram of body, which has the highest basal metabolic rate?',
       a: 'A mouse',
@@ -131,6 +136,7 @@ export default [
     from: 8,
     vars: { animal: 'human' },
     takeaway: 'Running humans: straight-line rise. Swimming fish: exponential rise. Slow-flying birds: high just to stay up.',
+    remember: 'Run = a Ruler-straight line; Swim = Skyrockets (water pushes back harder the faster you go); Fly = already high from the start, just to stay up.',
   },
   {
     title: 'Regulators vs conformers',
@@ -141,6 +147,7 @@ export default [
     scene: 'l2-reg',
     from: 0,
     takeaway: 'Regulators keep their inside steady; conformers let their inside match the outside.',
+    remember: 'A conformer conforms, going along with the crowd: its inside just follows the outside. A regulator is like a thermostat holding its setting. Mouse Maintains 37 °C; alligator Agrees with the weather.',
   },
   {
     title: 'The cost of staying steady',
@@ -167,6 +174,7 @@ export default [
     scene: 'l2-fluid',
     from: 0,
     takeaway: 'ECF (outside cells) = plasma + interstitial fluid; ICF = fluid inside cells.',
+    remember: 'Intra = inside (intramural), extra = outside (extraterrestrial), inter = between (an interstate runs between states). So interstitial fluid sits between cells, and it plus plasma make up the ECF.',
     check: {
       q: 'Which fluid is NOT part of the extracellular fluid?',
       a: 'Fluid inside the cells',
@@ -191,6 +199,7 @@ export default [
     scene: 'l2-fluid',
     from: 8.6,
     takeaway: 'Tissue (similar cells) → organ (2+ tissues) → organ system; every cell makes its own ATP.',
+    remember: 'Smallest to biggest: “Cats Take Over Sofas” = Cell → Tissue → Organ → System. Like letters → words → sentences → paragraphs, each level is built from the one before.',
     check: {
       q: 'Two or more tissue types joined in a set structure make up a(n)…',
       a: 'Organ',

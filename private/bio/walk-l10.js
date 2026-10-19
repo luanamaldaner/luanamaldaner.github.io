@@ -14,6 +14,7 @@ export default [
       'Innate defenses are nonspecific (they treat all germs about the same). They’re the first line and act within minutes to hours: skin, toxic molecules, phagocytes (cells that eat germs) and inflammation. Adaptive defenses target one specific pathogen (disease-causing germ). They’re switched on by the innate system, take days to weeks to build, and last a long time. B cells make antibodies. T cells either kill infected cells (cytotoxic T cells) or help other defenses (helper T cells).',
     ],
     takeaway: 'Innate = fast and general; adaptive = slow, specific and long-lasting.',
+    remember: 'Spot it, call it, stop it = recognition, activation, effector. Innate = Instant (you’re born with it, works in minutes); Adaptive = Acquired (learns one germ, takes days to weeks).',
     check: {
       q: 'Which describes ADAPTIVE defenses?',
       a: 'Specific to one pathogen and slower to develop',
@@ -28,6 +29,7 @@ export default [
       'Lymphocytes (a type of white blood cell): B cells and T cells work in adaptive immunity. Natural killer (NK) cells are the odd ones out: they work in BOTH innate and adaptive immunity.',
     ],
     takeaway: 'Phagocytes eat; B and T cells are adaptive; NK cells do both innate and adaptive.',
+    remember: 'Phago-cyte = “eating cell.” B cells make antiBodies; T cells Terminate infected cells or help. NK cells are the double agents: they work for both innate and adaptive immunity.',
     check: {
       q: 'Which lymphocytes take part in BOTH innate and adaptive immunity?',
       a: 'Natural killer (NK) cells',
@@ -52,6 +54,7 @@ export default [
       'How do cells spot a microbe? Toll-like receptors (TLRs, “germ detectors” on immune cells) recognize and grab common microbe parts called pathogen-associated molecular patterns (PAMPs). Think of PAMPs as the “uniform” many germs wear, and TLRs as guards trained to spot it.',
     ],
     takeaway: 'TLRs recognize PAMPs; phagocytes eat whatever gets in.',
+    remember: 'PAMPs are the germ’s uniform (a Pattern shared by many microbes); TLRs are the guards trained to spot it. Guard (TLR) sees uniform (PAMP) → alarm.',
     check: {
       q: 'What do Toll-like receptors recognize?',
       a: 'Pathogen-associated molecular patterns (PAMPs)',
@@ -67,6 +70,7 @@ export default [
       '② The bigger piece, C3b, sticks to the germ and turns on more convertase, so the cutting speeds up. ③ The smaller piece, C3a, floats off into the blood and triggers inflammation. Other complement proteins punch holes in the invader so it bursts (lysis), and phagocytes love eating C3b-coated targets.',
     ],
     takeaway: 'C3b (big) tags germs to be eaten; C3a (small) triggers inflammation; others burst the cell (lysis).',
+    remember: 'C3b: b = big and binds (sticks to the germ so phagocytes eat it). C3a: a = away (the small piece floats off in the blood and sets off inflammation).',
     check: {
       q: 'When C3 is cut, what does C3b do?',
       a: 'Coats the pathogen and marks it for phagocytosis',
@@ -81,6 +85,7 @@ export default [
       'Interferons are a warning to the neighbors: they stick to uninfected cells and help them block viruses from copying themselves. NK cells can tell healthy cells apart from tumor or virus-infected cells, and make the bad ones self-destruct (apoptosis, programmed cell death). NK cells are switched on by interferons, antibodies and cytokines, and can kill cells that antibodies have tagged.',
     ],
     takeaway: 'NF-κB → cytokines; interferons protect neighboring cells; NK cells kill infected and tumor cells.',
+    remember: 'INTERFERons INTERFERE with viruses copying in neighboring cells. NK = Natural Killer: it makes infected and tumor cells self-destruct (apoptosis).',
     check: {
       q: 'What do interferons do?',
       a: 'Help neighboring cells resist viral infection',
@@ -96,6 +101,7 @@ export default [
       'Watch the blood vessel widen (causing redness and heat) and get leaky so fluid seeps out (causing swelling). Cytokines also call in neutrophils (fast-acting germ-eating white blood cells), which squeeze out of the vessel and destroy the bacteria. Afterward the neutrophils die and form pus.',
     ],
     takeaway: 'Macrophage cytokines (TNF-α) → wide, leaky vessels + neutrophils → redness, heat, swelling, pain, pus.',
+    remember: 'Four signs: Red, Hot, Swollen, Sore. Wide vessel → red and hot; leaky vessel → swollen. Neutrophils rush in to eat the bacteria, and dead neutrophils = pus.',
   },
   {
     title: 'Antigens, and not attacking yourself',
@@ -120,6 +126,7 @@ export default [
       'Watch the antigen try the receptors one by one and stick only to the one that fits. That cell is “selected” and multiplies into a clone (a crowd of identical copies). That’s clonal selection. Some copies become plasma cells, which pump out antibodies, and others become memory cells that stick around. Like trying keys on a key ring, then copying the one that works.',
     ],
     takeaway: 'Clonal selection: the antigen picks the matching lymphocyte, which then multiplies.',
+    remember: 'Don’t mix them up: clonal DELETION deletes self-reacting cells while they develop; clonal SELECTION selects the cell whose receptor fits the antigen and copies it. Plasma cells pump out antibodies; memory cells remember.',
   },
   {
     title: 'Immune memory',
@@ -153,6 +160,7 @@ export default [
       'Antibodies have three jobs. Neutralization: block the germ so it can’t work (watch the virus bounce off). Use the toggle for opsonization (coat the germ so phagocytes eat it) and complement activation (switch on the domino cascade from step 6).',
     ],
     takeaway: 'Antibodies neutralize, opsonize and activate complement; the variable region grabs the antigen.',
+    remember: 'Jobs = N.O.C.: Neutralize (block it), Opsonize (Greek “opson” = seasoning: makes germs tasty to phagocytes), Complement (start the dominoes). The five classes spell GAMED: IgG, IgA, IgM, IgE, IgD.',
     check: {
       q: 'Coating a bacterium with antibodies so phagocytes eat it faster is called…',
       a: 'Opsonization',
@@ -168,6 +176,7 @@ export default [
       'A cytotoxic (“cell-killing”) T cell that fits docks on and orders the infected cell to self-destruct, virus and all. So: class I MHC switches on cytotoxic T cells (which kill infected, stressed or cancer cells); class II MHC (step 12) switches on helper T cells.',
     ],
     takeaway: 'MHC class I → cytotoxic T cells; MHC class II → helper T cells.',
+    remember: '“One kills, two helps”: MHC class I → cytotoxic (killer) T cells; MHC class II → helper T cells (like the phagocyte in the lymph node, step 12).',
     check: {
       q: 'Which T cells are activated by class I MHC?',
       a: 'Cytotoxic T cells',

@@ -15,6 +15,7 @@ export default [
       'Four jobs happen along the tube: motility (muscles mix and push food along), secretion (glands add juices), enzymatic hydrolysis (enzymes split food apart), and absorption (nutrients cross into the body). Watch the badges light up as the food lump travels.',
     ],
     takeaway: 'Gut jobs: motility, secretion, enzymatic hydrolysis, absorption.',
+    remember: 'Move, Squirt, Snip, Soak: muscles move food along (motility), glands squirt in juices (secretion), enzymes snip bonds (hydrolysis), the wall soaks up nutrients (absorption).',
     check: {
       q: 'Why is food in your gut lumen considered "outside" your body?',
       a: 'The gut is a tube open to the environment at both ends',
@@ -45,6 +46,7 @@ export default [
       'Swallowing: the tongue pushes the food lump (bolus) into the pharynx (the throat). Pressure sensors there alert the swallowing center in the medulla oblongata (the base of the brainstem). Then a ring-shaped squeeze of muscle called peristalsis pushes it down the esophagus, like squeezing toothpaste. Watch the squeeze ride just behind the bolus.',
     ],
     takeaway: 'Saliva = water, mucus, amylase, bicarbonate. Swallowing is run by the medulla and moved by peristalsis.',
+    remember: 'Saliva = “We Must Always Brush”: Water, Mucus, Amylase, Bicarbonate. And from your mnemonics list: Starch Starts in the mouth (that’s the amylase). Peristalsis = squeezing a toothpaste tube from behind.',
   },
   {
     title: 'The stomach and its cells',
@@ -54,6 +56,7 @@ export default [
       'Mucous cells make mucus. Chief cells make pepsinogen (the inactive form of a protein-cutting enzyme). Parietal cells make HCl (hydrochloric acid) and intrinsic factor (helps you absorb vitamin B). Hormone-making cells: G cells release gastrin, ECL cells release histamine, and D cells release somatostatin, which is the brake on HCl and pepsinogen.',
     ],
     takeaway: 'Parietal = HCl + intrinsic factor, chief = pepsinogen, G = gastrin, ECL = histamine, D = somatostatin.',
+    remember: 'Parietal = Pumps acid (HCl, plus intrinsic factor). Chief = the Chef, prepping the protein knife (pepsinogen). G → Gastrin, D → “Don’t” (somatostatin, the brake). ECL is the odd one: histamine.',
     check: {
       q: 'Which stomach cells release HCl (acid)?',
       a: 'Parietal cells',
@@ -69,6 +72,7 @@ export default [
       'Watch the three signals arrive at the parietal cell and speed up the pumps. Remember from step 5: somatostatin is the brake.',
     ],
     takeaway: 'ACh, gastrin and histamine all turn stomach acid up.',
+    remember: '“AGH, heartburn!”: ACh, Gastrin, Histamine turn acid up. Somatostatin Stops it.',
   },
   {
     title: 'The proton pump',
@@ -78,6 +82,7 @@ export default [
       'So the stomach gets more acidic (lower pH) while the blood leaving it gets a bit less acidic (higher pH). Try the toggle "Empty stomach" to see the pumps slow down between meals.',
     ],
     takeaway: 'Proton pump: H⁺ out into the stomach, K⁺ in; HCO₃⁻ goes to the blood.',
+    remember: 'Acid to the gut, base to the blood: H⁺ goes into the stomach, HCO₃⁻ into the blood. The name gives the swap: H⁺/K⁺ ATPase trades H⁺ out for K⁺ in.',
     check: {
       q: 'The parietal cell proton pump swaps…',
       a: 'H⁺ out for K⁺ in',
@@ -93,6 +98,7 @@ export default [
       'Making it inactive first is like shipping a knife in a sheath. The lining is also protected by a layer of bicarbonate-rich mucus (the gastric mucosal barrier), and the lining cells are replaced about every three days. When that barrier wears away, you get a peptic ulcer (an open sore in the lining).',
     ],
     takeaway: 'HCl activates pepsinogen → pepsin; bicarbonate mucus protects the lining.',
+    remember: '“-ogen” = not switched on yet: pepsinogen is the knife still in its sheath, and acid pulls the sheath off to make pepsin. From your list: Protein starts in the Pit (stomach).',
   },
   {
     title: 'The pancreas joins in',
@@ -125,6 +131,7 @@ export default [
       'Mixing then breaks it into smaller and smaller droplets. Same amount of fat, way more surface for lipase. That is emulsification. The tiny bile-salt bubbles that carry fat to the gut wall are called micelles.',
     ],
     takeaway: 'Bile salts emulsify fat (break it up physically, no enzymes), giving lipase more surface.',
+    remember: 'Bile is dish soap, not a knife: it breaks big fat drops into small ones but cuts no bonds. Lipase is the knife. (And: liver makes bile, gallbladder just stores it.)',
     check: {
       q: 'How does bile help digest fat?',
       a: 'It emulsifies fat into small droplets with more surface area',
@@ -154,6 +161,7 @@ export default [
       'Glucose leaves the other side of the cell through GLUT-2 (a glucose doorway) into the blood (GLUT-5 handles fructose, fruit sugar). Then the Na⁺/K⁺ pump spends ATP to throw Na⁺ back out, keeping the downhill slope ready for the next ride. Amino acids get in the same way.',
     ],
     takeaway: 'Glucose, galactose and amino acids enter with Na⁺ (secondary active transport); the Na⁺ difference powers it.',
+    remember: 'SGLT = Sodium + GLucose Transporter: glucose hitches a ride in on Na⁺’s downhill rush. GLUT-5 carries fructose: “fruit” has 5 letters.',
   },
   {
     title: 'Fats take a different exit',
@@ -163,6 +171,7 @@ export default [
       'The triglycerides get wrapped in phospholipids and protein to make a little package called a chylomicron. It leaves the cell by exocytosis (being pushed out in a bubble). Chylomicrons are picked up by lacteals, which are lymph vessels (drainage vessels), instead of blood capillaries.',
     ],
     takeaway: 'Fats → rebuilt into triglycerides → chylomicrons → lacteals (lymph), not blood capillaries.',
+    remember: 'Three L’s: Lipids go to Lacteals, which are Lymph. Water-friendly nutrients (sugars, amino acids) go straight to the blood instead.',
     check: {
       q: 'Where do chylomicrons go after leaving the intestinal cell?',
       a: 'Into lacteals (lymph vessels)',

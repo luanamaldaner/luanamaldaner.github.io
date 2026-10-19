@@ -14,6 +14,7 @@ export default [
       'Three words compare two solutions: isosmotic means the same, hyperosmotic means higher, and hyposmotic means lower. Separately, each ion (a charged particle, like Na⁺ or K⁺) spreads from where it is crowded to where it is not. So two solutions with the same osmotic pressure can still have different ions in them.',
     ],
     takeaway: 'Water moves toward higher osmotic pressure (more solute); ions spread from high to low concentration.',
+    remember: 'Water chases solute, trying to dilute it. Prefixes: hyper = more (hyperactive), hypo = less (hypodermic, under the skin), iso = equal (same as in isosceles).',
     check: {
       q: 'Solution A has more dissolved solute than solution B. Compared to B, A is…',
       a: 'Hyperosmotic',
@@ -38,6 +39,7 @@ export default [
       'Its fix: drink seawater to get water back, then pump the extra salt out through the gut and gills. That makes it a hyposmotic regulator (it keeps itself less salty than its surroundings). Seabirds, ocean lizards and sea turtles eat salty food, so they have salt glands (special organs, separate from the kidney) that use ATP to get rid of the extra salt.',
     ],
     takeaway: 'Ocean bony fish drink seawater and pump salt OUT; seabirds and turtles use salt glands.',
+    remember: 'Opposites: Sea fish Sip seawater and Shove salt out; river fish flood with water, so they pee lots of dilute urine and pump salt IN. Each fish fights its surroundings.',
     check: {
       q: 'Why does an ocean bony fish drink seawater?',
       a: 'It keeps losing water by osmosis to the saltier sea',
@@ -53,6 +55,7 @@ export default [
       'Most ocean invertebrates (animals without a backbone) skip all that work. They are osmoconformers: their body fluids just match the sea. Some, like mussels, can handle a wide range of salinity (saltiness). The blue crab is different: it is an osmoregulator, meaning it keeps its insides constant no matter what.',
     ],
     takeaway: 'Salmon: prolactin = freshwater mode, cortisol = saltwater mode. Most sea invertebrates are osmoconformers.',
+    remember: 'Prolactin → Pond (fresh water, salt pumped IN); Cortisol → Coast (salt water, salt pumped OUT). Conformers just conform (match the sea); regulators regulate (hold their insides steady).',
   },
   {
     title: 'Getting rid of nitrogen waste',
@@ -62,6 +65,7 @@ export default [
       'Ammonia: the most toxic, but it dissolves easily, so water-breathing animals just let it wash away. Urea (most land animals, like us): costs more energy to make but is less toxic. Uric acid (insects, reptiles, birds): costs the most, but barely dissolves (it’s the white paste in bird droppings), so it saves water.',
     ],
     takeaway: 'Less water available → more energy spent → less toxic, less soluble waste (ammonia → urea → uric acid).',
+    remember: 'Aquatic animals → Ammonia (both A, water washes it away); Us land mammals → Urea (U); birds, reptiles and insects → uric acid, the dry white paste. The drier the life, the less soluble the waste.',
     check: {
       q: 'Which nitrogen waste do birds mainly get rid of, and why?',
       a: 'Uric acid, because it is insoluble and saves water',
@@ -76,6 +80,7 @@ export default [
       'Different animals have different tubes: simple invertebrates use protonephridia (tiny hairs called cilia push the fluid), many use meso- or metanephridia (fluid pressure does it, so they need a circulatory system), and arthropods (insects and relatives) use Malpighian tubules (driven by pumping ions into the tube).',
     ],
     takeaway: 'Filtration, reabsorption, secretion, osmoconcentration: the four renal (kidney) processes.',
+    remember: '“Fresh Rolls Smell Outstanding” = Filtration, Reabsorption, Secretion, Osmoconcentration. REabsorption REturns stuff to the blood; Secretion Sends stuff into the tube.',
     check: {
       q: 'Moving a specific solute FROM the blood INTO the tube to get rid of it is called…',
       a: 'Secretion',
@@ -90,6 +95,7 @@ export default [
       'Each kidney has about a million nephrons, its smallest working units. Think of a nephron as a coffee filter plus a long sorting tube. The blood part: afferent arteriole (vessel in), glomerulus (ball of capillaries), efferent arteriole (vessel out), peritubular capillaries (capillaries wrapped around the tube). The tube part: Bowman’s capsule, proximal tubule, loop of Henle, distal tubule, collecting duct.',
     ],
     takeaway: 'The nephron = a blood part (glomerulus and friends) wrapped around a tube part (capsule → collecting duct).',
+    remember: 'Tube order: “Big Puddles Don’t Always Drain Completely” = Bowman’s capsule, Proximal tubule, Descending limb, Ascending limb, Distal tubule, Collecting duct. Blood side: Afferent Arrives, Efferent Exits.',
     check: {
       q: 'Which vessel brings blood INTO the glomerulus?',
       a: 'Afferent arteriole',
@@ -129,6 +135,7 @@ export default [
       'This setup is called the "countercurrent multiplier" (two side-by-side flows going opposite ways that build up saltiness). It makes the medulla very salty. Two helpers protect that saltiness: the vasa recta, hairpin-shaped capillaries that do countercurrent exchange so blood doesn’t wash the salt away, and urea, which leaks out of the bottom of the collecting duct and gets recycled to add even more saltiness.',
     ],
     takeaway: 'Descending limb: water out only. Ascending limb: salt out only (uses ATP). Result: a salty medulla up to 1200 mOsm.',
+    remember: 'Descending: water Departs. Ascending: salt is Actively pumped out (ATP). Each limb lets out only one thing, and together they make the medulla salty.',
     check: {
       q: 'What can leave the DESCENDING limb of the loop of Henle?',
       a: 'Water only',
@@ -153,6 +160,7 @@ export default [
       'Now try the toggle: set ADH low. The duct stays waterproof, water stays in, and out comes lots of watery urine. Think of ADH as "save water mode" for when you are thirsty.',
     ],
     takeaway: 'More ADH = more aquaporins = more water kept = less, more concentrated urine.',
+    remember: 'Anti-diuretic = anti-peeing: more ADH, less pee, and what comes out is concentrated. Low ADH = lots of watery pee.',
     check: {
       q: 'When ADH is high, the urine is…',
       a: 'Small in volume and very concentrated',
@@ -168,6 +176,7 @@ export default [
       'Renin cuts angiotensinogen (a protein always floating in the blood) into a shorter piece, angiotensin I. Watch the bead chain get shorter. Then ACE (angiotensin-converting enzyme), found in the blood vessels of the lungs, trims it into angiotensin II. Angiotensin II is the main signal for the adrenal cortex (outer layer of the adrenal gland, on top of the kidney) to release aldosterone.',
     ],
     takeaway: 'Renin → angiotensin I → (ACE, lungs) → angiotensin II → aldosterone.',
+    remember: '“Really Anxious Aunts Always Act Adorable” = Renin, Angiotensinogen, Angiotensin I, ACE, Angiotensin II, Aldosterone, in order.',
     check: {
       q: 'What turns angiotensin I into angiotensin II?',
       a: 'ACE in the lung circulation',
@@ -183,6 +192,7 @@ export default [
       'Once pressure is back to normal, renin release switches off. That is negative feedback (the fix turns off its own trigger), like a thermostat turning off the heater.',
     ],
     takeaway: 'Aldosterone → keep Na⁺ and water + more ADH + tighter arterioles → blood pressure up, then renin stops.',
+    remember: 'Three S’s raise pressure: Save salt (water follows), Signal more ADH, Squeeze the arterioles. Once pressure is back, renin Stops (negative feedback).',
   },
   {
     title: 'Putting it together',

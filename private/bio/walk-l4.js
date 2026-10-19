@@ -32,6 +32,7 @@ export default [
     from: 0,
     vars: { temp: 'cool' },
     takeaway: 'At the same partial pressure, water holds much less O₂ than air.',
+    remember: '“Same push, fewer passengers”: equal partial pressure means equal push, but water carries far fewer O₂ molecules than air does.',
   },
   {
     title: 'The pathway for oxygen',
@@ -42,6 +43,7 @@ export default [
     scene: 'l4-path',
     from: 0,
     takeaway: 'O₂ always moves from high to low partial pressure: lungs (~100) → blood → cells (<40).',
+    remember: 'Gases always roll downhill, from high to low partial pressure: lungs ~100 → arriving blood ~40 → cells under 40. If you remember “100 to 40”, the direction of O₂ (and CO₂ going backwards) follows.',
     check: {
       q: 'Roughly what is the PO₂ in the lungs compared with the blood arriving there?',
       a: 'About 100 mmHg in the lungs vs about 40 in the blood',
@@ -72,6 +74,7 @@ export default [
       'Ventilation means moving air or water over that membrane (bulk flow). Tidal ventilation goes in and out through the same tubes, like a tide, so fresh and used air mix. Unidirectional ventilation is a one-way stream, so there’s no mixing, which works better. Perfusion is blood flow through the capillaries, and it has to be fast enough to pick up the O₂ and carry it away.',
     ],
     takeaway: 'Lungs fold in, gills fold out; one-way ventilation beats tidal; perfusion (blood flow) must keep up.',
+    remember: 'IN-vaginated = INside (lungs hold air inside the body); E-vaginated = Exterior (gills stick out into the water). Tidal = like the tide, in and out the same way so air mixes; unidirectional = a one-way street, no mixing.',
     check: {
       q: 'Which type of ventilation avoids mixing fresh and used air or water?',
       a: 'Unidirectional (flow-through)',
@@ -89,6 +92,7 @@ export default [
     from: 4,
     vars: { temp: 'warm' },
     takeaway: 'Water holds little O₂ (even less when warm), and O₂ spreads much slower in water than in air.',
+    remember: 'Think of warm soda going flat: warm water holds less dissolved gas, so warm water holds even less O₂.',
     check: {
       q: 'What happens to O₂ solubility in water as the water gets warmer?',
       a: 'It decreases',
@@ -106,6 +110,7 @@ export default [
     from: 0,
     vars: { flow: 'cc' },
     takeaway: 'Water and blood flow in opposite directions, so there’s a high-to-low difference along the whole lamella.',
+    remember: 'Counter = opposite, current = flow, the same trick as the fox’s leg. Opposite flows keep a gap the whole way, so blood gets ~90% full; same-direction flow just “meets in the middle” at ~50% and stops.',
   },
   {
     title: 'What if they flowed the same way?',
@@ -133,6 +138,7 @@ export default [
     scene: 'l4-bird',
     from: 0,
     takeaway: 'Bird air sacs act like bellows, pushing air one way through the lungs to supply lots of O₂.',
+    remember: '“In-back, out-lungs, in-front, out-out”: Inhale 1 → back (posterior) sacs, Exhale 1 → lungs, Inhale 2 → front (anterior) sacs, Exhale 2 → out. Two breaths per puff, always moving back to front.',
     check: {
       q: 'In birds, how many breaths does it take one puff of air to pass all the way through?',
       a: 'Two',
@@ -155,6 +161,7 @@ export default [
       'Tidal volume is how much air you move in one breath. Respiratory minute volume is the total air moved in and out per minute. Exercise raises both. Lungs never fully empty: some stale air always stays behind (the residual volume), which keeps the lungs from collapsing. So each breath mixes fresh air with stale air.',
     ],
     takeaway: 'Trachea → bronchi → bronchioles → alveoli; some residual air always stays in the lungs.',
+    remember: 'Order: “The Big Bad Alligator” = Trachea → Bronchi → Bronchioles → Alveoli. “-iole” means little (a bronchiole is a little bronchus). Residual = left over, the air that’s always left behind.',
     check: {
       q: 'The air that always stays in the lungs, even after you breathe out hard, is the…',
       a: 'Residual volume',
@@ -172,6 +179,7 @@ export default [
     from: 0,
     vars: { mode: 'rest' },
     takeaway: 'Inhaling = diaphragm contracts; exhaling at rest = muscles relax and the lungs spring back.',
+    remember: '“Active in, passive out” (at rest): the diaphragm contracts and flattens to pull air in; then everything relaxes and the lungs snap back like a released rubber band.',
   },
   {
     title: 'CO₂ sets the pace',
@@ -183,6 +191,7 @@ export default [
     from: 0,
     vars: { mode: 'run' },
     takeaway: 'Rising CO₂ (falling pH) is sensed by the medulla, which makes breathing faster and deeper.',
+    remember: '“The Medulla Monitors CO₂”: rising CO₂ (falling pH) is read by the medulla. Low O₂ is reported by sensors in the Aorta and Carotids. Breathing = medulla; the hypothalamus was the temperature thermostat in Lecture 3.',
     check: {
       q: 'Where is a rise in blood CO₂ (fall in pH) mainly detected to drive more breathing?',
       a: 'The medulla oblongata',

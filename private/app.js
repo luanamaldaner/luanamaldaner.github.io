@@ -23,7 +23,7 @@ import { renderProg } from './prog/prog.js?v=3';
 import { bossCard } from './extras/boss.js?v=3';
 import { renderLab, microbeCard } from './extras/lab.js?v=10';
 import { renderDegree } from './extras/degree.js?v=3';
-import { renderBio } from './bio/bio.js?v=16';
+import { renderBio } from './bio/bio.js?v=17';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard, barChart } from './extras/extras.js?v=10';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }

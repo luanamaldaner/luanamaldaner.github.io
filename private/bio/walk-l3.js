@@ -32,6 +32,7 @@ export default [
     from: 0,
     vars: { sun: 'shade' },
     takeaway: 'Inside the TNZ a homeotherm uses the least energy; outside it, energy use goes up.',
+    remember: 'Think Goldilocks: in the TNZ the outside temperature is “just right”, so the energy bill is lowest and flat. Too cold or too hot, and the bill climbs either way.',
     check: {
       q: 'What happens to a homeotherm’s metabolic rate when the air gets colder than its thermoneutral zone?',
       a: 'It rises',
@@ -49,6 +50,7 @@ export default [
     from: 1.5,
     vars: { sun: 'bask' },
     takeaway: 'Poikilotherms’ body temperature follows the outside, but they can bask or hide (behavioral thermoregulation).',
+    remember: 'Word roots: homeo = same, poikilo = varied, ecto = outside. A poikilotherm’s temperature varies because its heat comes from outside, so it basks like a solar panel charging in the sun.',
   },
   {
     title: 'Homeotherms pay more',
@@ -77,6 +79,7 @@ export default [
     from: 0,
     vars: { day: 'cold' },
     takeaway: 'Shivering and brown fat (where ATP-making is “uncoupled”) turn energy into heat.',
+    remember: 'Brown fat = “burn” fat: uncoupled means the H⁺ flow is unhooked from ATP synthase (the water wheel’s belt is cut), so the energy comes out as heat instead of ATP. Shivering = shaking muscles making heat.',
     check: {
       q: 'How does brown fat make heat?',
       a: 'Its mitochondria are uncoupled, so energy goes to heat instead of ATP',
@@ -94,6 +97,7 @@ export default [
     from: 0,
     vars: { day: 'hot' },
     takeaway: 'Insulation keeps heat in; evaporative cooling (sweating, panting) gets rid of heat.',
+    remember: '“Coat in, steam out”: fur and feathers are a coat that keeps heat IN; sweating and panting send heat OUT as the water evaporates.',
   },
   {
     title: 'The body’s thermostat: negative feedback',
@@ -105,6 +109,7 @@ export default [
     from: 0,
     vars: { fb: 'neg' },
     takeaway: 'Negative feedback: sensors → hypothalamus → effectors, always pushing back toward the set point (the normal value).',
+    remember: 'The 4 parts in order: “Very Smart Control Engineers” = controlled Variable, Sensors, Control mechanism (hypothalamus), Effectors. Negative = “no, go back!”: the response always pushes against the change.',
     check: {
       q: 'In the temperature feedback loop, the hypothalamus is the…',
       a: 'Control mechanism',
@@ -122,6 +127,7 @@ export default [
     from: 0,
     vars: { fb: 'pos' },
     takeaway: 'Positive feedback makes a change bigger (e.g. oxytocin in childbirth) and needs something to end it.',
+    remember: 'Positive = “pile on”: the change keeps growing until something ends it. Oxytocin is the “Push” in “Pee and Push” (posterior pituitary hormones): it pushes labor contractions, the classic positive loop.',
     check: {
       q: 'Which is an example of positive feedback?',
       a: 'Oxytocin making uterine contractions stronger during childbirth',
@@ -136,6 +142,7 @@ export default [
       'Small animals mostly use behavior. They have a larger surface area to volume ratio (lots of skin for their size, so they gain and lose heat fast) and a higher metabolic rate, so holding their temperature is expensive. But it’s easy for them to duck into a microhabitat. Large animals have fewer hiding options, so they rely more on physiology (how their body works inside).',
     ],
     takeaway: 'Small animals cope with behavior (microhabitats); large animals depend more on physiology.',
+    remember: 'A small cup of coffee cools faster than a big pot: small bodies have lots of surface for their volume, so they lose heat fast and lean on behavior. Big bodies lean on physiology.',
     check: {
       q: 'Compared with a large animal, a small animal has…',
       a: 'A larger surface area to volume ratio',
@@ -153,6 +160,7 @@ export default [
     from: 0,
     vars: { cc: 'on' },
     takeaway: 'Countercurrent exchange between artery and vein keeps heat in the core while paws stay just above freezing.',
+    remember: 'Counter = opposite, current = flow. Picture a hot-potato hand-off: the warm artery passes its heat sideways to the cold vein right beside it, so the heat rides back to the core instead of leaking out the paw.',
   },
   {
     title: 'What if the vein were far away?',
@@ -180,6 +188,7 @@ export default [
     scene: 'l3-desert',
     from: 0,
     takeaway: 'Kangaroo rats avoid heat with behavior; Grant’s gazelles put up with a ~46 °C core to save water.',
+    remember: '“Small hides, big abides”: the small kangaroo rat hides in its burrow (behavior); the big Grant’s gazelle abides (tolerates) a ~46 °C core so it doesn’t waste water sweating.',
     check: {
       q: 'How does Grant’s gazelle cope with desert heat?',
       a: 'It lets its core temperature rise to about 46 °C instead of sweating',

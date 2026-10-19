@@ -16,6 +16,7 @@ export default [
       'A capillary wall is just one thin layer of cells called the vascular endothelium, less than 1 micron thick. Blood cells squeeze through single file. Capillaries sit next to almost every cell, so they’re where the real swapping happens (O₂ and food out, waste in).',
     ],
     takeaway: 'Closed system: heart → arteries → arterioles → capillaries → venules → veins → heart.',
+    remember: 'Arteries go Away from the heart (both start with A). Then size shrinks and grows back: big artery → small arteriole → tiny capillary → small venule → big vein.',
     check: {
       q: 'Which vessels make up the microcirculation?',
       a: 'Arterioles, capillaries and venules',
@@ -30,6 +31,7 @@ export default [
       'Our blood is plasma plus cells. Plasma is the watery liquid part. It carries dissolved stuff: sugar (glucose), salts (ions), wastes, hormones, clotting proteins and O₂. Red blood cells (erythrocytes) are packed with hemoglobin to carry O₂. White blood cells (leukocytes) fight infection. Platelets (tiny cell pieces, not full cells) help blood clot.',
     ],
     takeaway: 'Open systems use hemolymph; our blood = plasma + red cells + white cells + platelets.',
+    remember: 'Word roots: erythro = red (erythrocytes, the hemoglobin carriers), leuko = white (leukocytes, the infection fighters), and platelets = “little plates”, the cell bits that help clot. Hemolymph = hemo (blood) + lymph (tissue fluid) in one.',
     check: {
       q: 'Which part of blood is a cell fragment that helps with clotting?',
       a: 'Platelets',
@@ -47,6 +49,7 @@ export default [
     from: 0,
     vars: { mode: 'rest' },
     takeaway: 'Hemoglobin picks up O₂ where O₂ is high (lungs) and drops it off where O₂ is low (tissues).',
+    remember: 'Think delivery truck: it Loads in the Lungs where O₂ is plentiful and unloads where O₂ is scarce. “De-” means remove, so deoxygenation = O₂ dropped off in the tissues.',
   },
   {
     title: 'Working muscle gets more',
@@ -75,6 +78,7 @@ export default [
     from: 0,
     vars: { mode: 'rest' },
     takeaway: 'Right side → lungs; left side → body. Atrium → ventricle → artery, with valves stopping backflow.',
+    remember: 'A comes before V: blood always goes Atrium (the arrival lobby) → Ventricle → artery. And “Right to Respire”: the right side sends blood to the lungs, the left side sends it to the body.',
     check: {
       q: 'O₂-rich blood coming back from the lungs first enters the…',
       a: 'Left atrium',
@@ -92,6 +96,7 @@ export default [
     from: 0,
     vars: { mode: 'run' },
     takeaway: 'Cardiac output = heart rate × stroke volume; both go up during exercise.',
+    remember: 'Systole = S for Squeeze (ventricles contract, highest pressure); diastole = D for “Done squeezing” (relax and refill). Cardiac output is like a bus line: trips per minute (heart rate) × riders per trip (stroke volume).',
     check: {
       q: 'During systole, the ventricles are…',
       a: 'Contracting, at maximum pressure',
@@ -110,6 +115,7 @@ export default [
     from: 0,
     vars: { speed: 'slow' },
     takeaway: 'SA node → atria (P) → AV node → ventricles (QRS) → reset (T).',
+    remember: '“Pump the atria · Quick, Really Strong squeeze · Time-out”: P = atria fire, QRS = ventricles fire, T = ventricles reset. SA node Starts it All; AV node is the relay between Atria and Ventricles.',
     check: {
       q: 'On an ECG, the QRS spike shows…',
       a: 'Ventricular depolarization',
@@ -127,6 +133,7 @@ export default [
     from: 0,
     vars: { speed: 'real' },
     takeaway: 'Coronary arteries feed the heart; sympathetic nerves and epinephrine speed it up, parasympathetic nerves slow it down.',
+    remember: 'Sympathetic = Speeds up (S and S), like being startled; Parasympathetic = P for Pillow, rest and digest, so the heart slows. Coronary comes from corona (crown): these arteries crown the heart.',
     check: {
       q: 'Which one slows the heart rate?',
       a: 'Parasympathetic stimulation',
@@ -153,6 +160,7 @@ export default [
     scene: 'l5-vessels',
     from: 8,
     takeaway: 'Veins rely on skeletal muscle squeezes and one-way valves to get blood back to the heart.',
+    remember: 'V for Veins, V for Valves: low-pressure veins need one-way valves plus squeezing leg muscles to push blood back up to the heart.',
     check: {
       q: 'What helps push blood through veins, where pressure is very low?',
       a: 'Skeletal muscle contractions, with one-way valves preventing backflow',
@@ -167,6 +175,7 @@ export default [
       'The kidney is the opposite. The glomerulus (a little ball of capillaries in the kidney) has lots of pores and lets many solutes through. Blood pressure pushes fluid and solutes out into the kidney to be filtered. (The kidney also helps control blood pressure; more in Lecture 6.)',
     ],
     takeaway: 'Brain capillaries have no pores (blood–brain barrier); kidney glomerulus capillaries are very leaky.',
+    remember: 'Brain has a Bouncer (no pores, strict door, protects neurons); Kidney has a Kitchen strainer (glomerulus full of pores, lets lots through for filtering).',
     check: {
       q: 'Why can’t many solutes get through brain capillaries?',
       a: 'Their walls have no pores',
@@ -183,6 +192,7 @@ export default [
     scene: 'l5-exchange',
     from: 0,
     takeaway: 'Artery end: blood pressure pushes fluid out. Vein end: the proteins’ osmotic pull brings some back in.',
+    remember: 'Push first, pull later: at the artery end blood pressure is high and pushes fluid out; by the vein end pressure has dropped, so the protein “sponges” pull some water back in.',
     check: {
       q: 'At the artery end of a capillary, fluid moves…',
       a: 'Out, because blood pressure beats the osmotic pull',
