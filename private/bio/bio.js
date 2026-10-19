@@ -244,8 +244,9 @@ export function renderBio(ctx) {
     WALKS[lec.id] ? startWalk(lec) : null,
     h('h3', { class: 'bio-sub-h', text: 'The whole lecture in one minute' }),
     h('ul', { class: 'bio-minute' }, lec.minute.map(t => h('li', { text: t }))),
-    h('div', { class: 'bio-prog' }, h('span', { class: 'bio-prog-track' }, prog), progText),
-    h('nav', { class: 'bio-jump', 'aria-label': 'Jump to animation' }, lec.scenes.map((sc, i) => h('a', {
+    // with a guided lecture the animations only show inside it, so the page skips the list and progress
+    WALKS[lec.id] ? null : h('div', { class: 'bio-prog' }, h('span', { class: 'bio-prog-track' }, prog), progText),
+    WALKS[lec.id] ? null : h('nav', { class: 'bio-jump', 'aria-label': 'Jump to animation' }, lec.scenes.map((sc, i) => h('a', {
       href: `#scene-${sc.id}`, onclick: e => { e.preventDefault(); document.getElementById(`scene-${sc.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
     }, `${i + 1}. ${sc.title}`))));
 
@@ -258,7 +259,9 @@ export function renderBio(ctx) {
       h('p', { class: 'muted small bio-head-sub' }, 'Bio 2 · tap any animation to pause it', h('span', { class: 'bio-phone-hint', text: ' · swipe sideways inside one to see all of it' })))),
     tabs,
     h('div', { class: 'bio-layout' },
-      h('div', { class: 'bio-main' }, walking ? walkPanel(lec) : intro, ...scenes, quizCard(lec)),
+      h('div', { class: 'bio-main' }, walking ? walkPanel(lec) : intro,
+        // still mounted so the guided lecture can pull the current one into its card
+        WALKS[lec.id] ? h('div', { class: 'bio-scene-pool' }, ...scenes) : scenes, quizCard(lec)),
       h('aside', { class: 'bio-side' },
         card('Connections', null, h('ul', { class: 'bio-links' }, lec.links.map(([text, to]) => h('li', null,
           to ? h('button', { type: 'button', class: 'link', onclick: () => { st.lec = to; save('lec', to); C.render(); window.scrollTo({ top: 0 }); } }, text) : h('span', { text }))))),
@@ -346,6 +349,7 @@ function walkPanel(lec) {
     step.scene ? h('div', { class: 'bio-walk-stage' }) : null,
     figureFor(C, lec.id, w.i),
     step.takeaway ? h('p', { class: 'bio-walk-take' }, h('strong', { text: 'Takeaway: ' }), step.takeaway) : null,
+    step.remember ? h('p', { class: 'bio-walk-mem' }, h('strong', { text: '🧠 Memory trick: ' }), step.remember) : null,
     check,
     explainBox(lec, w.i, step),
     questionsBox(lec, w.i, step),

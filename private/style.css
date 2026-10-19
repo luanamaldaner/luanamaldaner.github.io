@@ -1605,6 +1605,8 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .bio-walk-say p { margin: 0 0 8px; line-height: 1.6; font-size: 15.5px; }
 .bio-walk-watch { justify-self: start; border: 1px solid var(--line); background: var(--side); border-radius: 10px; padding: 6px 12px; cursor: pointer; font: inherit; font-size: 13px; color: var(--text); }
 .bio-walk-take { margin: 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--lc) 10%, var(--card)); border-left: 3px solid var(--lc); line-height: 1.5; }
+.bio-walk-mem { margin: 8px 0 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, #d9739a 9%, var(--card)); border: 1px dashed color-mix(in srgb, #d9739a 55%, var(--line)); line-height: 1.5; }
+.bio-scene-pool { display: none; }
 .bio-walk-check { display: grid; gap: 8px; padding-top: 4px; border-top: 1px dashed var(--line); }
 .bio-walk-q { margin: 6px 0 0; font-weight: 600; }
 .bio-walk-why { margin: 0; font-size: 14px; line-height: 1.5; }
