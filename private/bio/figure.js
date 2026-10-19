@@ -36,6 +36,10 @@ export function figureFor(C, lecId, stepIndex) {
     wrap.append(h('button', { type: 'button', class: `bfig-label${fs.on === i ? ' on' : ''} ${l.a === 'l' ? 'left' : l.a === 'r' ? 'right' : l.a === 'c' ? '' : l.lx > 60 ? 'right' : l.lx < 40 ? 'left' : ''}`, style: `left:${l.lx}%;top:${l.ly}%`, onclick: () => pick(i) }, l.t));
   });
   const cur = fig.labels[fs.on];
+  // pop-up next to the tapped label: above it in the lower half, below it in the upper half, kept inside the picture
+  if (cur) wrap.append(h('div', { class: `bfig-pop ${cur.ly > 50 ? 'up' : 'down'}`, role: 'status', style: `left:${Math.min(80, Math.max(20, cur.lx))}%;top:${cur.ly}%` },
+    h('button', { type: 'button', class: 'bfig-pop-x', 'aria-label': 'Close', text: '×', onclick: () => pick(fs.on) }),
+    h('strong', { text: cur.t }), cur.d ? h('span', { text: cur.d }) : null));
   return h('figure', { class: 'bfig' }, wrap,
-    h('figcaption', { class: 'bfig-cap' }, cur ? h('span', null, h('strong', { text: `${cur.t}: ` }), cur.d || '') : h('span', { class: 'muted', text: fig.caption || 'Tap a label to see what that part does.' })));
+    h('figcaption', { class: 'bfig-cap muted', text: fig.caption || 'Tap a label to see what that part does.' }));
 }

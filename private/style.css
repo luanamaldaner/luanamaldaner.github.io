@@ -2229,7 +2229,13 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .bfig-label.right { transform: translate(0, -50%); }
 .bfig-label.on { background: var(--accent); color: var(--accent-ink, #fff); }
 .bfig-cap { margin-top: 8px; font-size: 13.5px; min-height: 1.4em; }
-@media (max-width: 720px) { .bfig-label { font-size: 10px; padding: 2px 6px; } }
+.bfig-pop { position: absolute; z-index: 2; width: max-content; max-width: min(300px, 62%); transform: translate(-50%, 16px); display: grid; gap: 3px; padding: 9px 30px 10px 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,.1); border-left: 4px solid #2f6b4f; background: #fff; color: #23302d; font: 13px/1.4 var(--sans); box-shadow: 0 6px 20px rgba(0,0,0,.18); animation: bfig-pop .15s ease-out; }
+.bfig-pop.up { transform: translate(-50%, calc(-100% - 16px)); }
+.bfig-pop strong { font-size: 13.5px; }
+.bfig-pop-x { position: absolute; top: 4px; right: 6px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: none; color: #5a6a64; font-size: 18px; line-height: 1; cursor: pointer; }
+.bfig-pop-x:hover { background: rgba(0,0,0,.06); }
+@keyframes bfig-pop { from { opacity: 0; } }
+@media (max-width: 720px) { .bfig-label { font-size: 10px; padding: 2px 6px; } .bfig-pop { max-width: 78%; font-size: 12px; padding: 7px 28px 8px 10px; } .bfig-pop strong { font-size: 12.5px; } }
 
 /* ---------- orgo guided lectures */
 .og-chaps { margin-bottom: 12px; }
