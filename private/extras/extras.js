@@ -173,10 +173,10 @@ export function renderSleep() {
       h('span', { class: 'sl-range', text: `${C.fmtTime(r.bed)} → ${C.fmtTime(r.wake)}` }),
       h('span', { class: 'sl-dur', text: fmtH(sleepHours(r)) }),
       h('span', { class: 'sl-q', title: (FACES.find(f => f[0] === r.quality) || FACES[2])[2], text: (FACES.find(f => f[0] === r.quality) || FACES[2])[1] }),
-      r.note ? h('span', { class: 'sl-n muted small', text: r.note }) : null,
       h('span', { class: 'sl-actions' },
         h('button', { type: 'button', class: 'link', text: 'Edit', onclick: () => { editing = r.id; C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }),
-        C.iconBtn('x', 'Delete night', () => C.commit(() => { C.touch(r).deleted = true; }), 'row-action')))))
+        C.iconBtn('x', 'Delete night', () => C.commit(() => { C.touch(r).deleted = true; }), 'row-action')),
+      r.note ? h('span', { class: 'sl-n muted small', text: r.note }) : null)))
       : h('p', { class: 'empty', text: 'No nights logged yet.' }));
 
   return h('div', { class: 'page' },
