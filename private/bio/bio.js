@@ -270,6 +270,81 @@ export function renderBio(ctx) {
   return page;
 }
 
+// ---------------------------------------------------------------- read aloud
+// Uses the device's own voices (speechSynthesis), preferring the natural/neural/enhanced ones.
+// Text is spoken sentence by sentence because Chrome cuts long utterances off after ~15 s.
+
+const TTS = typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance !== 'undefined';
+const tts = { key: null, btn: null };
+
+function enVoices() { return TTS ? speechSynthesis.getVoices().filter(v => /^en([-_]|$)/i.test(v.lang)) : []; }
+function voiceScore(v) {
+  return (/natural|neural|online/i.test(v.name) ? 40 : 0) + (/premium|enhanced|siri/i.test(v.name) ? 30 : 0)
+    + (/google us english|samantha|\bava\b|aria|jenny|zoe|allison/i.test(v.name) ? 15 : 0)
+    + (/en[-_]us/i.test(v.lang) ? 5 : 0) + (v.localService ? 0 : 3);
+}
+function pickVoice() {
+  const vs = enVoices();
+  return vs.find(v => v.name === saved('voice', '')) || [...vs].sort((a, b) => voiceScore(b) - voiceScore(a))[0] || null;
+}
+function speakable(t) {
+  const sub = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9' };
+  return t.replace(/[₀-₉]/g, d => sub[d]).replace(/²⁺/g, ' 2 plus').replace(/⁺/g, ' plus').replace(/⁻/g, ' minus')
+    .replace(/→/g, ', then ').replace(/←/g, ' from ').replace(/×/g, ' times ').replace(/~/g, 'about ').replace(/°C/g, ' degrees C')
+    .replace(/[Ss]tep\s*([①-⑳])/g, (m, c) => `Step ${c.charCodeAt(0) - 0x245f}`).replace(/[①-⑳]/g, c => `step ${c.charCodeAt(0) - 0x245f}, `).replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF✿]/gu, '').replace(/\s+/g, ' ').trim();
+}
+function ttsStop() {
+  if (!TTS) return;
+  tts.key = null;
+  speechSynthesis.cancel();
+  if (tts.btn) { tts.btn.textContent = '🔊 Listen'; tts.btn.classList.remove('on'); }
+}
+function ttsPlay(key, parts, btn) {
+  if (tts.key === key) { ttsStop(); return; }
+  ttsStop();
+  const voice = pickVoice();
+  const rate = Number(saved('rate', '1')) || 1;
+  const chunks = parts.map(speakable).filter(Boolean).flatMap(p => p.split(/(?<=[.!?]["”’)]*)\s+/)).map(x => x.trim()).filter(Boolean);
+  if (!chunks.length) return;
+  tts.key = key; tts.btn = btn;
+  btn.textContent = '⏹ Stop'; btn.classList.add('on');
+  chunks.forEach((text, i) => {
+    const u = new SpeechSynthesisUtterance(text);
+    if (voice) { u.voice = voice; u.lang = voice.lang; }
+    u.rate = rate;
+    // left the step (or the page)? stop instead of talking over something else
+    u.onstart = () => { if (tts.key !== key || !tts.btn?.isConnected) ttsStop(); };
+    if (i === chunks.length - 1) u.onend = () => { if (tts.key === key) ttsStop(); };
+    speechSynthesis.speak(u);
+  });
+}
+if (TTS) speechSynthesis.addEventListener?.('voiceschanged', () => document.querySelectorAll('.bio-tts-voice').forEach(fillVoices));
+function fillVoices(sel) {
+  const cur = pickVoice();
+  sel.replaceChildren(...[...enVoices()].sort((a, b) => voiceScore(b) - voiceScore(a)).map(v => {
+    const o = document.createElement('option');
+    o.value = v.name; o.textContent = v.name.replace(/^(Microsoft|Google)\s+/, '').replace(/\s*-\s*English.*$/, '');
+    o.selected = cur && v.name === cur.name;
+    return o;
+  }));
+}
+
+function ttsBar(lec, i, step) {
+  const { h } = C;
+  if (!TTS) return null;
+  const key = `${lec.id}:${i}`;
+  if (tts.key && tts.key !== key) ttsStop();
+  const parts = [step.title, ...(step.say || []), step.takeaway ? `Takeaway: ${step.takeaway}` : '', step.remember ? `Memory trick: ${step.remember}` : ''];
+  const btn = h('button', { type: 'button', class: `btn btn-small bio-tts-play${tts.key === key ? ' on' : ''}`, text: tts.key === key ? '⏹ Stop' : '🔊 Listen' });
+  btn.addEventListener('click', () => ttsPlay(key, parts, btn));
+  if (tts.key === key) tts.btn = btn;
+  const voice = h('select', { class: 'bio-tts-voice', 'aria-label': 'Voice', onchange: e => { save('voice', e.target.value); if (tts.key === key) { ttsStop(); ttsPlay(key, parts, btn); } } });
+  fillVoices(voice);
+  const rate = h('select', { class: 'bio-tts-rate', 'aria-label': 'Speed', onchange: e => { save('rate', e.target.value); if (tts.key === key) { ttsStop(); ttsPlay(key, parts, btn); } } },
+    ['0.9', '1', '1.1', '1.25', '1.5'].map(r => h('option', { value: r, text: `${r}×`, selected: saved('rate', '1') === r })));
+  return h('div', { class: 'bio-tts' }, btn, voice, rate);
+}
+
 // ---------------------------------------------------------------- guided walkthrough
 
 function startWalk(lec) {
@@ -345,6 +420,7 @@ function walkPanel(lec) {
       h('button', { type: 'button', class: 'link', text: 'Exit guided lecture', onclick: () => { st.walk = null; document.querySelectorAll('.bio-scene.walk-on').forEach(el => el.classList.remove('walk-on')); C.render(); } })),
     h('div', { class: 'bio-walk-bar' }, h('span', { style: `width:${(100 * (w.i + 1) / n).toFixed(1)}%` })),
     h('h2', { class: 'bio-walk-title', text: step.title }),
+    ttsBar(lec, w.i, step),
     h('div', { class: 'bio-walk-say' }, (() => { const used = new Set(); return (step.say || []).map(t => h('p', null, ...withTerms(t, used))); })()),
     step.scene ? h('div', { class: 'bio-walk-stage' }) : null,
     figureFor(C, lec.id, w.i),

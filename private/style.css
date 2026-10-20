@@ -1607,6 +1607,10 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .bio-walk-take { margin: 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--lc) 10%, var(--card)); border-left: 3px solid var(--lc); line-height: 1.5; }
 .bio-walk-mem { margin: 8px 0 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, #d9739a 9%, var(--card)); border: 1px dashed color-mix(in srgb, #d9739a 55%, var(--line)); line-height: 1.5; }
 .bio-scene-pool { display: none; }
+.bio-tts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -2px 0 10px; }
+.bio-tts-play.on { background: var(--lc, var(--accent)); color: #fff; border-color: transparent; }
+.bio-tts select { max-width: 220px; font-size: 13px; padding: 4px 6px; }
+.bio-tts .bio-tts-rate { max-width: 80px; }
 .bio-walk-check { display: grid; gap: 8px; padding-top: 4px; border-top: 1px dashed var(--line); }
 .bio-walk-q { margin: 6px 0 0; font-weight: 600; }
 .bio-walk-why { margin: 0; font-size: 14px; line-height: 1.5; }
