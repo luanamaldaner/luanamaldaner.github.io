@@ -17,7 +17,7 @@ import GLOSSARY from './glossary.js?v=1';
 import { examPage } from './exam.js?v=4';
 import { mapPage } from './map.js?v=2';
 import { addCorrect } from '../extras/packs.js?v=1';
-import { figureFor } from './figure.js?v=2';
+import { figureFor } from './figure.js?v=3';
 
 const LECTURES = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];
 

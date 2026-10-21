@@ -5,7 +5,7 @@
 
 import FA from './figures-a.js?v=1';
 import FB from './figures-b.js?v=1';
-import FC from './figures-c.js?v=1';
+import FC from './figures-c.js?v=2';
 
 export const FIGURES = { ...FA, ...FB, ...FC };
 

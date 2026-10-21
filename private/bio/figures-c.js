@@ -29,6 +29,20 @@ export default {
       { x: 84, y: 51, lx: 88, ly: 14, a: 'c', t: 'Postsynaptic cell', d: 'The receiving cell ("after the synapse").' },
     ],
   },
+  'L9:8': {
+    img: 'l9-pituitary-closeup.webp', ratio: '3 / 2', alt: 'A head in side view with the hypothalamus circled, and a close-up of the pituitary hanging from the hypothalamus: a pink glandular front lobe fed by blood vessels, and a yellow back lobe filled with axons from purple hypothalamus neurons',
+    caption: 'Left: where it sits. Right: the two halves up close. Tap a label.',
+    labels: [
+      { x: 17, y: 26, lx: 17, ly: 60, a: 'c', t: 'Base of the brain', d: 'The hypothalamus and pituitary sit right in the middle of your head, under the brain, above the roof of your mouth.' },
+      { x: 93, y: 11, lx: 90, ly: 4, a: 'c', t: 'Hypothalamus', d: 'The pituitary’s boss: a small control center at the base of the brain that decides what the pituitary releases.' },
+      { x: 66.5, y: 12, lx: 47, ly: 4, a: 'c', t: 'Neurosecretory neurons', d: 'Hypothalamus neurons that make hormones (ADH and oxytocin) and send them down their axons into the posterior pituitary.' },
+      { x: 56.5, y: 17, lx: 49, ly: 22, a: 'l', t: 'Releasing-hormone neuron', d: 'Releases hormones into tiny blood vessels at the top of the stalk. They travel down to tell the anterior pituitary what to do.' },
+      { x: 63, y: 30, lx: 49, ly: 36, a: 'l', t: 'Portal blood vessels', d: 'A short private blood route from the hypothalamus straight down to the anterior pituitary.' },
+      { x: 55, y: 65, lx: 40, ly: 70, a: 'l', t: 'Anterior pituitary', d: 'The front half. A true gland: its own cells make hormones, including tropic hormones that tell other glands what to do.' },
+      { x: 71, y: 55, lx: 93, ly: 42, a: 'c', t: 'Posterior pituitary', d: 'The back half. Really part of the brain: it makes no hormones itself, it just releases ones made in the hypothalamus.' },
+      { x: 77, y: 73, lx: 80, ly: 95, a: 'c', t: 'Axon terminals', d: 'Where the hypothalamus neurons end. They release ADH and oxytocin into the blood here.' },
+    ],
+  },
   'L9:10': {
     img: 'l9-pituitary.webp', ratio: '3 / 2', alt: 'A brain cut in half showing the hypothalamus and pituitary, with dotted paths to the thyroid, adrenal gland, ovaries, testis, breast, bone and muscle, and frog skin',
     caption: 'The anterior pituitary sends hormones to glands and tissues all over the body. Tap a label.',
