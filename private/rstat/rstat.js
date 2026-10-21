@@ -20,11 +20,38 @@ const st = {
 
 function shuffle(a) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
 
-function code(text) {
+// Small R highlighter: comments, strings, numbers, keywords/constants, operators and function calls.
+// Lines starting with "##" are console output and are shown muted.
+const R_TOKEN = /(#.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(`[^`]*`)|(\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?L?\b)|\b(function|if|else|for|while|repeat|in|next|break|return)\b|\b(TRUE|FALSE|NULL|NA|Inf|NaN)\b|(<-|->|\|>|%[^%\s]*%|==|!=|<=|>=|&&|\|\||[$@~^]|::)|([A-Za-z.][A-Za-z0-9._]*)(?=\s*\()/gm;
+const R_CLASS = [null, 'tok-com', 'tok-str', 'tok-builtin', 'tok-num', 'tok-kw', 'tok-const', 'tok-op', 'tok-call'];
+const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function highlightR(src) {
+  return src.split('\n').map(line => {
+    if (/^\s*##/.test(line)) return `<span class="r-out">${esc(line)}</span>`;
+    let out = '', last = 0;
+    line.replace(R_TOKEN, (m, ...g) => {
+      const at = g[g.length - 2];
+      const k = g.slice(0, 8).findIndex(x => x !== undefined) + 1;
+      out += esc(line.slice(last, at)) + `<span class="${R_CLASS[k]}">${esc(m)}</span>`;
+      last = at + m.length;
+      return m;
+    });
+    return out + esc(line.slice(last));
+  }).join('\n');
+}
+
+// Prose with R bits in it: function calls, arguments like drop = FALSE, format codes, [[ ]], $ and constants become <code>.
+const INLINE = /([A-Za-z.][A-Za-z0-9._]*\([^()]*\)|\b(?:drop|stringsAsFactors|label|units|format|tz)\s*=\s*(?:TRUE|FALSE|"[^"]*")|%[A-Za-z]{1,2}\b|%--%|\[\[ \]\]|\[ \]|\[, cols\]|\$|\b(?:TRUE|FALSE|NULL)\b)/g;
+function prose(text) {
+  const { h } = C;
+  return text.split(INLINE).map((part, i) => (i % 2 ? h('code', { class: 'r-inline', text: part }) : part));
+}
+
+function code(text, plain = false) {
   const pre = document.createElement('pre');
   pre.className = 'prog-code r-code';
   const c = document.createElement('code');
-  c.textContent = text;
+  if (plain) c.textContent = text; else c.innerHTML = highlightR(text);
   pre.append(c);
   return pre;
 }
@@ -43,10 +70,10 @@ function notesPage() {
   const secs = NOTES.filter(n => st.topic === 'all' || (st.topic === 'df' ? n.id.startsWith('df') : st.topic === 'lub' ? n.id.startsWith('lub') : !n.id.startsWith('df') && !n.id.startsWith('lub')));
   const setup = st.topic === 'all' || st.topic === 'df'
     ? card('The guitars data frame (used in the examples)', h('span', { class: 'card-meta', text: 'Lecture 9' }),
-      h('details', { class: 'r-setup' }, h('summary', null, 'Show the code that builds it'), code(SETUP)), code(GUITARS_TABLE))
+      h('details', { class: 'r-setup' }, h('summary', null, 'Show the code that builds it'), code(SETUP)), code(GUITARS_TABLE, true))
     : null;
   return [setup, ...secs.map(n => card(n.title, h('span', { class: 'card-meta', text: n.lecture }),
-    ...n.blocks.map(([text, c]) => h('div', { class: 'r-block' }, h('p', { text }), c ? code(c) : null))))];
+    ...n.blocks.map(([text, c]) => h('div', { class: 'r-block' }, h('p', null, prose(text)), c ? code(c) : null))))];
 }
 
 function practicePage() {
@@ -84,9 +111,11 @@ function practicePage() {
       let cls = 'q-opt';
       if (answered && o === Q.a) cls += ' right';
       else if (answered && o === r.picked) cls += ' wrong';
-      return h('button', { type: 'button', class: cls, disabled: answered, onclick: () => pick(o) }, o);
+      const label = document.createElement('span');
+      label.innerHTML = highlightR(o);
+      return h('button', { type: 'button', class: cls, disabled: answered, onclick: () => pick(o) }, label);
     })),
-    answered ? h('p', { class: `r-why ${r.picked === Q.a ? 'ok' : 'no'}`, text: `${r.picked === Q.a ? 'Yes ✿ ' : `It’s ${Q.a}. `}${Q.why}` }) : null,
+    answered ? h('p', { class: `r-why ${r.picked === Q.a ? 'ok' : 'no'}` }, r.picked === Q.a ? 'Yes ✿ ' : ['It’s ', h('code', { class: 'r-inline', text: Q.a }), '. '], prose(Q.why)) : null,
     answered ? h('div', { class: 'row' }, h('button', { type: 'button', class: 'btn btn-primary', text: r.i + 1 < r.ids.length ? 'Next →' : 'See score', onclick: () => { r.i++; r.picked = null; r.opts = null; C.render(); } })) : null)];
 }
 

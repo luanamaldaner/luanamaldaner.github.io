@@ -909,23 +909,23 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .prob-note .bullets li { line-height: 1.5; }
 
 /* ---------- prog 1 (python practice) ---------- */
-.prog {
-  max-width: 1180px;
+.prog, .rstat {
   --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --code-bg: #fbf9fe; --code-line: #ece6f3; --code-text: #2b2735; --code-ln: #b3a9c2; --code-caret: #d6457f;
   --tok-kw: #c2185b; --tok-builtin: #6f42c1; --tok-str: #1e8a4f; --tok-num: #c85d0b; --tok-com: #8a8794;
   --tok-def: #1565c0; --tok-call: #0b72a8; --tok-const: #b34500; --tok-op: #9b4f86; --tok-deco: #8e24aa; --tok-fx: #a3226a;
   --con-err: #c62b45; --con-ok: #1e8a4f; --con-stdin: #6f42c1;
 }
+.prog { max-width: 1180px; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .prog {
+  :root:not([data-theme="light"]) .prog, :root:not([data-theme="light"]) .rstat {
     --code-bg: #13181b; --code-line: #26302b; --code-text: #e4ebe6; --code-ln: #56635b; --code-caret: #ff8fbc;
     --tok-kw: #ff7ab8; --tok-builtin: #c3a6ff; --tok-str: #8fe3a8; --tok-num: #ffb86c; --tok-com: #7d8b84;
     --tok-def: #8ec8ff; --tok-call: #7fd8ff; --tok-const: #ffa86c; --tok-op: #f2a7d4; --tok-deco: #dba8ff; --tok-fx: #ff9fd2;
     --con-err: #ff8a9a; --con-ok: #8fe3a8; --con-stdin: #c3a6ff;
   }
 }
-:root[data-theme="dark"] .prog {
+:root[data-theme="dark"] .prog, :root[data-theme="dark"] .rstat {
   --code-bg: #13181b; --code-line: #26302b; --code-text: #e4ebe6; --code-ln: #56635b; --code-caret: #ff8fbc;
   --tok-kw: #ff7ab8; --tok-builtin: #c3a6ff; --tok-str: #8fe3a8; --tok-num: #ffb86c; --tok-com: #7d8b84;
   --tok-def: #8ec8ff; --tok-call: #7fd8ff; --tok-const: #ffa86c; --tok-op: #f2a7d4; --tok-deco: #dba8ff; --tok-fx: #ff9fd2;
@@ -2282,3 +2282,6 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .rstat .r-why.ok { background: var(--accent-soft); }
 .rstat .r-why.no { background: var(--danger-soft); }
 @media (max-width: 720px) { .rstat .r-options { grid-template-columns: 1fr; } }
+.rstat .r-out { color: var(--code-ln); }
+.rstat code.r-inline { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); border: 1px solid var(--code-line); color: var(--code-text); padding: 1px 5px; border-radius: 5px; white-space: nowrap; }
+.rstat .r-code code { white-space: pre; }
