@@ -2266,3 +2266,19 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .dg-wi-item ul { margin: 8px 0 4px; }
 .og-toc .link { text-align: left; }
 .og-mech { width: auto; display: inline-flex; }
+
+/* ---------- R (STA 3100) study tab */
+.rstat .r-tabs { margin-bottom: 8px; }
+.rstat .r-topics { margin-bottom: 16px; }
+.rstat .r-main { display: grid; gap: 14px; max-width: 860px; }
+.rstat .r-block { margin: 0 0 12px; }
+.rstat .r-block p { margin: 0 0 6px; line-height: 1.55; }
+.rstat .r-code { margin: 0; white-space: pre; overflow-x: auto; font-size: 13px; }
+.rstat .r-setup { margin: 0 0 10px; }
+.rstat .r-setup summary { cursor: pointer; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.rstat .q-prompt { margin: 12px 0 10px; }
+.rstat .r-options .q-opt { font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 13.5px; }
+.rstat .r-why { margin: 12px 0; padding: 10px 12px; border-radius: 12px; line-height: 1.5; }
+.rstat .r-why.ok { background: var(--accent-soft); }
+.rstat .r-why.no { background: var(--danger-soft); }
+@media (max-width: 720px) { .rstat .r-options { grid-template-columns: 1fr; } }

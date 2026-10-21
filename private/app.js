@@ -23,6 +23,7 @@ import { renderProg } from './prog/prog.js?v=3';
 import { bossCard } from './extras/boss.js?v=3';
 import { renderLab, microbeCard } from './extras/lab.js?v=10';
 import { renderDegree } from './extras/degree.js?v=3';
+import { renderRstat } from './rstat/rstat.js?v=1';
 import { renderBio } from './bio/bio.js?v=19';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard, barChart } from './extras/extras.js?v=10';
 
@@ -612,7 +613,7 @@ function startAutoLock() {
 // The sidebar shows a few groups; pages inside a group get a small tab bar on top.
 const NAV_GROUPS = [
   ['today', 'Today', 'today', [['today', 'Today'], ['notes', 'Notes']]],
-  ['study', 'Study', 'bio', [['bio', 'Biology'], ['orgo', 'Orgo'], ['prog', 'Prog 1'], ['cards', 'Cards'], ['lab', 'Lab']]],
+  ['study', 'Study', 'bio', [['bio', 'Biology'], ['orgo', 'Orgo'], ['prog', 'Prog 1'], ['rstat', 'R'], ['cards', 'Cards'], ['lab', 'Lab']]],
   ['focus', 'Focus', 'focus', [['focus', 'Focus']]],
   ['health', 'Health', 'calories', [['calories', 'Food'], ['sleep', 'Sleep']]],
   ['week', 'Week', 'week', [['week', 'Week']]],
@@ -631,6 +632,7 @@ const VIEWS = {
   orgo: { label: 'Orgo', icon: 'orgo', render: () => renderOrgo(ORGO_CTX) },
   bio: { label: 'Biology', icon: 'bio', render: () => renderBio(ORGO_CTX) },
   prog: { label: 'Prog 1', icon: 'code', render: () => renderProg(ORGO_CTX) },
+  rstat: { label: 'R · STA 3100', icon: 'code', render: () => renderRstat(ORGO_CTX) },
   cards: { label: 'Cards', icon: 'cards', render: renderCards },
   lab: { label: 'Study lab', icon: 'lab', render: () => renderLab(ORGO_CTX) },
   degree: { label: 'Degree map', icon: 'degree', render: () => renderDegree(ORGO_CTX) },
