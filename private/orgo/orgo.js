@@ -2,12 +2,12 @@
 // a 3D molecule explorer, and practice (quiz + flashcards).
 
 import { MECHS, mechById } from './mechanisms.js?v=3';
-import { energyDiagram, skeletal } from './draw.js?v=2';
+import { energyDiagram, skeletal } from './draw.js?v=3';
 import { conceptsPage } from './concepts.js?v=2';
 import { problemsPage } from './problems.js?v=2';
 import { cheatSheetPage, mockExamPage } from './exam.js?v=1';
 import { roulettePage } from './roulette.js?v=4';
-import { guidedPage } from './guided.js?v=1';
+import { guidedPage } from './guided.js?v=2';
 import { addMistake } from './mistakes.js?v=1';
 import { addCorrect } from '../extras/packs.js?v=1';
 import {

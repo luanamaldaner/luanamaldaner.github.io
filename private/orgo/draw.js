@@ -104,11 +104,26 @@ export function energyDiagram(points) {
  * | 'h' (hash, narrow at i). Double bonds draw their second line toward
  * opts.toward ([x, y]) or centred. opts.hl colours a bond or label pink.
  */
+let arrowIds = 0;
 export function skeletal(spec, { scale = 30, className = 'skel' } = {}) {
   const pts = spec.atoms.map(a => [a[0], -a[1]]);
   const lab = spec.atoms.map(a => a[2] || '');
   const aopt = spec.atoms.map(a => a[3] || {});
-  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  // arrow ends and (half of) their bend count toward the drawing's size so curves aren't clipped
+  const extra = (spec.arrows || []).flatMap(ar => {
+    const a = [ar.from[0], -ar.from[1]], b = [ar.to[0], -ar.to[1]], bend = ar.bend === undefined ? 0.5 : ar.bend;
+    const d = [b[0] - a[0], b[1] - a[1]];
+    return [a, b, [(a[0] + b[0]) / 2 - d[1] * bend / 2, (a[1] + b[1]) / 2 + d[0] * bend / 2]];
+  });
+  // labels are wider than their anchor point: reserve room so text like "HgOAc" isn't clipped
+  const textEdge = [];
+  pts.forEach(([x, y], i) => {
+    if (!lab[i]) return;
+    const w = lab[i].replace(/\d|[+−-]/g, '').length * 0.34 + lab[i].replace(/[^\d+−-]/g, '').length * 0.22;
+    const al = aopt[i].align || 'start';
+    if (al === 'start') textEdge.push([x + w - 0.17, y]); else if (al === 'end') textEdge.push([x - w + 0.17, y]); else textEdge.push([x - w / 2, y], [x + w / 2, y]);
+  });
+  const xs = [...pts, ...extra, ...textEdge].map(p => p[0]), ys = [...pts, ...extra].map(p => p[1]);
   const pad = 0.75;
   const minX = Math.min(...xs) - pad, maxX = Math.max(...xs) + pad;
   const minY = Math.min(...ys) - pad, maxY = Math.max(...ys) + pad;
@@ -160,6 +175,27 @@ export function skeletal(spec, { scale = 30, className = 'skel' } = {}) {
           }
         }
       }
+    }
+  }
+  // lone pairs: atom opts.lp = [angles in degrees], two dots per pair just outside the label
+  pts.forEach(([x, y], i) => {
+    for (const deg of aopt[i].lp || []) {
+      const a = deg * Math.PI / 180, r = lab[i] ? 0.42 : 0.2;
+      const c = [x + Math.cos(a) * r, y - Math.sin(a) * r], n = [-Math.sin(a) * 0.09, -Math.cos(a) * 0.09];
+      for (const sg of [1, -1]) svg.append(el('circle', { cx: c[0] + n[0] * sg, cy: c[1] + n[1] * sg, r: 0.045, class: 'sk-lp' }));
+    }
+  });
+  // curved mechanism arrows: spec.arrows = [{ from: [x, y], to: [x, y], bend = 0.5, half }] in bond units, y up
+  if (spec.arrows && spec.arrows.length) {
+    const id = `ska${++arrowIds}`;
+    svg.append(el('defs', {}, el('marker', { id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 5, markerHeight: 5, orient: 'auto-start-reverse' },
+      el('path', { d: 'M0,0 L10,5 L0,10 z', class: 'sk-arrowhead' }))));
+    for (const ar of spec.arrows) {
+      const a = [ar.from[0], -ar.from[1]], b = [ar.to[0], -ar.to[1]];
+      const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], d = [b[0] - a[0], b[1] - a[1]];
+      const bend = ar.bend === undefined ? 0.5 : ar.bend;
+      const c = [m[0] - d[1] * bend, m[1] + d[0] * bend];
+      svg.append(el('path', { d: `M${a[0]},${a[1]} Q${c[0]},${c[1]} ${b[0]},${b[1]}`, class: 'sk-arrow', 'marker-end': `url(#${id})` }));
     }
   }
   pts.forEach(([x, y], i) => {

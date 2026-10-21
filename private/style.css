@@ -2500,3 +2500,35 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .bio-svg .m11-whitefib { fill: color-mix(in srgb, var(--b-red) 8%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-ink) 35%, transparent); stroke-width: 1.4; }
 .bio-svg .m11-mito { fill: color-mix(in srgb, var(--b-glu) 70%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-glu) 60%, var(--b-ink)); stroke-width: .8; }
 .bio-svg .m11-cap { fill: var(--b-red); }
+
+/* ---------- orgo guided lectures: drawn schemes and worked examples */
+.og-fig { --oc: #c0661e; margin: 4px 0 12px; padding: 12px; border-radius: 12px; background: color-mix(in srgb, var(--oc) 5%, var(--card)); border: 1px solid color-mix(in srgb, var(--oc) 22%, var(--line)); display: grid; gap: 10px; }
+.og-fig-title { margin: 0; font-weight: 600; font-size: 14px; }
+.og-fig-cap { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.og-scheme-row, .og-gallery-row { display: flex; align-items: center; justify-content: center; gap: 10px 14px; flex-wrap: wrap; }
+.og-gallery-row { align-items: flex-end; gap: 14px 22px; }
+.og-mol { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.og-mol .skel { max-height: 170px; width: auto; }
+.og-mol figcaption { font-size: 12px; color: var(--muted); text-align: center; display: grid; gap: 1px; max-width: 160px; }
+.og-mol figcaption strong { color: var(--text); font-size: 12.5px; }
+.og-formula { font: 600 17px var(--sans); }
+.og-arrow { display: grid; justify-items: center; gap: 2px; min-width: 70px; }
+.og-arrow .arrow-line { width: 100%; min-width: 60px; }
+.og-arrow-top, .og-arrow-bot { font-size: 12px; color: var(--muted); text-align: center; max-width: 150px; }
+.og-plus { font-size: 20px; color: var(--muted); }
+.og-example { border-style: dashed; }
+.og-ex-kicker { margin: 0; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--oc); }
+.og-ex-q { margin: 0; font-weight: 500; line-height: 1.5; }
+.og-ex-hint { margin: 0; }
+.og-ex-sol { display: grid; gap: 8px; }
+.og-ex-steps { margin: 0; padding-left: 20px; line-height: 1.5; }
+.og-ex-steps li { margin: 3px 0; }
+.og-ex-ans { margin: 0; padding: 8px 10px; border-radius: 10px; background: var(--accent-soft); }
+.og-example .btn { justify-self: start; }
+.og-table { border-collapse: collapse; font-size: 13px; width: 100%; }
+.og-table th, .og-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.og-table th { font-weight: 700; border-bottom: 2px solid var(--line-strong); }
+.og-table-wrap { overflow-x: auto; }
+.sk-arrow { fill: none; stroke: #d6457f; stroke-width: 0.06; stroke-linecap: round; }
+.sk-arrowhead { fill: #d6457f; }
+.sk-lp { fill: var(--text); }

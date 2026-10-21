@@ -1,18 +1,68 @@
 // Orgo guided lectures (Ch 7, Ch 8): the same step-by-step format as the Bio tab.
 // Steps can show an alkene-reaction card (rx), run the SN/E decider (decide) and open the 3D viewer (mech).
 
-import CH7 from './walk-ch7.js?v=1';
-import CH8 from './walk-ch8.js?v=1';
+import CH7 from './walk-ch7.js?v=2';
+import CH8 from './walk-ch8.js?v=2';
 
 const CHAPTERS = [CH7, CH8];
 const load = (k, fb) => { try { const v = localStorage.getItem(`orgo.g.${k}`); return v === null ? fb : JSON.parse(v); } catch { return fb; } };
 const put = (k, v) => { try { localStorage.setItem(`orgo.g.${k}`, JSON.stringify(v)); } catch {} };
 const shuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
-const gs = { ch: load('ch', 7), pos: load('pos', { 7: 0, 8: 0 }), picked: null, opts: null, optsFor: '' };
+const gs = { ch: load('ch', 7), pos: load('pos', { 7: 0, 8: 0 }), picked: null, opts: null, optsFor: '', reveal: new Set() };
 
 const SOLV = { protic: 'polar protic solvent', aprotic: 'polar aprotic solvent' };
 const CLS = { methyl: 'methyl', 1: '1°', 2: '2°', 3: '3°' };
+
+// Pictures and worked examples for a step (step.figs), drawn with draw.js's skeletal():
+//   { kind: 'scheme', rows: [[item, …], …], caption }   item = { mol: spec, label } | { arrow: { top, bottom } } | { plus: true } | { text, sub }
+//   { kind: 'gallery', items: [{ mol, label, note }], caption }   side-by-side structures (e.g. 1°/2°/3°)
+//   { kind: 'example', title, q, rows?, hint?, steps: [...], answer, answerRows? }   a try-it problem with a reveal
+//   { kind: 'table', head: [...], rows: [[...]], caption }
+function schemeRow(C, D, row) {
+  const { h } = C;
+  return h('div', { class: 'og-scheme-row' }, row.map(it => {
+    if (it.mol) return h('figure', { class: 'og-mol' }, D.skeletal(it.mol, { scale: it.scale || 34 }), it.label ? h('figcaption', { text: it.label }) : null);
+    if (it.arrow) return h('div', { class: 'og-arrow' }, h('span', { class: 'og-arrow-top', text: it.arrow.top || '' }), h('span', { class: 'arrow-line' }), h('span', { class: 'og-arrow-bot', text: it.arrow.bottom || '' }));
+    if (it.plus) return h('span', { class: 'og-plus', text: '+' });
+    if (it.text) return h('figure', { class: 'og-mol og-textmol' }, h('span', { class: 'og-formula', text: it.text }), it.sub ? h('figcaption', { text: it.sub }) : null);
+    return null;
+  }));
+}
+
+function figure(C, D, f, key) {
+  const { h } = C;
+  if (f.kind === 'scheme') {
+    return h('div', { class: 'og-fig og-scheme' }, f.title ? h('p', { class: 'og-fig-title', text: f.title }) : null,
+      (f.rows || []).map(r => schemeRow(C, D, r)), f.caption ? h('p', { class: 'og-fig-cap', text: f.caption }) : null);
+  }
+  if (f.kind === 'gallery') {
+    return h('div', { class: 'og-fig og-gallery' }, f.title ? h('p', { class: 'og-fig-title', text: f.title }) : null,
+      h('div', { class: 'og-gallery-row' }, f.items.map(it => h('figure', { class: 'og-mol' }, D.skeletal(it.mol, { scale: it.scale || 30 }),
+        h('figcaption', null, h('strong', { text: it.label || '' }), it.note ? h('span', { text: it.note }) : null)))),
+      f.caption ? h('p', { class: 'og-fig-cap', text: f.caption }) : null);
+  }
+  if (f.kind === 'table') {
+    return h('div', { class: 'og-fig og-table-wrap' }, f.title ? h('p', { class: 'og-fig-title', text: f.title }) : null,
+      h('table', { class: 'og-table' }, h('thead', null, h('tr', null, f.head.map(x => h('th', { text: x })))),
+        h('tbody', null, f.rows.map(r => h('tr', null, r.map(x => h('td', { text: x })))))),
+      f.caption ? h('p', { class: 'og-fig-cap', text: f.caption }) : null);
+  }
+  if (f.kind === 'example') {
+    const open = gs.reveal.has(key);
+    return h('div', { class: 'og-fig og-example' },
+      h('p', { class: 'og-ex-kicker', text: f.title || 'Worked example' }),
+      f.q ? h('p', { class: 'og-ex-q', text: f.q }) : null,
+      (f.rows || []).map(r => schemeRow(C, D, r)),
+      f.hint && !open ? h('p', { class: 'og-ex-hint small muted', text: `Hint: ${f.hint}` }) : null,
+      open ? h('div', { class: 'og-ex-sol' },
+        f.steps && f.steps.length ? h('ol', { class: 'og-ex-steps' }, f.steps.map(t => h('li', { text: t }))) : null,
+        (f.answerRows || []).map(r => schemeRow(C, D, r)),
+        f.answer ? h('p', { class: 'og-ex-ans' }, h('strong', { text: 'Answer: ' }), f.answer) : null)
+        : h('button', { type: 'button', class: 'btn btn-small', text: 'Try it, then show the solution', onclick: () => { gs.reveal.add(key); C.render(); } }));
+  }
+  return null;
+}
 
 export function guidedPage(C, D) {
   const { h } = C;
@@ -74,6 +124,7 @@ export function guidedPage(C, D) {
         h('div', { class: 'bio-walk-bar' }, h('span', { style: `width:${(100 * (i + 1) / steps.length).toFixed(1)}%` })),
         h('h2', { class: 'bio-walk-title', text: step.title }),
         h('div', { class: 'bio-walk-say' }, (step.say || []).map(t => h('p', { text: t }))),
+        (step.figs || []).map((f, k) => figure(C, D, f, `${chap.ch}:${i}:${k}`)),
         rx, dec,
         step.mech ? h('button', { type: 'button', class: 'btn btn-small og-mech', onclick: () => D.selectMech(step.mech) }, '▶ Watch it in 3D') : null,
         step.takeaway ? h('p', { class: 'bio-walk-take' }, h('strong', { text: 'Takeaway: ' }), step.takeaway) : null,
