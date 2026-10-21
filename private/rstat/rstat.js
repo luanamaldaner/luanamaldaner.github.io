@@ -2,17 +2,22 @@
 // Progress (which questions were missed) is kept in localStorage on this device.
 
 import { SETUP, GUITARS_TABLE, NOTES, QUESTIONS } from './content.js?v=1';
+import { LESSONS } from './walk.js?v=1';
+import { visual } from './visual.js?v=1';
 
 let C; // { h, card, render, ... } from app.js
 
 const TOPICS = [['all', 'Everything'], ['df', 'Data frames'], ['date', 'Dates (base R)'], ['lub', 'lubridate']];
-const TABS = [['notes', 'Notes'], ['practice', 'Practice'], ['missed', 'Missed']];
+const TABS = [['guided', 'Guided lessons'], ['notes', 'Notes'], ['practice', 'Practice'], ['missed', 'Missed']];
 
 function load(key, fallback) { try { const v = localStorage.getItem(`rstat.${key}`); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } }
 function store(key, v) { try { localStorage.setItem(`rstat.${key}`, JSON.stringify(v)); } catch {} }
 
 const st = {
-  tab: load('tab', 'notes'),
+  tab: load('tab', 'guided'),
+  lesson: load('lesson', 'df'),
+  stepAt: load('stepAt', {}),            // lesson id -> step index
+  checkPick: null,
   topic: load('topic', 'all'),
   missed: new Set(load('missed', [])),   // question indexes answered wrong (cleared when answered right)
   run: null,                              // { ids, i, picked, right, opts }
@@ -41,7 +46,7 @@ function highlightR(src) {
 }
 
 // Prose with R bits in it: function calls, arguments like drop = FALSE, format codes, [[ ]], $ and constants become <code>.
-const INLINE = /([A-Za-z.][A-Za-z0-9._]*\([^()]*\)|\b(?:drop|stringsAsFactors|label|units|format|tz)\s*=\s*(?:TRUE|FALSE|"[^"]*")|%[A-Za-z]{1,2}\b|%--%|\[\[ \]\]|\[ \]|\[, cols\]|\$|\b(?:TRUE|FALSE|NULL)\b)/g;
+const INLINE = /([A-Za-z_.][A-Za-z0-9_.]*\$[A-Za-z_.][A-Za-z0-9_.]*(?:\s*<-\s*NULL)?|[A-Za-z.][A-Za-z0-9._]*\((?:[^()]|\([^()]*\))*\)|[A-Za-z_]*\[\[[^\[\]]{0,16}\]\]|[A-Za-z_]*\[[^\[\]]{0,16}\]|\b(?:drop|stringsAsFactors|label|units|format|tz)\s*=\s*(?:TRUE|FALSE|"[^"]*")|%[A-Za-z]{1,2}\b|%--%|\[\[ \]\]|\[ \]|\[, cols\]|\$|\b(?:TRUE|FALSE|NULL)\b)/g;
 function prose(text) {
   const { h } = C;
   return text.split(INLINE).map((part, i) => (i % 2 ? h('code', { class: 'r-inline', text: part }) : part));
@@ -119,6 +124,50 @@ function practicePage() {
     answered ? h('div', { class: 'row' }, h('button', { type: 'button', class: 'btn btn-primary', text: r.i + 1 < r.ids.length ? 'Next →' : 'See score', onclick: () => { r.i++; r.picked = null; r.opts = null; C.render(); } })) : null)];
 }
 
+function guidedPage() {
+  const { h, card } = C;
+  const L = LESSONS.find(l => l.id === st.lesson) || LESSONS[0];
+  const n = L.steps.length;
+  const i = Math.max(0, Math.min(n - 1, st.stepAt[L.id] || 0));
+  const step = L.steps[i];
+  const go = j => { st.stepAt[L.id] = Math.max(0, Math.min(n - 1, j)); store('stepAt', st.stepAt); st.checkPick = null; C.render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const picker = h('div', { class: 'chips r-lessons' }, LESSONS.map(l => h('button', {
+    type: 'button', class: `chip chip-btn${l.id === L.id ? ' on' : ''}`, text: `${l.title} · ${l.steps.length} steps`,
+    onclick: () => { st.lesson = l.id; store('lesson', l.id); st.checkPick = null; C.render(); },
+  })));
+  let check = null;
+  if (step.check) {
+    const ck = step.check;
+    if (!step._opts) step._opts = shuffle([ck.a, ...ck.o]);
+    const done = st.checkPick !== null;
+    check = h('div', { class: 'r-check' },
+      h('p', { class: 'r-check-q' }, h('strong', { text: 'Quick check: ' }), prose(ck.q)),
+      h('div', { class: 'q-options r-options' }, step._opts.map(o => {
+        const label = document.createElement('span');
+        label.innerHTML = highlightR(o);
+        return h('button', { type: 'button', class: `q-opt${done && o === ck.a ? ' right' : done && o === st.checkPick ? ' wrong' : ''}`, disabled: done, onclick: () => { st.checkPick = o; C.render(); } }, label);
+      })),
+      done ? h('p', { class: `r-why ${st.checkPick === ck.a ? 'ok' : 'no'}` }, st.checkPick === ck.a ? 'Yes ✿ ' : 'Not quite. ', prose(ck.why)) : null);
+  }
+  const dots = h('div', { class: 'bio-walk-dots', role: 'tablist', 'aria-label': 'Steps' }, L.steps.map((s2, k) => h('button', {
+    type: 'button', class: `bio-walk-dot${k === i ? ' on' : k < i ? ' past' : ''}`, title: `${k + 1}. ${s2.title}`, 'aria-label': `Step ${k + 1}: ${s2.title}`, onclick: () => go(k),
+  })));
+  return [picker, h('section', { class: 'card r-walk' },
+    h('p', { class: 'r-kicker', text: `${L.title} · ${L.lecture} · step ${i + 1} of ${n}` }),
+    h('div', { class: 'bio-walk-bar r-bar' }, h('span', { style: `width:${(100 * (i + 1) / n).toFixed(1)}%` })),
+    h('h2', { class: 'r-walk-title', text: step.title }),
+    code(step.code),
+    h('div', { class: 'r-say' }, step.say.map(t => h('p', null, prose(t)))),
+    visual(h, step.vis),
+    step.takeaway ? h('p', { class: 'r-take' }, h('strong', { text: 'Takeaway: ' }), prose(step.takeaway)) : null,
+    check,
+    h('div', { class: 'bio-walk-nav r-nav' },
+      h('button', { type: 'button', class: 'btn', text: '← Back', disabled: i === 0, onclick: () => go(i - 1) }),
+      dots,
+      i + 1 < n ? h('button', { type: 'button', class: 'btn btn-primary', text: 'Next →', onclick: () => go(i + 1) })
+        : h('button', { type: 'button', class: 'btn btn-primary', text: 'Practice this ✿', onclick: () => { st.tab = 'practice'; st.topic = L.id === 'df' ? 'df' : 'date'; store('tab', 'practice'); store('topic', st.topic); st.run = null; C.render(); window.scrollTo({ top: 0 }); } })))];
+}
+
 export function renderRstat(ctx) {
   C = ctx;
   const { h } = C;
@@ -133,7 +182,7 @@ export function renderRstat(ctx) {
   })));
   return h('div', { class: 'page rstat' },
     h('header', { class: 'page-head' }, h('div', null, h('h1', { text: 'R · STA 3100' }),
-      h('p', { class: 'muted small', text: 'Data frames (L9), dates & times (L11) and lubridate (L18). Notes from your lectures, then predict-the-output practice.' }))),
-    tabs, topics,
-    h('div', { class: 'r-main' }, ...(st.tab === 'notes' ? notesPage() : practicePage())));
+      h('p', { class: 'muted small', text: 'Data frames (L9), dates & times (L11) and lubridate (L18): guided lessons, notes, then predict-the-output practice.' }))),
+    tabs, st.tab === 'guided' ? null : topics,
+    h('div', { class: 'r-main' }, ...(st.tab === 'guided' ? guidedPage() : st.tab === 'notes' ? notesPage() : practicePage())));
 }
