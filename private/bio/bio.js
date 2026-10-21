@@ -12,7 +12,8 @@ import L7 from './l7.js?v=3';
 import L8 from './l8.js?v=3';
 import L9 from './l9.js?v=3';
 import L10 from './l10.js?v=3';
-import WALKS from './walks.js?v=4';
+import WALKS from './walks.js?v=5';
+import SQ from './sq/index.js?v=1';
 import GLOSSARY from './glossary.js?v=1';
 import { examPage } from './exam.js?v=4';
 import { mapPage } from './map.js?v=2';
@@ -261,7 +262,7 @@ export function renderBio(ctx) {
     h('div', { class: 'bio-layout' },
       h('div', { class: 'bio-main' }, walking ? walkPanel(lec) : intro,
         // still mounted so the guided lecture can pull the current one into its card
-        WALKS[lec.id] ? h('div', { class: 'bio-scene-pool' }, ...scenes) : scenes, quizCard(lec)),
+        WALKS[lec.id] ? h('div', { class: 'bio-scene-pool' }, ...scenes) : scenes, quizCard(lec), walking ? null : studyCard(lec)),
       h('aside', { class: 'bio-side' },
         card('Connections', null, h('ul', { class: 'bio-links' }, lec.links.map(([text, to]) => h('li', null,
           to ? h('button', { type: 'button', class: 'link', onclick: () => { st.lec = to; save('lec', to); C.render(); window.scrollTo({ top: 0 }); } }, text) : h('span', { text }))))),
@@ -526,6 +527,33 @@ function questionsBox(lec, i, step) {
 // ---------------------------------------------------------------- quiz
 
 function shuffle(a) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+
+// ---------------------------------------------------------------- Dr. Taylor's study questions
+// The professor's study sheet, with a model answer behind each question (sq/L*.js).
+
+function multiline(text) {
+  const { h } = C;
+  // keep the order: runs of "• " lines become one list where they appear
+  const out = [];
+  for (const l of String(text).split('\n')) {
+    if (l.startsWith('• ')) {
+      const last = out[out.length - 1];
+      (last && last.tagName === 'UL' ? last : out[out.push(h('ul', { class: 'bio-sq-bullets' })) - 1]).append(h('li', { text: l.slice(2) }));
+    } else if (l.trim()) out.push(h('p', { text: l }));
+  }
+  return out;
+}
+
+function studyCard(lec) {
+  const { h, card } = C;
+  const qs = SQ[lec.id];
+  if (!qs || !qs.length) return null;
+  return card('Dr. Taylor’s study questions', h('span', { class: 'card-meta', text: `${qs.length} questions` }),
+    h('p', { class: 'muted small', text: 'From your professor’s study sheet. Try answering out loud first, then tap a question to check yourself.' }),
+    h('div', { class: 'bio-sq' }, qs.map((x, i) => h('details', { class: 'bio-sq-item' },
+      h('summary', null, h('span', { class: 'bio-sq-n', text: `${i + 1}` }), h('span', { class: 'bio-sq-q' }, multiline(x.q))),
+      h('div', { class: 'bio-sq-a' }, multiline(x.a))))));
+}
 
 function quizCard(lec) {
   const { h } = C;

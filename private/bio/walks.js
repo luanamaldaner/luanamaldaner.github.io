@@ -8,7 +8,7 @@ import W5 from './walk-l5.js?v=4';
 import W6 from './walk-l6.js?v=4';
 import W7 from './walk-l7.js?v=4';
 import W8 from './walk-l8.js?v=4';
-import W9 from './walk-l9.js?v=4';
+import W9 from './walk-l9.js?v=5';
 import W10 from './walk-l10.js?v=4';
 
 export default { L1: W1, L2: W2, L3: W3, L4: W4, L5: W5, L6: W6, L7: W7, L8: W8, L9: W9, L10: W10 };

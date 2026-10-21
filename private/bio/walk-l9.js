@@ -182,6 +182,22 @@ export default [
     remember: 'The thyroid axis is all T’s: TRH → TSH → T3/T4, the same three-step shape as C-A-C for stress. Thyroid = thermostat: it turns up metabolism and heat.',
   },
   {
+    title: 'Same pattern for the sex hormones',
+    say: [
+      'One more axis, from the reproduction lecture. Reproduction itself isn’t on your exam, but its hormones follow the exact chain you just learned. The hypothalamus releases GnRH (gonadotropin-releasing hormone) → the anterior pituitary releases FSH and LH (follicle-stimulating hormone and luteinizing hormone, the “F” and “L” in FLAT PEG) → the gonads (testes or ovaries) release the sex steroids: testosterone, estrogens and progesterone.',
+      'In the testes, LH makes the interstitial (Leydig) cells release testosterone. In the ovaries, follicle cells release estrogens and progesterone. These are steroid hormones, so like cortisol they’re made from cholesterol and work through receptors inside the cell.',
+      'Feedback: after ovulation, progesterone, estrogen and inhibin suppress FSH and LH, which is negative feedback just like cortisol. The big exception: mid-cycle, rising estrogen makes the anterior pituitary release a surge of LH, and that LH surge is the direct trigger for ovulation (releasing the egg). Oxytocin’s birth loop (Lecture 3) is the other classic positive feedback, and after birth oxytocin and prolactin drive milk secretion.',
+    ],
+    takeaway: 'GnRH → FSH + LH → testosterone, estrogens, progesterone. Mostly negative feedback, but the LH surge (ovulation) and oxytocin at birth are positive.',
+    remember: 'Gonadotropins Go to the Gonads: GnRH → FSH + LH → sex steroids. LH = the “Launch” hormone: its surge launches the egg (ovulation).',
+    check: {
+      q: 'What is the direct trigger for ovulation?',
+      a: 'A surge of LH',
+      o: ['A surge of GnRH', 'A drop in FSH', 'Oxytocin from the posterior pituitary'],
+      why: 'The slides: the immediate stimulus for ovulation is a surge in blood LH (caused by rising estrogen acting on the anterior pituitary).',
+    },
+  },
+  {
     title: 'What if feedback breaks?',
     scene: 'l9-feedback', from: 0, vars: { axis: 'hpa', fb: 'off' },
     say: [

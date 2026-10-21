@@ -1,0 +1,60 @@
+// Lecture 10 · Ch 36 · Study question model answers (immunology).
+// One entry per question, in the same order as the professor’s study sheet.
+export default [
+  {
+    q: 'What are the key differences between innate and adaptive immunity, in terms of each of the following:\n• The timing of the response\n• The main cell types and basic types of mechanisms involved\n• The specificity and duration of the response',
+    a: '• The timing of the response: Innate is the first line and acts fast, within minutes to hours (you’re born with it). Adaptive takes days to weeks to build the first time, and it’s switched on by the innate system.\n• The main cell types and basic types of mechanisms involved: Innate uses barriers (skin, mucus, stomach acid, good microbes), toxic molecules (defensins, complement, interferons), phagocytes (macrophages, neutrophils, dendritic cells), NK cells and inflammation. Adaptive uses lymphocytes: B cells make antibodies, and T cells either kill infected cells (cytotoxic T cells) or help other immune cells (helper T cells).\n• The specificity and duration of the response: Innate is nonspecific (treats all germs about the same, recognizing common patterns) and has no memory. Adaptive is specific to one pathogen (disease-causing germ), lasts a long time and remembers, so the next response is faster and stronger.'
+  },
+  {
+    q: 'Briefly state a key function of each of the main types of leukocytes (macrophages, neutrophils, dendritic cells, mast cells, monocytes, eosinophils, basophils, B cells, T cells, NK cells), and classify each as a phagocyte, specialist, or lymphocyte.',
+    a: 'Leukocytes = white blood cells.\n• Macrophages (phagocyte): big cells that eat germs, release cytokines like TNF-α to start inflammation, and present antigen to T cells.\n• Neutrophils (phagocyte): arrive fast at an infection, eat bacteria, then die and form pus.\n• Dendritic cells (phagocyte): eat germs and carry pieces to lymph nodes to present them to T cells, linking innate to adaptive immunity.\n• Mast cells (specialist): sit in tissues and release histamine and other signals that trigger inflammation and allergic reactions.\n• Monocytes (phagocyte): circulate in the blood and turn into macrophages (or dendritic cells) once they enter tissues.\n• Eosinophils (specialist): fight parasites and take part in allergies.\n• Basophils (specialist): take part in allergies and inflammation (release histamine) and fight parasites.\n• B cells (lymphocyte): adaptive; turn into plasma cells that make antibodies, plus memory cells.\n• T cells (lymphocyte): adaptive; cytotoxic T cells kill infected or cancer cells, helper T cells switch on other immune cells.\n• NK cells (lymphocyte): natural killer cells make virus-infected and tumor cells self-destruct; they work in both innate and adaptive immunity.\nMast cells and monocytes aren’t described in the site’s notes. (Not covered in the site’s notes; check your slides.)'
+  },
+  {
+    q: 'What are mucosal tissues and what are their key protection mechanisms (from microbes)?',
+    a: 'Mucosal tissues are the moist, mucus-making linings of the body’s openings, like the gut, airways and urogenital tract (urinary and reproductive openings). Their protection:\n• Mucus traps microbes so they can’t reach cells.\n• The mucus contains germ-killing proteins like defensins.\n• Good microbes (bacteria and fungi) living there compete with pathogens and keep them in check.\n• Harsh conditions like low pH (acid) in the stomach and urogenital tract kill germs.'
+  },
+  {
+    q: 'What are Toll-like receptors (TLRs)? What are PRRs and PAMPS and how are they involved in TLR function?',
+    a: 'TLRs are “germ detector” receptors on immune cells (like macrophages) that recognize common microbe parts and raise the alarm.\n• PRRs (pattern recognition receptors): the general family of innate receptors that recognize patterns found on many microbes but not on our own cells. TLRs are one kind of PRR.\n• PAMPs (pathogen-associated molecular patterns): molecules shared by many microbes, like parts of bacterial cell walls or flagella, or viral nucleic acids. Think of them as the “uniform” germs wear.\n• How they work together: a TLR (the guard) binds a PAMP (the uniform) → this switches on NF-κB inside the cell → cytokine genes turn on → inflammation and other defenses start.\nThe term PRR isn’t in the site’s notes. (Not covered in the site’s notes; check your slides.)'
+  },
+  {
+    q: 'What is the complement system, what is the main effector protein in this system, and what are 3 types of responses that are activated by this system?',
+    a: 'The complement system is a team of antimicrobial proteins in the blood that work as a cascade: each one switches on the next, like falling dominoes, so a small trigger becomes a big response. The key protein is C3, which an enzyme (convertase) cuts into C3a and C3b. Three responses:\n• Opsonization/phagocytosis: C3b (the bigger piece) coats the germ and marks it to be eaten by phagocytes.\n• Inflammation: C3a (the smaller piece) floats off in the blood and triggers inflammation.\n• Lysis: other complement proteins punch holes in the invader’s membrane so it bursts.'
+  },
+  {
+    q: 'What are the roles of NFkB, cytokines, and interferons in innate immunity?',
+    a: '• NF-κB: the master on-switch for inflammation. When TLRs detect a microbe, they switch on NF-κB, which turns on the genes for cytokines.\n• Cytokines: signaling proteins immune cells use to talk to each other (interleukins, tumor necrosis factor/TNF and interferons). Many are pro-inflammatory: they widen blood vessels and call in white blood cells.\n• Interferons: a warning to the neighbors. They bind uninfected nearby cells and help them block viruses from copying themselves. They also help switch on NK cells.'
+  },
+  {
+    q: 'What do natural killer cells do and what activates them?',
+    a: 'NK cells are lymphocytes that can tell healthy cells apart from virus-infected or tumor cells, and make the bad ones self-destruct (apoptosis, programmed cell death). They can also kill cells that antibodies have tagged. They’re activated by interferons, cytokines and antibodies. They work in both innate and adaptive immunity.'
+  },
+  {
+    q: 'What is inflammation?',
+    a: 'Inflammation is the body’s coordinated response to infection or injury, with four signs: redness, heat, swelling and pain. The chain: germs get in (for example through a cut) → macrophages release cytokines like TNF-α (and C3a from complement adds to it) → blood vessels widen (redness and heat) and get leaky, so fluid seeps out (swelling) → cytokines call in neutrophils, which squeeze out of the vessel and eat the bacteria → the dead neutrophils form pus.'
+  },
+  {
+    q: 'What are antigens, and what is the difference between and antigen and epitope?',
+    a: 'An antigen is any molecule the immune system (T cell receptors or antibodies) can recognize as nonself. Antigens are usually proteins or peptides, sometimes lipids (fats) or carbohydrates (sugars). The epitope is the exact small spot on the antigen that a receptor or antibody actually binds. One antigen can have several different epitopes, so the antigen is the whole molecule and the epitope is the specific bit that gets recognized.'
+  },
+  {
+    q: 'What are macrophages, and what are 3 key types of signaling molecules (and their basic functions) that they release?',
+    a: 'Macrophages are large phagocytes (germ-eating white blood cells) that live in tissues. They swallow invaders, sound the alarm, and present antigen pieces on class II MHC to helper T cells. They release cytokines, mainly:\n• Tumor necrosis factor (TNF-α): triggers inflammation, making blood vessels widen and get leaky.\n• Interleukins: help white blood cells communicate, for example switching on lymphocytes and causing fever.\n• Chemokines: attract more white blood cells, like neutrophils, to the infection site.\nThe site’s notes only name TNF-α as the macrophage signal; the other two are standard examples, and some courses list interferons instead of chemokines. (Not covered in the site’s notes; check your slides.)'
+  },
+  {
+    q: 'How do B cells and T cells generate their receptor diversity, and what is clonal selection?',
+    a: '• Receptor diversity: as each B and T cell develops, pieces of its receptor genes get cut and reshuffled (DNA rearrangement), so every cell ends up with its own one-of-a-kind receptor. The body builds a huge library of different lymphocytes before it ever meets a germ. Cells that react to your own antigens are destroyed during development (clonal deletion); if that fails, the result is autoimmunity.\n• Clonal selection: when an antigen shows up, it binds only the lymphocyte whose receptor fits it. That cell is “selected” and multiplies into a clone (many identical copies). Some become effector cells (like antibody-making plasma cells) and others become long-lived memory cells. Like trying keys on a key ring, then copying the one that works.'
+  },
+  {
+    q: 'Explain the concepts of primary, secondary, tertiary (etc.) immune responses and why these are important when considering vaccination schedules.',
+    a: '• Primary response: the first exposure to an antigen. It’s slow (takes 1–2 weeks to build) and small, because the matching lymphocytes have to be selected and cloned from scratch.\n• Secondary response: memory B and T cells from the first time are waiting, partly switched on, so the response is almost immediate and much stronger.\n• Tertiary and later responses: each new exposure makes the response stronger and more precise still.\n• Vaccination: a vaccine is a practice run that builds memory without you catching the disease, so a real infection meets a fast secondary response instead of a slow primary one. Because each exposure boosts the response, schedules use several doses (boosters) spaced over time to build stronger, longer-lasting protection.'
+  },
+  {
+    q: 'How are naïve B cells activated (recall interactions with TFH cells), which region of the antibody is most important for antigen recognition, and what are the 3 basic functions of antibodies?',
+    a: '• Activating naïve B cells: a naïve B cell (one that hasn’t met its antigen yet) binds antigen with its receptor, takes it in, chops it up and presents the pieces on class II MHC. A matching TFH cell (a special helper T cell) recognizes it and pairs up with the B cell, and they activate each other with cytokines. The fully switched-on B cell then multiplies into plasma cells (which make antibodies) and memory cells.\n• Antigen recognition: the variable region, at the tips of the Y-shaped antibody, grabs the antigen. It’s different in every antibody. The constant region (the stem) is the same within a class (IgG, IgA, IgM, IgE, IgD).\n• Three functions: Neutralization (block the germ or toxin so it can’t work), opsonization (coat the germ so phagocytes eat it), and complement activation (switch on the complement cascade).'
+  },
+  {
+    q: 'How are T cells activated (recall the roles of MHCs), and what are the functional differences between cytotoxic and helper T cells?',
+    a: 'T cell receptors can’t see free-floating antigen. They only bind antigen pieces held up on MHC proteins (major histocompatibility complex, a “display stand” on another cell’s surface).\n• Helper T cells: activated by class II MHC. Phagocytes (macrophages, dendritic cells) eat germs, travel to lymph nodes and present antigen on class II MHC to naïve T cells; a matching helper T cell recognizes it and releases cytokines. Helper T cells coordinate and switch on other immune cells, like B cells (via TFH cells).\n• Cytotoxic T cells: activated by class I MHC. A virus-infected (or stressed or cancer) cell displays pieces of the virus on class I MHC; a matching cytotoxic T cell docks on and makes that cell self-destruct (apoptosis), virus and all.\n• In short, “one kills, two helps”: class I → cytotoxic (kill), class II → helper (coordinate).'
+  },
+];

@@ -2419,3 +2419,17 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
   .rstat .r-walk-title { font-size: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .rv *, .rv { animation: none !important; transition: none !important; } }
+
+/* ---------- Bio: professor's study questions */
+.bio-sq { display: grid; gap: 6px; }
+.bio-sq-item { border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.bio-sq-item[open] { border-color: color-mix(in srgb, var(--lc, var(--accent)) 45%, var(--line)); }
+.bio-sq-item summary { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; cursor: pointer; list-style: none; }
+.bio-sq-item summary::-webkit-details-marker { display: none; }
+.bio-sq-n { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: color-mix(in srgb, var(--lc, var(--accent)) 16%, var(--card)); color: var(--text); }
+.bio-sq-q p { margin: 0 0 2px; line-height: 1.45; font-weight: 500; }
+.bio-sq-q .bio-sq-bullets { margin: 4px 0 0; font-weight: 400; color: var(--muted); }
+.bio-sq-a { padding: 0 14px 12px 46px; line-height: 1.55; }
+.bio-sq-a p { margin: 0 0 6px; }
+.bio-sq-bullets { margin: 0 0 6px; padding-left: 18px; }
+.bio-sq-bullets li { margin: 2px 0; }
