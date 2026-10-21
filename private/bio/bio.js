@@ -1,4 +1,4 @@
-// The Biology tab: Bio 2 (BSC2011) lectures 1–10, each told with plain words
+// The Biology tab: Bio 2 (BSC2011) lectures 1–11, each told with plain words
 // and small looping animations, a guided step-by-step walkthrough and a quiz.
 
 import { E, NS } from './kit.js';
@@ -12,15 +12,16 @@ import L7 from './l7.js?v=3';
 import L8 from './l8.js?v=3';
 import L9 from './l9.js?v=3';
 import L10 from './l10.js?v=3';
-import WALKS from './walks.js?v=5';
+import L11 from './l11.js?v=1';
+import WALKS from './walks.js?v=6';
 import SQ from './sq/index.js?v=1';
-import GLOSSARY from './glossary.js?v=1';
+import GLOSSARY from './glossary.js?v=2';
 import { examPage } from './exam.js?v=4';
 import { mapPage } from './map.js?v=2';
 import { addCorrect } from '../extras/packs.js?v=1';
 import { figureFor } from './figure.js?v=3';
 
-const LECTURES = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10];
+const LECTURES = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11];
 
 let C; // h, card, render … handed over by app.js
 

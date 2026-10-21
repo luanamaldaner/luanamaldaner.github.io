@@ -2433,3 +2433,70 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--petal); outline-
 .bio-sq-a p { margin: 0 0 6px; }
 .bio-sq-bullets { margin: 0 0 6px; padding-left: 18px; }
 .bio-sq-bullets li { margin: 2px 0; }
+
+/* ---------- L11 muscle scenes (bio/l11.js) ---------- */
+.bio-svg .m11-bone { fill: color-mix(in srgb, var(--b-mem) 60%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-ink) 28%, transparent); stroke-width: 1.4; }
+.bio-svg .m11-tendon { stroke: color-mix(in srgb, var(--b-mem) 75%, var(--b-ink)); stroke-width: 8; }
+.bio-svg .m11-belly { fill: color-mix(in srgb, var(--b-red) 30%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 65%, transparent); stroke-width: 1.6; }
+.bio-svg .m11-fibline { fill: none; stroke: color-mix(in srgb, var(--b-red) 60%, var(--b-stage)); stroke-width: 1.2; }
+.bio-svg .m11-fiber { fill: color-mix(in srgb, var(--b-red) 18%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 60%, transparent); stroke-width: 1.5; }
+.bio-svg .m11-fiberbg { fill: color-mix(in srgb, var(--b-red) 10%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 40%, transparent); stroke-width: 1.4; }
+.bio-svg .m11-stri { stroke: color-mix(in srgb, var(--b-red) 32%, transparent); stroke-width: 1.6; }
+.bio-svg .m11-mfline { stroke: color-mix(in srgb, var(--b-red) 22%, transparent); stroke-width: 1; }
+.bio-svg .m11-nuc { fill: color-mix(in srgb, var(--b-k) 70%, var(--b-stage)); transition: fill .3s; }
+.bio-svg .m11-nuc.glow { fill: var(--b-k); filter: drop-shadow(0 0 4px var(--b-gold)); }
+.bio-svg .m11-mf { fill: color-mix(in srgb, var(--b-teal) 10%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-ink) 28%, transparent); stroke-width: 1.2; }
+.bio-svg .m11-mfA { fill: color-mix(in srgb, var(--b-k) 40%, var(--b-stage)); }
+.bio-svg .m11-mfH { fill: color-mix(in srgb, var(--b-k) 18%, var(--b-stage)); }
+.bio-svg .m11-zoom { fill: none; stroke: color-mix(in srgb, var(--b-ink) 38%, transparent); stroke-width: 1.2; stroke-dasharray: 3 5; }
+.bio-svg .m11-pick { fill: none; stroke: var(--b-gold); stroke-width: 2.2; }
+.bio-svg .m11-aband { fill: color-mix(in srgb, var(--b-k) 17%, transparent); }
+.bio-svg .m11-hzone { fill: color-mix(in srgb, var(--b-stage) 72%, transparent); }
+.bio-svg .m11-actin { fill: none; stroke: var(--b-teal); stroke-width: 6; stroke-dasharray: .01 7; stroke-linecap: round; }
+.bio-svg .m11-myosin { stroke: var(--b-k); stroke-width: 9; stroke-linecap: round; }
+.bio-svg .m11-heads { fill: none; stroke: color-mix(in srgb, var(--b-k) 80%, var(--b-ink)); stroke-width: 2.6; stroke-linecap: round; }
+.bio-svg .m11-sarc.small .m11-actin { stroke-width: 4; stroke-dasharray: .01 5; }
+.bio-svg .m11-sarc.small .m11-myosin { stroke-width: 5.5; }
+.bio-svg .m11-sarc.small .m11-heads { stroke-width: 1.6; }
+.bio-svg .m11-z { stroke: color-mix(in srgb, var(--b-ink) 62%, transparent); stroke-width: 4; stroke-linecap: round; }
+.bio-svg .m11-z.thin { stroke-width: 2; }
+.bio-svg .m11-m { stroke: color-mix(in srgb, var(--b-ink) 45%, transparent); stroke-width: 2.5; stroke-dasharray: 4 5; }
+.bio-svg .m11-bracket { fill: none; stroke: color-mix(in srgb, var(--b-ink) 55%, transparent); stroke-width: 1.6; }
+.bio-svg .m11-ghost { stroke: color-mix(in srgb, var(--b-ink) 32%, transparent); stroke-width: 1.5; stroke-dasharray: 3 5; }
+.bio-svg .m11-bar { fill: var(--b-water); }
+.bio-svg .m11-bar.same { fill: var(--b-k); }
+.bio-svg .m11-barghost { fill: none; stroke: color-mix(in srgb, var(--b-ink) 30%, transparent); stroke-width: 1.2; stroke-dasharray: 3 3; }
+/* cross-bridge */
+.bio-svg .m11-bead { fill: color-mix(in srgb, var(--b-teal) 70%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-teal) 70%, var(--b-ink)); stroke-width: 1; }
+.bio-svg.fxb .m11-bead { fill: var(--fxb-bead-teal); }
+.bio-svg .m11-bead.site { stroke: color-mix(in srgb, var(--b-gold) 60%, var(--b-ink)); stroke-width: 1.6; }
+.bio-svg .m11-bead.site.on { stroke: var(--b-gold); stroke-width: 3; filter: drop-shadow(0 0 4px var(--b-gold)); }
+.bio-svg .m11-tropo { fill: none; stroke: var(--b-fat); stroke-width: 5.5; stroke-linecap: round; opacity: .95; }
+.bio-svg .m11-tropn { fill: var(--b-acid); stroke: color-mix(in srgb, var(--b-acid) 60%, var(--b-ink)); stroke-width: 1; }
+.bio-svg.fxb .m11-tropn { fill: var(--fxb-bead-acid); }
+.bio-svg .m11-thick { stroke: var(--b-k); stroke-width: 16; stroke-linecap: round; opacity: .85; }
+.bio-svg .m11-neck { stroke: color-mix(in srgb, var(--b-k) 85%, var(--b-ink)); stroke-width: 7; stroke-linecap: round; }
+.bio-svg .m11-head { fill: var(--b-k); stroke: color-mix(in srgb, var(--b-k) 55%, var(--b-ink)); stroke-width: 1.4; }
+.bio-svg.fxb .m11-head { fill: var(--fxb-bead-k); }
+.bio-svg .m11-head.bound { stroke: var(--b-gold); stroke-width: 3; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--b-gold) 80%, transparent)); }
+.bio-svg .m11-neck.idle, .bio-svg .m11-head.idle { opacity: .35; }
+.bio-svg .m11-spark { fill: none; stroke: var(--b-gold); stroke-width: 2; }
+/* excitation */
+.bio-svg .m11-axon { fill: none; stroke: color-mix(in srgb, var(--b-k) 55%, var(--b-stage)); stroke-width: 9; stroke-linecap: round; }
+.bio-svg .m11-term { fill: color-mix(in srgb, var(--b-k) 55%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-k) 70%, var(--b-ink)); stroke-width: 1.4; transition: filter .3s; }
+.bio-svg .m11-term.glow { filter: drop-shadow(0 0 6px var(--b-gold)); }
+.bio-svg .m11-memb { stroke: color-mix(in srgb, var(--b-red) 65%, var(--b-ink)); stroke-width: 4; stroke-linecap: round; }
+.bio-svg .m11-ap { stroke: var(--b-gold); stroke-width: 6; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--b-gold)); }
+.bio-svg .m11-tt { fill: color-mix(in srgb, var(--b-red) 28%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 65%, var(--b-ink)); stroke-width: 1.2; }
+.bio-svg .m11-tt-on { fill: var(--b-gold); filter: drop-shadow(0 0 4px var(--b-gold)); }
+.bio-svg .m11-sr { fill: color-mix(in srgb, var(--b-fat) 22%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-fat) 75%, var(--b-ink)); stroke-width: 1.2; transition: fill .4s, filter .4s; }
+.bio-svg .m11-sr.on { fill: color-mix(in srgb, var(--b-fat) 42%, var(--b-stage)); filter: drop-shadow(0 0 4px color-mix(in srgb, var(--b-gold) 70%, transparent)); }
+/* ATP systems and fiber types */
+.bio-svg .m11-cv { fill: none; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.bio-svg .m11-cv.imm { stroke: var(--b-gold); }
+.bio-svg .m11-cv.gly { stroke: var(--b-blue); }
+.bio-svg .m11-cv.oxi { stroke: var(--b-red); }
+.bio-svg .m11-redfib { fill: color-mix(in srgb, var(--b-red) 55%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-red) 70%, var(--b-ink)); stroke-width: 1.4; }
+.bio-svg .m11-whitefib { fill: color-mix(in srgb, var(--b-red) 8%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-ink) 35%, transparent); stroke-width: 1.4; }
+.bio-svg .m11-mito { fill: color-mix(in srgb, var(--b-glu) 70%, var(--b-stage)); stroke: color-mix(in srgb, var(--b-glu) 60%, var(--b-ink)); stroke-width: .8; }
+.bio-svg .m11-cap { fill: var(--b-red); }
