@@ -25,6 +25,7 @@ import { renderLab, microbeCard } from './extras/lab.js?v=10';
 import { renderDegree } from './extras/degree.js?v=3';
 import { renderRstat } from './rstat/rstat.js?v=3';
 import { renderBio } from './bio/bio.js?v=21';
+import { initCareer, internsCard, renderInternships, renderApplications, renderProfile } from './career/career.js?v=1';
 import { initExtras, sleepCard, renderSleep, renderWeek, weekCard, renderCards, tilCard, palavrasCard, journalCard, barChart } from './extras/extras.js?v=10';
 
 if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
@@ -617,7 +618,7 @@ const NAV_GROUPS = [
   ['focus', 'Focus', 'focus', [['focus', 'Focus']]],
   ['health', 'Health', 'calories', [['calories', 'Food'], ['sleep', 'Sleep']]],
   ['week', 'Week', 'week', [['week', 'Week']]],
-  ['career', 'Career', 'briefcase', [['internships', 'Internships'], ['degree', 'Degree map']]],
+  ['career', 'Career', 'briefcase', [['internships', 'Openings'], ['applications', 'Applications'], ['profile', 'Profile'], ['degree', 'Degree map']]],
 ];
 const groupOf = v => NAV_GROUPS.find(g => g[3].some(([k]) => k === v)) || NAV_GROUPS[0];
 function lastIn(g) { try { const k = localStorage.getItem(`nav.${g[0]}`); if (k && g[3].some(([x]) => x === k)) return k; } catch {} return g[3][0][0]; }
@@ -629,6 +630,8 @@ const VIEWS = {
   week: { label: 'Week', icon: 'week', render: renderWeek },
   sleep: { label: 'Sleep', icon: 'moon', render: renderSleep },
   internships: { label: 'Internships', icon: 'briefcase', render: renderInternships },
+  applications: { label: 'Applications', icon: 'briefcase', render: renderApplications },
+  profile: { label: 'Profile', icon: 'briefcase', render: renderProfile },
   orgo: { label: 'Orgo', icon: 'orgo', render: () => renderOrgo(ORGO_CTX) },
   bio: { label: 'Biology', icon: 'bio', render: () => renderBio(ORGO_CTX) },
   prog: { label: 'Prog 1', icon: 'code', render: () => renderProg(ORGO_CTX) },
@@ -1420,119 +1423,8 @@ function renderForest() {
 
 // ---------------------------------------------------------------- internships
 
-// Filled in by Claude each day (paid or stipended roles only). Three are picked
-// for today; the full list lives on its own page.
-let internFilter = 'open';
-
-const safeUrl = u => (typeof u === 'string' && /^https:\/\//i.test(u) ? u : null);
-
-function internDeadline(it) {
-  if (it.deadline) {
-    const days = daysBetween(todayStr(), it.deadline);
-    if (days < 0) return { text: `Closed ${fmtShort(it.deadline)}`, cls: 'past', days };
-    return { text: days === 0 ? 'Due today' : days <= 14 ? `Due in ${days} days · ${fmtShort(it.deadline)}` : `Due ${fmtShort(it.deadline)}`, cls: days <= 14 ? 'soon' : '', days };
-  }
-  return { text: it.deadlineNote || 'Deadline not posted', cls: '', days: 9999 };
-}
-
-function internOpen(it) { return !it.status && internDeadline(it).days >= 0; }
-
-function internsSorted(list) {
-  return list.sort((a, b) => internDeadline(a).days - internDeadline(b).days || (a.org || '').localeCompare(b.org || ''));
-}
-
-// Today's three: the ones Claude picked for today (kept even after you apply),
-// topped up with the soonest open deadlines if fewer than three were picked.
-function todaysInterns() {
-  const today = todayStr();
-  const all = live('internships');
-  // Once today's 3 are shown they stay put: marking one Applied counts it instead of swapping it out.
-  const doneToday = it => it.status === 'applied' && it.statusAt && new Date(it.statusAt).toLocaleDateString('en-CA') === today;
-  const picked = all.filter(it => (it.pick === today || doneToday(it)) && it.status !== 'skipped');
-  const rest = internsSorted(all.filter(it => internOpen(it) && !picked.includes(it)));
-  const list = [...picked, ...rest].slice(0, 3);
-  if (!all.some(it => it.pick === today) && list.length) setTimeout(() => commit(() => list.forEach(it => { if (it.pick !== today) { it.pick = today; touch(it); } })), 0);
-  return list;
-}
-
-function setInternStatus(it, status) {
-  commit(() => { it.status = status; it.statusAt = status ? Date.now() : 0; touch(it); });
-}
-
-function internActions(it, compact) {
-  const url = safeUrl(it.url);
-  if (it.status === 'applied') {
-    return h('div', { class: 'intern-actions' }, h('span', { class: 'intern-badge applied', text: 'Applied ✿' }),
-      h('button', { class: 'link', type: 'button', text: 'Undo', onclick: () => setInternStatus(it, '') }));
-  }
-  if (it.status === 'skipped') {
-    return h('div', { class: 'intern-actions' }, h('span', { class: 'intern-badge', text: 'Skipped' }),
-      h('button', { class: 'link', type: 'button', text: 'Undo', onclick: () => setInternStatus(it, '') }));
-  }
-  return h('div', { class: 'intern-actions' },
-    url ? h('a', { class: 'btn btn-small btn-primary', href: url, target: '_blank', rel: 'noopener noreferrer', text: 'Apply ↗' }) : null,
-    h('button', { class: 'btn btn-small', type: 'button', text: 'Applied', onclick: () => setInternStatus(it, 'applied') }),
-    h('button', { class: 'btn btn-small btn-quiet', type: 'button', text: compact ? 'Skip' : 'Not for me', onclick: () => setInternStatus(it, 'skipped') }));
-}
-
-function internRow(it, compact = false) {
-  const dl = internDeadline(it);
-  const isNew = it.addedAt && daysBetween(it.addedAt, todayStr()) <= 1;
-  return h('li', { class: `intern${it.status ? ` is-${it.status}` : ''}` },
-    h('div', { class: 'intern-top' },
-      h('span', { class: `intern-type ${it.type === 'research' ? 'research' : 'industry'}`, text: it.type === 'research' ? 'Research' : 'Industry' }),
-      isNew && !compact ? h('span', { class: 'intern-new', text: 'New' }) : null,
-      h('span', { class: `intern-due ${dl.cls}`, text: dl.text })),
-    h('div', { class: 'intern-title', text: it.title }),
-    h('div', { class: 'intern-org', text: [it.org, it.location].filter(Boolean).join(' · ') }),
-    it.pay ? h('div', { class: 'intern-pay', text: it.pay }) : null,
-    !compact && it.why ? h('p', { class: 'intern-why', text: it.why }) : null,
-    !compact && it.eligibility ? h('p', { class: 'intern-elig', text: it.eligibility }) : null,
-    !compact && it.fields && it.fields.length ? h('div', { class: 'chips' }, it.fields.slice(0, 5).map(f => h('span', { class: 'chip', text: f }))) : null,
-    internActions(it, compact));
-}
-
-function internsCard() {
-  const all = live('internships');
-  if (!all.length) return null;
-  const picks = todaysInterns();
-  const done = picks.filter(it => it.status === 'applied').length;
-  return card('Apply today', h('span', { class: 'card-meta', text: `${done} / ${picks.length} done` }),
-    picks.length ? h('ul', { class: 'interns compact' }, picks.map(it => internRow(it, true)))
-      : h('p', { class: 'empty', text: 'Nothing open right now. New ones land every day ✿' }),
-    h('button', { class: 'link center-link', type: 'button', text: `See all ${all.filter(internOpen).length} open internships →`, onclick: () => go('internships') }));
-}
-
-function renderInternships() {
-  const all = live('internships');
-  const filters = [
-    ['open', 'Open', it => internOpen(it)],
-    ['industry', 'Industry', it => internOpen(it) && it.type !== 'research'],
-    ['research', 'Research', it => internOpen(it) && it.type === 'research'],
-    ['abroad', 'Abroad', it => internOpen(it) && it.country && it.country !== 'US'],
-    ['new', 'New', it => internOpen(it) && it.addedAt && daysBetween(it.addedAt, todayStr()) <= 1],
-    ['applied', 'Applied', it => it.status === 'applied'],
-    ['skipped', 'Skipped', it => it.status === 'skipped'],
-  ];
-  const [, , test] = filters.find(f => f[0] === internFilter) || filters[0];
-  const shown = internsSorted(all.filter(test));
-  const applied = all.filter(it => it.status === 'applied').length;
-  const picks = todaysInterns();
-
-  return h('div', { class: 'page' },
-    h('header', { class: 'page-head' },
-      h('h1', { text: 'Internships' }),
-      h('p', { class: 'meta', text: `Paid or stipended roles in data science, biology, biotech and nearby fields. Updated daily. ${applied} applied so far.` })),
-    picks.length ? card('Your three for today', null, h('ul', { class: 'interns picks' }, picks.map(it => internRow(it)))) : null,
-    h('section', { class: 'card' },
-      h('header', { class: 'card-head' }, h('h2', { text: 'If you want to do more' }), h('span', { class: 'card-meta', text: `${shown.length} shown` })),
-      h('div', { class: 'chips intern-filters' }, filters.map(([key, label, t]) => h('button', {
-        type: 'button', class: `chip chip-btn${internFilter === key ? ' on' : ''}`,
-        onclick: () => { internFilter = key; render(); },
-      }, `${label} · ${all.filter(t).length}`))),
-      shown.length ? h('ul', { class: 'interns' }, shown.map(it => internRow(it)))
-        : h('p', { class: 'empty', text: all.length ? 'Nothing here.' : 'Your first batch is on its way ✿' })));
-}
+// Internships, scholarships, the application profile and drafts live in career/career.js.
+initCareer({ h, card, S: () => S, live, commit, touch, uid, scheduleSave: d => scheduleSave(d), render: () => render(), go, todayStr, daysBetween, fmtShort });
 
 // ---------------------------------------------------------------- quick add from anywhere
 
@@ -2027,19 +1919,22 @@ function sparkline(series) {
 
 // ---------------------------------------------------------------- notes
 
+// Notes that other pages own (Biology questions, journal, degree audit, application profile).
+const HIDDEN_NOTE_KINDS = new Set(['bioq', 'journal', 'coursemap', 'profile']);
+
 function noteTitle(n) {
   return (n.title || '').trim() || (n.body || '').trim().split('\n')[0].slice(0, 60) || 'Untitled';
 }
 
 function renderNotes() {
-  const notes = live('notes').filter(n => n.kind !== 'bioq' && n.kind !== 'journal' && n.kind !== 'coursemap').sort((a, b) => b.updatedAt - a.updatedAt);
+  const notes = live('notes').filter(n => !HIDDEN_NOTE_KINDS.has(n.kind)).sort((a, b) => b.updatedAt - a.updatedAt);
   if (!notes.find(n => n.id === activeNoteId)) activeNoteId = notes[0] ? notes[0].id : null;
   const active = notes.find(n => n.id === activeNoteId);
 
   const listEl = h('ul', { class: 'note-list' });
   const fillList = (filter = '') => {
     const q = filter.toLowerCase();
-    listEl.replaceChildren(...live('notes').filter(n => n.kind !== 'bioq' && n.kind !== 'journal' && n.kind !== 'coursemap').sort((a, b) => b.updatedAt - a.updatedAt)
+    listEl.replaceChildren(...live('notes').filter(n => !HIDDEN_NOTE_KINDS.has(n.kind)).sort((a, b) => b.updatedAt - a.updatedAt)
       .filter(n => !q || `${n.title}\n${n.body}`.toLowerCase().includes(q))
       .map(n => h('li', null, h('button', {
         type: 'button', class: `note-item${n.id === activeNoteId ? ' active' : ''}`,
